@@ -413,6 +413,73 @@ export async function updateReservationStatus(
   return result;
 }
 
+/**
+ * Mark an existing payment as refunded (full refund only in Phase 4 — partial
+ * lands in 4.5). Updates the reservation's paidAmount in the same tx and
+ * writes an audit row.
+ */
+export async function refundPayment(input: {
+  paymentId: string;
+  reason?: string;
+}) {
+  const parsed = z
+    .object({
+      paymentId: z.string().min(1),
+      reason: z.string().max(400).optional(),
+    })
+    .parse(input);
+  const staff = await requireStaff();
+
+  const result = await prisma.$transaction(async (tx) => {
+    const payment = await tx.payment.findUnique({
+      where: { id: parsed.paymentId },
+      select: { id: true, status: true, amount: true, reservationId: true },
+    });
+    if (!payment) {
+      throw new ReservationError("Paiement introuvable", "NOT_FOUND", 404);
+    }
+    if (payment.status !== "SUCCEEDED") {
+      throw new ReservationError(
+        `Impossible de rembourser un paiement en statut ${payment.status}`,
+        "INVALID_STATE",
+        409,
+      );
+    }
+
+    const updated = await tx.payment.update({
+      where: { id: payment.id },
+      data: { status: "REFUNDED" },
+      select: { id: true, reservationId: true },
+    });
+    await tx.reservation.update({
+      where: { id: payment.reservationId },
+      data: { paidAmount: { decrement: payment.amount } },
+    });
+    await writeAudit(
+      {
+        userId: staff.id,
+        action: "payment.refunded",
+        entity: "Payment",
+        entityId: payment.id,
+        diff: {
+          before: { status: "SUCCEEDED" },
+          after: {
+            status: "REFUNDED",
+            amount: payment.amount,
+            reason: parsed.reason ?? null,
+          },
+        },
+      },
+      tx,
+    );
+    return updated;
+  });
+
+  revalidatePath("/[locale]/admin/payments");
+  revalidatePath(`/[locale]/admin/reservations/${result.reservationId}`);
+  return result;
+}
+
 export async function addPayment(input: CreatePaymentInput) {
   const parsed = createPaymentSchema.parse(input);
   const staff = await requireStaff();

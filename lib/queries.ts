@@ -217,3 +217,80 @@ export async function findPublicProperty(slug: string) {
 export type PublicPropertyDetail = NonNullable<
   Awaited<ReturnType<typeof findPublicProperty>>
 >;
+
+/**
+ * Payments listing for /admin/payments — paginated, filtered by date
+ * range and optional method/status. Returns the rows + per-method totals
+ * for the same window.
+ */
+export async function listPaymentsForRange(opts: {
+  start: Date;
+  end: Date;
+  method?: import("@prisma/client").PaymentMethod;
+  status?: import("@prisma/client").PaymentStatus;
+  query?: string;
+}) {
+  const where: import("@prisma/client").Prisma.PaymentWhereInput = {
+    receivedAt: { gte: opts.start, lt: opts.end },
+    ...(opts.method ? { method: opts.method } : {}),
+    ...(opts.status ? { status: opts.status } : {}),
+    ...(opts.query
+      ? {
+          OR: [
+            {
+              reservation: {
+                code: { contains: opts.query, mode: "insensitive" },
+              },
+            },
+            { reservation: { guest: { phone: { contains: opts.query } } } },
+            {
+              reservation: {
+                guest: {
+                  lastName: { contains: opts.query, mode: "insensitive" },
+                },
+              },
+            },
+            {
+              reservation: {
+                guest: {
+                  firstName: { contains: opts.query, mode: "insensitive" },
+                },
+              },
+            },
+            { reference: { contains: opts.query, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const [payments, totalsRaw] = await Promise.all([
+    prisma.payment.findMany({
+      where,
+      orderBy: { receivedAt: "desc" },
+      take: 200,
+      include: {
+        receivedBy: { select: { id: true, name: true } },
+        reservation: {
+          select: {
+            id: true,
+            code: true,
+            property: { select: { name: true } },
+            guest: { select: { firstName: true, lastName: true, phone: true } },
+          },
+        },
+      },
+    }),
+    prisma.payment.groupBy({
+      by: ["method", "status"],
+      where: { receivedAt: { gte: opts.start, lt: opts.end } },
+      _sum: { amount: true },
+      _count: { _all: true },
+    }),
+  ]);
+
+  return { payments, totals: totalsRaw };
+}
+
+export type PaymentRow = Awaited<
+  ReturnType<typeof listPaymentsForRange>
+>["payments"][number];
