@@ -7,15 +7,12 @@ import { LanguageSwitcher } from "./language-switcher";
 export async function Header() {
   const t = await getTranslations("nav");
 
-  // Phase 1: all nav targets point to "/" until the real pages land in
-  // Phase 3. Replace `href="/"` with the proper route when wiring each
-  // page.
   const navItems = [
-    { key: "chalets" as const, href: "/" },
-    { key: "bungalows" as const, href: "/" },
-    { key: "padel" as const, href: "/" },
-    { key: "about" as const, href: "/" },
-    { key: "contact" as const, href: "/" },
+    { key: "chalets" as const, href: "/chalets" },
+    { key: "bungalows" as const, href: "/bungalows" },
+    { key: "padel" as const, href: "/padel" },
+    { key: "about" as const, href: "/about" },
+    { key: "contact" as const, href: "/contact" },
   ];
 
   return (
@@ -36,7 +33,7 @@ export async function Header() {
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
           <Button asChild size="sm" className="hidden sm:inline-flex">
-            <Link href="/">{t("book_cta")}</Link>
+            <Link href="/book">{t("book_cta")}</Link>
           </Button>
         </div>
       </div>

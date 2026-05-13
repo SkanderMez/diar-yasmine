@@ -122,3 +122,98 @@ export async function findReservationByCode(code: string) {
 export type ReservationDetail = NonNullable<
   Awaited<ReturnType<typeof findReservationByCode>>
 >;
+
+/**
+ * Listing query for the public site (/chalets, /bungalows). Returns
+ * active properties of the requested type plus their first 3 photos
+ * for the card. Sorted by name.
+ */
+export async function listPublicProperties(
+  type: "CHALET" | "BUNGALOW",
+  options: {
+    minCapacity?: number;
+    hasPrivatePool?: boolean;
+    seaView?: boolean;
+    beachfront?: boolean;
+  } = {},
+) {
+  return prisma.property.findMany({
+    where: {
+      deletedAt: null,
+      status: "ACTIVE",
+      type,
+      ...(options.minCapacity
+        ? { capacity: { gte: options.minCapacity } }
+        : {}),
+      ...(typeof options.hasPrivatePool === "boolean"
+        ? { hasPrivatePool: options.hasPrivatePool }
+        : {}),
+      ...(typeof options.seaView === "boolean"
+        ? { seaView: options.seaView }
+        : {}),
+      ...(typeof options.beachfront === "boolean"
+        ? { beachfront: options.beachfront }
+        : {}),
+    },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      type: true,
+      capacity: true,
+      bedrooms: true,
+      bathrooms: true,
+      basePrice: true,
+      cleaningFee: true,
+      hasPrivatePool: true,
+      seaView: true,
+      beachfront: true,
+      descriptionFr: true,
+      photos: {
+        orderBy: { order: "asc" },
+        take: 3,
+        select: { url: true, alt: true },
+      },
+    },
+    orderBy: { name: "asc" },
+  });
+}
+
+export type PublicPropertyCard = Awaited<
+  ReturnType<typeof listPublicProperties>
+>[number];
+
+/**
+ * Full property profile for the public detail page. Returns null if the
+ * property is missing, soft-deleted, or inactive.
+ */
+export async function findPublicProperty(slug: string) {
+  const property = await prisma.property.findUnique({
+    where: { slug },
+    include: {
+      photos: { orderBy: { order: "asc" } },
+      amenities: {
+        include: {
+          amenity: {
+            select: {
+              slug: true,
+              labelFr: true,
+              labelEn: true,
+              labelAr: true,
+              icon: true,
+              category: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!property || property.deletedAt || property.status !== "ACTIVE") {
+    return null;
+  }
+  return property;
+}
+
+export type PublicPropertyDetail = NonNullable<
+  Awaited<ReturnType<typeof findPublicProperty>>
+>;

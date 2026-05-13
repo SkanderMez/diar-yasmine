@@ -45,6 +45,27 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   ),
+  openGraph: {
+    type: "website",
+    siteName: "Diar Yasmine",
+    images: [{ url: "/brand/og-default.svg", width: 1200, height: 630 }],
+    locale: "fr_FR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/brand/og-default.svg"],
+  },
+  alternates: {
+    canonical: "/",
+    languages: {
+      fr: "/fr",
+      en: "/en",
+      ar: "/ar",
+    },
+  },
+  icons: {
+    icon: [{ url: "/brand/favicon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export function generateStaticParams() {

@@ -64,6 +64,23 @@ async function requireStaff(): Promise<{ id: string; role: MutatingRole }> {
   return { id: session.user.id, role: session.user.role as MutatingRole };
 }
 
+/**
+ * Resolve the staff user id for createReservation: DIRECT_WEB (public
+ * funnel) is allowed anonymously and falls through to a logged-in staff
+ * member if there happens to be one; every other source requires a
+ * MUTATING staff role. Returns null for anonymous public bookings.
+ */
+async function resolveStaffForReservation(
+  source: CreateReservationInput["source"],
+): Promise<string | null> {
+  if (source === "DIRECT_WEB") {
+    const session = await auth();
+    return session?.user?.id ?? null;
+  }
+  const staff = await requireStaff();
+  return staff.id;
+}
+
 function initialStatusForSource(
   source: CreateReservationInput["source"],
 ): "PENDING" | "CONFIRMED" {
@@ -74,7 +91,8 @@ function initialStatusForSource(
 
 export async function createReservation(input: unknown) {
   const parsed = createReservationSchema.parse(input);
-  const staff = await requireStaff();
+  // DIRECT_WEB allows anonymous (public funnel); all other sources require staff.
+  const staffId = await resolveStaffForReservation(parsed.source);
 
   const checkIn = parseLocalDate(parsed.checkInDate);
   const checkOut = parseLocalDate(parsed.checkOutDate);
@@ -194,12 +212,18 @@ export async function createReservation(input: unknown) {
         guestId = newGuest.id;
         await writeAudit(
           {
-            userId: staff.id,
+            userId: staffId,
             action: "guest.created",
             entity: "Guest",
             entityId: newGuest.id,
             diff: {
-              after: { phone: parsed.guest.phone, source: "quick_book" },
+              after: {
+                phone: parsed.guest.phone,
+                source:
+                  parsed.source === "DIRECT_WEB"
+                    ? "public_funnel"
+                    : "quick_book",
+              },
             },
           },
           tx,
@@ -212,7 +236,7 @@ export async function createReservation(input: unknown) {
         code,
         propertyId: property.id,
         guestId,
-        createdById: staff.id,
+        createdById: staffId,
         checkIn,
         checkOut,
         nights: breakdown.nights,
@@ -244,7 +268,7 @@ export async function createReservation(input: unknown) {
           method: parsed.payment.method,
           status: "SUCCEEDED",
           reference: parsed.payment.reference,
-          receivedById: staff.id,
+          receivedById: staffId,
         },
       });
       await tx.reservation.update({
@@ -253,7 +277,7 @@ export async function createReservation(input: unknown) {
       });
       await writeAudit(
         {
-          userId: staff.id,
+          userId: staffId,
           action: "payment.received",
           entity: "Payment",
           entityId: payment.id,
@@ -271,7 +295,7 @@ export async function createReservation(input: unknown) {
 
     await writeAudit(
       {
-        userId: staff.id,
+        userId: staffId,
         action: "reservation.created",
         entity: "Reservation",
         entityId: reservation.id,

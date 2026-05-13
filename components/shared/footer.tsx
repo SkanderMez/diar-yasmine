@@ -8,15 +8,16 @@ export async function Footer() {
   const tNav = await getTranslations("nav");
 
   const whatsapp = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
-  const email = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contact@diaryasmine.tn";
+  const email =
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contact@diaryasmine.tn";
   const year = new Date().getFullYear();
 
   const navItems = [
-    { key: "chalets" as const, href: "/" },
-    { key: "bungalows" as const, href: "/" },
-    { key: "padel" as const, href: "/" },
-    { key: "about" as const, href: "/" },
-    { key: "contact" as const, href: "/" },
+    { key: "chalets" as const, href: "/chalets" },
+    { key: "bungalows" as const, href: "/bungalows" },
+    { key: "padel" as const, href: "/padel" },
+    { key: "about" as const, href: "/about" },
+    { key: "contact" as const, href: "/contact" },
   ];
 
   return (
@@ -25,7 +26,9 @@ export async function Footer() {
         <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-2 space-y-4">
             <Logo />
-            <p className="max-w-md text-sm text-muted-foreground">{t("tagline")}</p>
+            <p className="max-w-md text-sm text-muted-foreground">
+              {t("tagline")}
+            </p>
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="size-4" />
               {t("address_line")}
