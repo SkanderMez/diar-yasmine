@@ -118,10 +118,10 @@ model User {
   hashedPassword String
   role           UserRole  @default(VIEWER)
   image          String?
-  lastLoginAt    DateTime?
+  lastLoginAt    DateTime? @db.Timestamptz(3)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
   createdReservations Reservation[] @relation("CreatedBy")
   receivedPayments    Payment[]     @relation("ReceivedBy")
@@ -149,14 +149,14 @@ model Guest {
   // Auth fields — all null until the guest creates an account.
   // The upgrade flow uses OTP SMS on the registered phone (see CLAUDE.md).
   hashedPassword   String?
-  emailVerifiedAt  DateTime?
-  phoneVerifiedAt  DateTime?
-  accountCreatedAt DateTime?
-  lastLoginAt      DateTime?
+  emailVerifiedAt  DateTime? @db.Timestamptz(3)
+  phoneVerifiedAt  DateTime? @db.Timestamptz(3)
+  accountCreatedAt DateTime? @db.Timestamptz(3)
+  lastLoginAt      DateTime? @db.Timestamptz(3)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
 
   reservations Reservation[]
 
@@ -193,9 +193,9 @@ model Property {
   cleaningFee Int @default(0) // millimes
   minStay     Int @default(1) // nights
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
 
   photos       Photo[]
   amenities    PropertyAmenity[]
@@ -214,7 +214,7 @@ model Photo {
   alt        String?
   order      Int           @default(0)
   category   PhotoCategory @default(GENERAL)
-  createdAt  DateTime      @default(now())
+  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
 
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
@@ -271,7 +271,7 @@ model PriceRule {
   weekendPrice Int? // millimes
   weekMinStay  Int?
 
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   season   Season?  @relation(fields: [seasonId], references: [id], onDelete: SetNull)
@@ -291,8 +291,8 @@ model Reservation {
   guestId     String
   createdById String?
 
-  checkIn  DateTime
-  checkOut DateTime
+  checkIn  DateTime @db.Timestamptz(3)
+  checkOut DateTime @db.Timestamptz(3)
   nights   Int
   adults   Int
   children Int      @default(0)
@@ -317,9 +317,9 @@ model Reservation {
   internalNotes String?
   guestRequests String?
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
 
   property  Property  @relation(fields: [propertyId], references: [id])
   guest     Guest     @relation(fields: [guestId], references: [id])
@@ -344,7 +344,7 @@ model Payment {
   amount        Int // millimes
   method        PaymentMethod
   status        PaymentStatus @default(SUCCEEDED)
-  receivedAt    DateTime      @default(now())
+  receivedAt    DateTime      @default(now()) @db.Timestamptz(3)
   receivedById  String?
   reference     String? // Stripe payment intent id, OTA transaction ref, cash receipt #
   notes         String?
@@ -366,12 +366,12 @@ model ChannelSync {
   channel    ChannelType
   propertyId String
   url        String? // iCal feed URL
-  lastSyncAt DateTime?
+  lastSyncAt DateTime?         @db.Timestamptz(3)
   status     ChannelSyncStatus @default(IDLE)
   log        Json? // last sync error / stats
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
@@ -392,7 +392,7 @@ model AuditLog {
   diff      Json // { before: {...}, after: {...} } or { fields: [...] }
   ipAddress String?
   userAgent String?
-  timestamp DateTime @default(now())
+  timestamp DateTime @default(now()) @db.Timestamptz(3)
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -409,7 +409,7 @@ model Setting {
   key         String   @id // registry key, e.g. "tax.rate", "voucher.terms_fr"
   value       Json
   updatedById String?
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 
   updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
 }
