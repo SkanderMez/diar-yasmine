@@ -1,5 +1,3 @@
-Loaded Prisma config from prisma.config.ts.
-
 -- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
 
@@ -382,4 +380,3 @@ ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_userId_fkey" FOREIGN KEY ("userI
 
 -- AddForeignKey
 ALTER TABLE "Setting" ADD CONSTRAINT "Setting_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-

@@ -42,7 +42,9 @@ export default auth((request) => {
 
 export const config = {
   matcher: [
-    // Skip Next internals, Auth.js routes, static files, and brand assets.
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|brand/|.*\\..*).*)",
+    // Skip Next internals, ALL /api/* routes, static files, brand assets.
+    // API routes are global (no locale prefix) — wrapping them with the
+    // next-intl middleware would force a 307 to /fr/api/*.
+    "/((?!api/|_next/static|_next/image|favicon.ico|brand/|.*\\..*).*)",
   ],
 };

@@ -1,7 +1,15 @@
 import { PrismaClient, PropertyType } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL is required to seed the database.");
+}
+
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString }),
+});
 
 const CHALETS = [
   "Albatros",
@@ -15,8 +23,8 @@ const CHALETS = [
   "Océan",
 ] as const;
 
-// 7 confirmed bungalow names from the brief + 5 placeholders to be
-// replaced by the client (TODO in CLAUDE.md).
+// 9 confirmed bungalow names (7 from brief + Rose + Valeria from
+// assets folder) + 3 placeholders still pending in CLAUDE.md TODOs.
 const BUNGALOWS = [
   "Amber",
   "Bougainvillier",
@@ -25,11 +33,11 @@ const BUNGALOWS = [
   "Néroli",
   "Orchidée",
   "Tulipe",
+  "Rose",
+  "Valeria",
   "TBD-1",
   "TBD-2",
   "TBD-3",
-  "TBD-4",
-  "TBD-5",
 ] as const;
 
 function slugify(name: string): string {
@@ -42,20 +50,104 @@ function slugify(name: string): string {
 }
 
 const AMENITIES = [
-  { slug: "wifi", labelFr: "Wi-Fi gratuit", labelEn: "Free Wi-Fi", icon: "wifi", category: "tech" },
-  { slug: "air-conditioning", labelFr: "Climatisation", labelEn: "Air conditioning", icon: "wind", category: "comfort" },
-  { slug: "private-pool", labelFr: "Piscine privée", labelEn: "Private pool", icon: "waves", category: "outdoor" },
-  { slug: "sea-view", labelFr: "Vue sur la mer", labelEn: "Sea view", icon: "eye", category: "outdoor" },
-  { slug: "beachfront", labelFr: "Pieds dans l'eau", labelEn: "Beachfront", icon: "umbrella", category: "outdoor" },
-  { slug: "kitchen", labelFr: "Cuisine équipée", labelEn: "Equipped kitchen", icon: "utensils", category: "indoor" },
-  { slug: "bbq", labelFr: "Barbecue", labelEn: "BBQ", icon: "flame", category: "outdoor" },
-  { slug: "parking", labelFr: "Parking privé", labelEn: "Private parking", icon: "car", category: "service" },
-  { slug: "washing-machine", labelFr: "Lave-linge", labelEn: "Washing machine", icon: "shirt", category: "indoor" },
-  { slug: "dishwasher", labelFr: "Lave-vaisselle", labelEn: "Dishwasher", icon: "utensils-crossed", category: "indoor" },
-  { slug: "garden", labelFr: "Jardin", labelEn: "Garden", icon: "leaf", category: "outdoor" },
-  { slug: "terrace", labelFr: "Terrasse", labelEn: "Terrace", icon: "sun", category: "outdoor" },
-  { slug: "linens-towels", labelFr: "Draps et serviettes fournis", labelEn: "Linens and towels provided", icon: "bed", category: "service" },
-  { slug: "cleaning", labelFr: "Service de ménage", labelEn: "Cleaning service", icon: "sparkles", category: "service" },
+  {
+    slug: "wifi",
+    labelFr: "Wi-Fi gratuit",
+    labelEn: "Free Wi-Fi",
+    icon: "wifi",
+    category: "tech",
+  },
+  {
+    slug: "air-conditioning",
+    labelFr: "Climatisation",
+    labelEn: "Air conditioning",
+    icon: "wind",
+    category: "comfort",
+  },
+  {
+    slug: "private-pool",
+    labelFr: "Piscine privée",
+    labelEn: "Private pool",
+    icon: "waves",
+    category: "outdoor",
+  },
+  {
+    slug: "sea-view",
+    labelFr: "Vue sur la mer",
+    labelEn: "Sea view",
+    icon: "eye",
+    category: "outdoor",
+  },
+  {
+    slug: "beachfront",
+    labelFr: "Pieds dans l'eau",
+    labelEn: "Beachfront",
+    icon: "umbrella",
+    category: "outdoor",
+  },
+  {
+    slug: "kitchen",
+    labelFr: "Cuisine équipée",
+    labelEn: "Equipped kitchen",
+    icon: "utensils",
+    category: "indoor",
+  },
+  {
+    slug: "bbq",
+    labelFr: "Barbecue",
+    labelEn: "BBQ",
+    icon: "flame",
+    category: "outdoor",
+  },
+  {
+    slug: "parking",
+    labelFr: "Parking privé",
+    labelEn: "Private parking",
+    icon: "car",
+    category: "service",
+  },
+  {
+    slug: "washing-machine",
+    labelFr: "Lave-linge",
+    labelEn: "Washing machine",
+    icon: "shirt",
+    category: "indoor",
+  },
+  {
+    slug: "dishwasher",
+    labelFr: "Lave-vaisselle",
+    labelEn: "Dishwasher",
+    icon: "utensils-crossed",
+    category: "indoor",
+  },
+  {
+    slug: "garden",
+    labelFr: "Jardin",
+    labelEn: "Garden",
+    icon: "leaf",
+    category: "outdoor",
+  },
+  {
+    slug: "terrace",
+    labelFr: "Terrasse",
+    labelEn: "Terrace",
+    icon: "sun",
+    category: "outdoor",
+  },
+  {
+    slug: "linens-towels",
+    labelFr: "Draps et serviettes fournis",
+    labelEn: "Linens and towels provided",
+    icon: "bed",
+    category: "service",
+  },
+  {
+    slug: "cleaning",
+    labelFr: "Service de ménage",
+    labelEn: "Cleaning service",
+    icon: "sparkles",
+    category: "service",
+  },
 ];
 
 async function main() {
@@ -67,7 +159,12 @@ async function main() {
   for (const a of AMENITIES) {
     await prisma.amenity.upsert({
       where: { slug: a.slug },
-      update: { labelFr: a.labelFr, labelEn: a.labelEn, icon: a.icon, category: a.category },
+      update: {
+        labelFr: a.labelFr,
+        labelEn: a.labelEn,
+        icon: a.icon,
+        category: a.category,
+      },
       create: a,
     });
   }
@@ -128,7 +225,9 @@ async function main() {
       },
     });
   }
-  console.log(`  ✓ ${BUNGALOWS.length} bungalows (5 placeholders pending real names)`);
+  console.log(
+    `  ✓ ${BUNGALOWS.length} bungalows (3 placeholders pending real names)`,
+  );
 
   // ---------------------------------------------------------------
   // Default season — Haute été (July & August)
@@ -163,7 +262,9 @@ async function main() {
       role: "ADMIN",
     },
   });
-  console.log(`  ✓ Admin user: ${adminEmail} (rotate the password in production!)`);
+  console.log(
+    `  ✓ Admin user: ${adminEmail} (rotate the password in production!)`,
+  );
 
   // ---------------------------------------------------------------
   // Default settings — registry-validated keys only
@@ -171,8 +272,9 @@ async function main() {
   await prisma.setting.upsert({
     where: { key: "tax.rate" },
     update: {},
-    // 0 = no tax until configured via /admin/settings (registry validates 0..1).
-    create: { key: "tax.rate", value: 0 },
+    // Tunisian VAT — confirmed at 19% by the client. Stored as a decimal
+    // in [0,1] per registry schema. Adjustable later via /admin/settings.
+    create: { key: "tax.rate", value: 0.19 },
   });
   await prisma.setting.upsert({
     where: { key: "currency.code" },
@@ -184,7 +286,9 @@ async function main() {
     update: {},
     create: { key: "timezone", value: "Africa/Tunis" },
   });
-  console.log("  ✓ Default settings (tax.rate=0, currency.code=TND, timezone=Africa/Tunis)");
+  console.log(
+    "  ✓ Default settings (tax.rate=0.19, currency.code=TND, timezone=Africa/Tunis)",
+  );
 
   console.log("✅ Seed complete.");
 }
