@@ -73,3 +73,52 @@ export async function listReservationsForCalendar(start: Date, end: Date) {
 export type CalendarReservation = Awaited<
   ReturnType<typeof listReservationsForCalendar>
 >[number];
+
+/**
+ * Full reservation view used by /admin/reservations/[code].
+ *
+ * Returns null on miss (caller renders notFound()). Pulls guest, property,
+ * the full payment history, and the last 20 audit-log rows so the page
+ * stays a single network round-trip.
+ */
+export async function findReservationByCode(code: string) {
+  const reservation = await prisma.reservation.findUnique({
+    where: { code },
+    include: {
+      guest: true,
+      property: {
+        select: { id: true, name: true, slug: true, type: true },
+      },
+      createdBy: { select: { id: true, name: true, email: true } },
+      payments: {
+        orderBy: { receivedAt: "desc" },
+        include: {
+          receivedBy: { select: { id: true, name: true } },
+        },
+      },
+    },
+  });
+  if (!reservation || reservation.deletedAt) return null;
+
+  const audit = await prisma.auditLog.findMany({
+    where: {
+      OR: [
+        { entity: "Reservation", entityId: reservation.id },
+        // Surface payment audits attached to this reservation's payments.
+        {
+          entity: "Payment",
+          entityId: { in: reservation.payments.map((p) => p.id) },
+        },
+      ],
+    },
+    orderBy: { timestamp: "desc" },
+    take: 20,
+    include: { user: { select: { id: true, name: true, email: true } } },
+  });
+
+  return { reservation, audit };
+}
+
+export type ReservationDetail = NonNullable<
+  Awaited<ReturnType<typeof findReservationByCode>>
+>;
