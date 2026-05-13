@@ -1,0 +1,415 @@
+// Prisma schema for Diar Yasmine.
+//
+// Design notes:
+// - Money is stored as Int in millimes (1 TND = 1000 millimes). Never Float.
+// - Dates are timestamptz UTC. Business logic uses Africa/Tunis (see /lib/date.ts).
+// - Soft delete via `deletedAt` on Property, Reservation, Guest.
+// - Double-booking prevention: EXCLUDE GIST constraint on Reservation
+//   (added in a follow-up SQL migration, see prisma/migrations/*).
+// - Settings live in a single Setting table with a typed registry
+//   (see /lib/settings/registry.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  RECEPTION
+  VIEWER
+}
+
+enum PropertyType {
+  CHALET
+  BUNGALOW
+}
+
+enum PropertyStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum PhotoCategory {
+  GENERAL
+  EXTERIOR
+  INTERIOR
+  BEDROOM
+  BATHROOM
+  KITCHEN
+  POOL
+  VIEW
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
+
+enum ReservationSource {
+  DIRECT_WEB
+  WALK_IN
+  PHONE
+  PARTNER
+  BOOKING
+  AIRBNB
+  EXPEDIA
+  OTHER
+}
+
+enum DiscountType {
+  NONE
+  PERCENT
+  FIXED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  STRIPE
+  FLOUCI
+  KONNECT
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum ChannelType {
+  BOOKING
+  AIRBNB
+  EXPEDIA
+  OTHER
+}
+
+enum ChannelSyncStatus {
+  IDLE
+  SYNCING
+  ERROR
+}
+
+// =============================================================================
+// STAFF (User) — internal users only, never linked to reservations directly
+// =============================================================================
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String
+  hashedPassword String
+  role           UserRole  @default(VIEWER)
+  image          String?
+  lastLoginAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdReservations Reservation[] @relation("CreatedBy")
+  receivedPayments    Payment[]     @relation("ReceivedBy")
+  auditLogs           AuditLog[]
+  settingsUpdated     Setting[]
+
+  @@index([role])
+}
+
+// =============================================================================
+// CUSTOMERS (Guest) — passive by default, upgradeable to a full account
+// =============================================================================
+
+model Guest {
+  id         String  @id @default(cuid())
+  firstName  String
+  lastName   String
+  phone      String  @unique
+  email      String? @unique
+  whatsapp   String?
+  country    String?
+  idDocument String?
+  notes      String?
+
+  // Auth fields — all null until the guest creates an account.
+  // The upgrade flow uses OTP SMS on the registered phone (see CLAUDE.md).
+  hashedPassword   String?
+  emailVerifiedAt  DateTime?
+  phoneVerifiedAt  DateTime?
+  accountCreatedAt DateTime?
+  lastLoginAt      DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  reservations Reservation[]
+
+  @@index([phone])
+  @@index([email])
+  @@index([accountCreatedAt])
+  @@index([deletedAt])
+}
+
+// =============================================================================
+// PROPERTIES — 9 chalets + 12 bungalows
+// =============================================================================
+
+model Property {
+  id     String         @id @default(cuid())
+  slug   String         @unique
+  name   String
+  type   PropertyType
+  status PropertyStatus @default(ACTIVE)
+
+  capacity       Int // max guests
+  bedrooms       Int
+  bathrooms      Int
+  hasPrivatePool Boolean @default(false)
+  seaView        Boolean @default(false)
+  beachfront     Boolean @default(false)
+  sizeM2         Int?
+
+  descriptionFr String  @db.Text
+  descriptionEn String? @db.Text
+  descriptionAr String? @db.Text
+
+  basePrice   Int @default(0) // millimes per night
+  cleaningFee Int @default(0) // millimes
+  minStay     Int @default(1) // nights
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  photos       Photo[]
+  amenities    PropertyAmenity[]
+  priceRules   PriceRule[]
+  reservations Reservation[]
+  channelSyncs ChannelSync[]
+
+  @@index([type, status])
+  @@index([deletedAt])
+}
+
+model Photo {
+  id         String        @id @default(cuid())
+  propertyId String
+  url        String
+  alt        String?
+  order      Int           @default(0)
+  category   PhotoCategory @default(GENERAL)
+  createdAt  DateTime      @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, order])
+}
+
+model Amenity {
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  labelFr  String
+  labelEn  String?
+  labelAr  String?
+  icon     String? // lucide icon name
+  category String?
+
+  properties PropertyAmenity[]
+}
+
+model PropertyAmenity {
+  propertyId String
+  amenityId  String
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  amenity  Amenity  @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  @@id([propertyId, amenityId])
+  @@index([amenityId])
+}
+
+// =============================================================================
+// PRICING — seasons and per-property price rules
+// =============================================================================
+
+model Season {
+  id              String   @id @default(cuid())
+  name            String
+  startDate       DateTime @db.Date
+  endDate         DateTime @db.Date
+  // Basis points: 1000 = 1.000x, 1500 = 1.500x. Stored as Int to avoid Float arithmetic.
+  priceMultiplier Int      @default(1000)
+
+  priceRules PriceRule[]
+
+  @@index([startDate, endDate])
+}
+
+model PriceRule {
+  id           String   @id @default(cuid())
+  propertyId   String
+  seasonId     String?
+  dateFrom     DateTime @db.Date
+  dateTo       DateTime @db.Date
+  nightlyPrice Int // millimes
+  weekendPrice Int? // millimes
+  weekMinStay  Int?
+
+  createdAt DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  season   Season?  @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+
+  @@index([propertyId, dateFrom, dateTo])
+}
+
+// =============================================================================
+// RESERVATIONS — core entity
+// =============================================================================
+
+model Reservation {
+  id   String @id @default(cuid())
+  code String @unique // human-readable: DY-YYYYMMDD-XXXX
+
+  propertyId  String
+  guestId     String
+  createdById String?
+
+  checkIn  DateTime
+  checkOut DateTime
+  nights   Int
+  adults   Int
+  children Int      @default(0)
+
+  // Pricing breakdown (all millimes Int)
+  basePrice      Int // sum of nightly prices before discount/extras
+  discountType   DiscountType @default(NONE)
+  discountValue  Int          @default(0) // raw % (0-100) or millimes
+  discountAmount Int          @default(0) // computed millimes amount
+  extras         Json         @default("[]") // [{ label, amount, category? }]
+  extrasTotal    Int          @default(0)
+  subtotal       Int // basePrice + extrasTotal - discountAmount
+  tax            Int          @default(0)
+  total          Int // subtotal + tax
+  paidAmount     Int          @default(0)
+
+  status     ReservationStatus @default(PENDING)
+  source     ReservationSource
+  externalId String? // OTA reservation ID (Booking, Airbnb, Expedia)
+
+  voucherUrl    String?
+  internalNotes String?
+  guestRequests String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  property  Property  @relation(fields: [propertyId], references: [id])
+  guest     Guest     @relation(fields: [guestId], references: [id])
+  createdBy User?     @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  payments  Payment[]
+
+  @@index([propertyId, checkIn, checkOut])
+  @@index([guestId])
+  @@index([status, source])
+  @@index([deletedAt])
+  @@index([externalId])
+  @@index([checkIn])
+}
+
+// =============================================================================
+// PAYMENTS — multiple per reservation (deposit + balance, refunds, etc.)
+// =============================================================================
+
+model Payment {
+  id            String        @id @default(cuid())
+  reservationId String
+  amount        Int // millimes
+  method        PaymentMethod
+  status        PaymentStatus @default(SUCCEEDED)
+  receivedAt    DateTime      @default(now())
+  receivedById  String?
+  reference     String? // Stripe payment intent id, OTA transaction ref, cash receipt #
+  notes         String?
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  receivedBy  User?       @relation("ReceivedBy", fields: [receivedById], references: [id], onDelete: SetNull)
+
+  @@index([reservationId, status])
+  @@index([receivedAt])
+  @@index([method])
+}
+
+// =============================================================================
+// CHANNEL MANAGER — iCal feeds per property × channel
+// =============================================================================
+
+model ChannelSync {
+  id         String            @id @default(cuid())
+  channel    ChannelType
+  propertyId String
+  url        String? // iCal feed URL
+  lastSyncAt DateTime?
+  status     ChannelSyncStatus @default(IDLE)
+  log        Json? // last sync error / stats
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([channel, propertyId])
+  @@index([status])
+}
+
+// =============================================================================
+// AUDIT LOG — required on every mutation of Reservation/Payment/Property/Guest
+// =============================================================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String // "reservation.created", "payment.received", "guest.merged", ...
+  entity    String // "Reservation", "Payment", "Guest", "Property", "Setting"
+  entityId  String
+  diff      Json // { before: {...}, after: {...} } or { fields: [...] }
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entity, entityId])
+  @@index([userId, timestamp])
+  @@index([timestamp])
+}
+
+// =============================================================================
+// SETTINGS — typed key/value store (registry-validated in /lib/settings)
+// =============================================================================
+
+model Setting {
+  key         String   @id // registry key, e.g. "tax.rate", "voucher.terms_fr"
+  value       Json
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+}
