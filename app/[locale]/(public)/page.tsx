@@ -60,7 +60,7 @@ export default async function HomePage({
         <div className="container-x relative pb-16 pt-44 sm:pb-24 lg:pb-32">
           <div className="space-y-5 text-ivory">
             <FadeIn>
-              <p className="font-script text-3xl text-honey sm:text-4xl">
+              <p className="font-script text-3xl text-clay-light sm:text-4xl">
                 Tazarka Plage · Cap Bon
               </p>
             </FadeIn>
@@ -89,7 +89,10 @@ export default async function HomePage({
             <span className="flex items-center gap-2">
               <span className="flex">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="size-3.5 fill-honey text-honey" />
+                  <Star
+                    key={i}
+                    className="size-3.5 fill-clay-light text-clay-light"
+                  />
                 ))}
               </span>
               4.9 / 5 · 137 séjours en 2025
@@ -253,26 +256,25 @@ export default async function HomePage({
       <ExperiencesGrid />
 
       {/* PADEL */}
-      <section className="relative overflow-hidden bg-charcoal">
-        <div className="absolute inset-0 opacity-30">
-          {padelBg && (
-            <Image
-              src={padelBg.url}
-              alt=""
-              fill
-              sizes="100vw"
-              className="object-cover"
-            />
-          )}
-        </div>
+      <section className="relative overflow-hidden bg-deep">
+        {padelBg && (
+          <Image
+            src={padelBg.url}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover opacity-25"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-deep via-deep/70 to-deep/40" />
         <div className="container-x relative section-y text-ivory">
           <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
             <FadeIn className="lg:col-span-7">
-              <p className="eyebrow text-honey">À deux pas</p>
-              <h2 className="mt-3 heading-display text-4xl sm:text-6xl">
+              <p className="font-script text-3xl text-clay-light">À deux pas</p>
+              <h2 className="mt-3 heading-display text-4xl text-ivory sm:text-6xl">
                 Deux courts de padel
               </h2>
-              <p className="mt-5 max-w-xl text-ivory/80">
+              <p className="mt-5 max-w-xl text-ivory/85">
                 Padels Méditerranée — courts professionnels accessibles à pied
                 depuis Diar Yasmine, vitrés sur les quatre côtés, éclairés pour
                 les sessions du soir.
@@ -283,7 +285,7 @@ export default async function HomePage({
                 asChild
                 shape="pill"
                 size="lg"
-                className="gap-2 bg-honey text-charcoal hover:bg-honey-light"
+                className="gap-2 bg-ivory text-charcoal hover:bg-white"
               >
                 <Link href="/padel">
                   Découvrir le padel <ArrowRight className="size-4" />
@@ -304,7 +306,7 @@ export default async function HomePage({
       <PressStrip />
 
       {/* FINAL CTA */}
-      <section className="bg-honey/15">
+      <section className="bg-bone">
         <div className="container-x section-y text-center">
           <FadeIn className="mx-auto max-w-3xl space-y-6">
             <p className="font-script text-3xl text-clay sm:text-4xl">
@@ -377,7 +379,7 @@ function UniverseCard({
         <p className="max-w-sm text-sm text-ivory/85 sm:text-base">
           {description}
         </p>
-        <span className="mt-1 inline-flex items-center gap-2 text-sm font-medium text-honey">
+        <span className="mt-1 inline-flex items-center gap-2 text-sm font-medium text-clay-light">
           Découvrir
           <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
         </span>

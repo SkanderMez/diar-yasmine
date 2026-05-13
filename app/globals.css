@@ -17,15 +17,18 @@
  */
 
 :root {
-  /* ===== Brand raw values — refined palette ===== */
-  --brand-deep: #002a32; /* primary deep — for hero text on photos */
-  --brand-teal: #00505f; /* primary — slightly deeper than before */
-  --brand-turquoise: #1d98a8; /* primary-light */
-  --brand-honey: #c9a57f; /* warm honey accent */
-  --brand-honey-light: #e8d4b8;
-  --brand-clay: #b66a52; /* terracotta — for rare emphasis */
-  --brand-sand: #f0e9dd; /* sand background, warmer */
-  --brand-bone: #f6f1e7; /* mid layer between sand & ivory */
+  /* ===== Brand raw values — sober coastal palette ===== */
+  --brand-deep: #002a32; /* primary deep — footer / dark sections */
+  --brand-teal: #00505f; /* primary — CTAs, eyebrows on light */
+  --brand-turquoise: #1d98a8; /* primary-light — rare accents */
+  --brand-clay: #b66a52; /* terracotta — warm script + dark-bg eyebrows */
+  --brand-clay-light: #d9a08d;
+  /* Legacy honey aliases now point to clay so the old API keeps working
+     without any gold tones bleeding through. */
+  --brand-honey: var(--brand-clay);
+  --brand-honey-light: var(--brand-clay-light);
+  --brand-sand: #efe7d8; /* sand background, neutral warm */
+  --brand-bone: #f5f0e6; /* mid layer between sand & ivory */
   --brand-ivory: #fbf8f1; /* lightest layer */
   --brand-charcoal: #14181a; /* deeper charcoal for headings */
   --brand-graphite: #2c3438;
@@ -57,7 +60,7 @@
   --destructive-foreground: var(--brand-ivory);
   --border: var(--brand-border);
   --input: var(--brand-input);
-  --ring: var(--brand-honey);
+  --ring: var(--brand-teal);
   --radius: 0.75rem;
 
   /* ===== Reservation source palette (admin calendar blocks) ===== */
@@ -99,6 +102,7 @@
   --color-honey: var(--brand-honey);
   --color-honey-light: var(--brand-honey-light);
   --color-clay: var(--brand-clay);
+  --color-clay-light: var(--brand-clay-light);
   --color-sand: var(--brand-sand);
   --color-bone: var(--brand-bone);
   --color-ivory: var(--brand-ivory);
@@ -144,7 +148,7 @@
   --shadow-xl: 0 32px 80px rgba(20, 24, 26, 0.14);
   --shadow-2xl: 0 50px 120px rgba(20, 24, 26, 0.18);
   --shadow-inner: inset 0 1px 2px rgba(20, 24, 26, 0.04);
-  --shadow-glow: 0 0 0 6px rgba(201, 165, 127, 0.18);
+  --shadow-glow: 0 0 0 6px rgba(0, 80, 95, 0.18);
 }
 
 @layer base {
@@ -178,7 +182,7 @@
     font-weight: 400;
     letter-spacing: -0.025em;
     line-height: 1.02;
-    color: var(--foreground);
+    color: inherit;
   }
 
   h1 {
@@ -186,7 +190,7 @@
   }
 
   ::selection {
-    background-color: var(--brand-honey);
+    background-color: var(--brand-clay-light);
     color: var(--brand-charcoal);
   }
 
@@ -205,9 +209,13 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--brand-honey);
+    outline: 2px solid var(--brand-teal);
     outline-offset: 3px;
     border-radius: 4px;
+  }
+
+  body {
+    color: var(--foreground);
   }
 
   a {
@@ -247,7 +255,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.32em;
-    color: var(--brand-honey);
+    color: var(--brand-clay);
   }
 
   /* Honey gradient text — for special emphasis */

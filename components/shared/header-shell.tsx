@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Menu, Phone, Search, X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -21,13 +22,27 @@ interface HeaderShellProps {
 }
 
 /**
- * Editorial header — translucent top band on hero, becomes solid ivory
- * with subtle shadow after the scroll threshold. Includes a compact
- * search trigger (Airbnb pattern) that visually anchors the bar.
+ * Editorial header. Transparent over the home + listing heroes (full-bleed
+ * photo pages), solid ivory everywhere else. Detects route via pathname so
+ * non-hero pages don't get the dark-text-on-light visual glitch.
  */
 export function HeaderShell({ items, cta, contactPhone }: HeaderShellProps) {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const hasHero = useMemo(() => {
+    if (!pathname) return false;
+    const p = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, "") || "/";
+    return (
+      p === "/" ||
+      p === "/chalets" ||
+      p === "/bungalows" ||
+      /^\/(chalets|bungalows)\/[^/]+$/.test(p)
+    );
+  }, [pathname]);
+
+  const transparent = hasHero && !scrolled;
 
   useEffect(() => {
     function onScroll() {
@@ -49,42 +64,47 @@ export function HeaderShell({ items, cta, contactPhone }: HeaderShellProps) {
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-all duration-500",
-        scrolled ? "bg-ivory/90 backdrop-blur-md shadow-sm" : "bg-transparent",
+        transparent
+          ? "bg-transparent"
+          : "border-b border-border bg-ivory/92 backdrop-blur-md",
       )}
     >
-      {/* Top thin band — contact, hides on scroll */}
-      <div
-        className={cn(
-          "overflow-hidden transition-all duration-500",
-          scrolled ? "max-h-0 opacity-0" : "max-h-10 opacity-100",
-          !scrolled && "border-b border-white/15",
-        )}
-      >
-        <div className="container-x flex items-center justify-between py-2 text-[11px] tracking-wide text-white/75">
-          <span className="hidden sm:inline">Tazarka — Cap Bon, Tunisie</span>
-          {contactPhone && (
-            <a
-              href={`tel:${contactPhone.replace(/[^0-9+]/g, "")}`}
-              className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
-            >
-              <Phone className="size-3" />
-              {contactPhone}
-            </a>
+      {/* Top thin band — visible only on hero pages until scroll */}
+      {hasHero && (
+        <div
+          className={cn(
+            "overflow-hidden transition-all duration-500",
+            transparent
+              ? "max-h-10 opacity-100 border-b border-white/15"
+              : "max-h-0 opacity-0",
           )}
+        >
+          <div className="container-x flex items-center justify-between py-2 text-[11px] tracking-wide text-white/75">
+            <span className="hidden sm:inline">Tazarka — Cap Bon, Tunisie</span>
+            {contactPhone && (
+              <a
+                href={`tel:${contactPhone.replace(/[^0-9+]/g, "")}`}
+                className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
+              >
+                <Phone className="size-3" />
+                {contactPhone}
+              </a>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div
         className={cn(
           "container-x flex items-center justify-between gap-6 transition-all duration-500",
-          scrolled ? "h-16" : "h-20",
+          transparent ? "h-20" : "h-16",
         )}
       >
         <div className="flex items-center gap-10">
           <Logo
             variant="wordmark"
-            heightClass={scrolled ? "h-5" : "h-6"}
-            className={cn(!scrolled && "[&_img]:brightness-0 [&_img]:invert")}
+            heightClass={transparent ? "h-6" : "h-5"}
+            className={cn(transparent && "[&_img]:brightness-0 [&_img]:invert")}
           />
           <nav className="hidden items-center gap-8 text-sm md:flex">
             {items.map((item) => (
@@ -93,9 +113,9 @@ export function HeaderShell({ items, cta, contactPhone }: HeaderShellProps) {
                 href={item.href}
                 className={cn(
                   "transition-colors",
-                  scrolled
-                    ? "text-foreground/80 hover:text-foreground"
-                    : "text-white/85 hover:text-white",
+                  transparent
+                    ? "text-white/85 hover:text-white"
+                    : "text-foreground/80 hover:text-foreground",
                 )}
               >
                 {item.label}
@@ -109,23 +129,23 @@ export function HeaderShell({ items, cta, contactPhone }: HeaderShellProps) {
             type="button"
             className={cn(
               "hidden items-center gap-2 rounded-full border px-4 py-2 text-xs transition-all md:inline-flex",
-              scrolled
-                ? "border-foreground/15 text-foreground/80 hover:border-foreground/30 hover:bg-secondary"
-                : "border-white/30 text-white/90 hover:border-white/50 hover:bg-white/10",
+              transparent
+                ? "border-white/30 text-white/90 hover:border-white/50 hover:bg-white/10"
+                : "border-foreground/15 text-foreground/80 hover:border-foreground/30 hover:bg-secondary",
             )}
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
             <Search className="size-3.5" />
             <span>Rechercher</span>
           </button>
-          <LanguageSwitcher dark={!scrolled} />
+          <LanguageSwitcher dark={transparent} />
           <Button
             asChild
             size="sm"
             shape="pill"
             className={cn(
               "hidden sm:inline-flex",
-              !scrolled && "bg-white text-charcoal hover:bg-white/90",
+              transparent && "bg-white text-charcoal hover:bg-white/90",
             )}
           >
             <Link href="/book">{cta}</Link>
@@ -135,9 +155,9 @@ export function HeaderShell({ items, cta, contactPhone }: HeaderShellProps) {
             onClick={() => setMobileOpen((v) => !v)}
             className={cn(
               "inline-flex size-10 items-center justify-center rounded-full transition-colors md:hidden",
-              scrolled
-                ? "text-foreground/80 hover:bg-secondary"
-                : "text-white/90 hover:bg-white/10",
+              transparent
+                ? "text-white/90 hover:bg-white/10"
+                : "text-foreground/80 hover:bg-secondary",
             )}
             aria-label={mobileOpen ? "Fermer" : "Menu"}
           >

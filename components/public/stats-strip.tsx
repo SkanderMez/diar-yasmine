@@ -22,7 +22,7 @@ export function StatsStrip() {
             delay={i === 0 ? undefined : `delay-${i * 75}`}
             className="flex flex-col items-center gap-2 px-4 py-10 text-center sm:py-12"
           >
-            <span className="text-honey">{s.icon}</span>
+            <span className="text-clay">{s.icon}</span>
             <span className="heading-display text-5xl text-foreground sm:text-6xl">
               {s.value}
             </span>

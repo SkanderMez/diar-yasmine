@@ -38,12 +38,12 @@ export function Testimonials() {
       <div className="container-x section-y-lg">
         <div className="mx-auto max-w-4xl">
           <FadeIn className="space-y-10 text-center">
-            <Quote className="mx-auto size-8 text-honey" />
+            <Quote className="mx-auto size-8 text-clay-light" />
             <p className="font-heading text-3xl leading-[1.3] sm:text-5xl">
               {t.quote}
             </p>
             <div className="space-y-2">
-              <p className="text-sm uppercase tracking-[0.3em] text-honey">
+              <p className="text-sm uppercase tracking-[0.3em] text-clay-light">
                 {t.name}
               </p>
               <p className="text-sm text-ivory/60">{t.origin}</p>
@@ -54,7 +54,7 @@ export function Testimonials() {
             <button
               type="button"
               onClick={() => go(-1)}
-              className="inline-flex size-12 items-center justify-center rounded-full border border-white/20 text-ivory transition-colors hover:border-honey hover:text-honey"
+              className="inline-flex size-12 items-center justify-center rounded-full border border-white/20 text-ivory transition-colors hover:border-clay-light hover:text-clay-light"
               aria-label="Témoignage précédent"
             >
               <ChevronLeft className="size-5" />
@@ -67,7 +67,7 @@ export function Testimonials() {
                   onClick={() => setIndex(i)}
                   className={`h-1.5 rounded-full transition-all ${
                     i === index
-                      ? "w-10 bg-honey"
+                      ? "w-10 bg-clay-light"
                       : "w-1.5 bg-white/30 hover:bg-white/60"
                   }`}
                   aria-label={`Aller au témoignage ${i + 1}`}
@@ -77,7 +77,7 @@ export function Testimonials() {
             <button
               type="button"
               onClick={() => go(1)}
-              className="inline-flex size-12 items-center justify-center rounded-full border border-white/20 text-ivory transition-colors hover:border-honey hover:text-honey"
+              className="inline-flex size-12 items-center justify-center rounded-full border border-white/20 text-ivory transition-colors hover:border-clay-light hover:text-clay-light"
               aria-label="Témoignage suivant"
             >
               <ChevronRight className="size-5" />

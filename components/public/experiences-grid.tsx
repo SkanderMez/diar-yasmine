@@ -66,13 +66,13 @@ export function ExperiencesGrid() {
             <FadeIn
               key={x.title}
               delay={i < 3 ? undefined : "delay-100"}
-              className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-7 transition-all hover:-translate-y-1 hover:border-honey/30 hover:shadow-lg"
+              className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-7 transition-all hover:-translate-y-1 hover:border-clay/30 hover:shadow-lg"
             >
               <div className="flex items-start justify-between">
-                <span className="inline-flex size-12 items-center justify-center rounded-full bg-honey/15 text-honey">
+                <span className="inline-flex size-12 items-center justify-center rounded-full bg-clay/15 text-clay">
                   {x.icon}
                 </span>
-                <ArrowUpRight className="size-4 text-muted-foreground transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-honey" />
+                <ArrowUpRight className="size-4 text-muted-foreground transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-clay" />
               </div>
               <div className="space-y-2">
                 <h3 className="font-heading text-2xl text-foreground">
