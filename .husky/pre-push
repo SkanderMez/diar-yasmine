@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Run typecheck before pushing. Unit tests run in CI; local pre-push
+# stays fast (typecheck only) so the loop doesn't slow down.
+npm run typecheck
