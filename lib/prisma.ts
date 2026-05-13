@@ -22,7 +22,6 @@ const BUILD_TIME_PLACEHOLDER =
 const connectionString = process.env.DATABASE_URL ?? BUILD_TIME_PLACEHOLDER;
 
 declare global {
-  // eslint-disable-next-line no-var
   var __prisma: PrismaClient | undefined;
 }
 
@@ -30,10 +29,7 @@ function makeClient(): PrismaClient {
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({
     adapter,
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["error", "warn"]
-        : ["error"],
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 }
 

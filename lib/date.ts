@@ -7,7 +7,7 @@ import {
   startOfDay,
 } from "date-fns";
 import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
-import { APP_TIMEZONE, type SupportedLocale } from "./constants";
+import { APP_TIMEZONE } from "./constants";
 
 /**
  * Date helpers — Africa/Tunis.
@@ -40,12 +40,11 @@ export function parseLocalDate(ymd: string): Date {
 /**
  * Format a UTC Date in the Africa/Tunis timezone with a date-fns
  * pattern. Default pattern is the locale's long date.
+ *
+ * Locale-aware month/day names land in Phase 2 when we wire date-fns
+ * locale packs; for now the timezone conversion is what matters.
  */
-export function formatLocalized(
-  date: Date,
-  pattern = "PPP",
-  _locale: SupportedLocale = "fr",
-): string {
+export function formatLocalized(date: Date, pattern = "PPP"): string {
   return formatInTimeZone(date, TZ, pattern);
 }
 
