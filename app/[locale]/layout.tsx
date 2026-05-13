@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { Caveat, Fraunces, Inter, Tajawal } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import { routing } from "@/i18n/routing";
 import { RTL_LOCALES } from "@/lib/constants";
 import "../globals.css";
@@ -74,6 +75,7 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

@@ -1,5 +1,5 @@
 import type { Session } from "next-auth";
-import { LogOut, Search, Zap } from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 import { signOut } from "@/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
+import { QuickBookTriggerButton } from "@/components/admin/quick-book/trigger-button";
 
 type TopbarProps = {
   user: NonNullable<Session["user"]>;
@@ -19,17 +20,16 @@ export function Topbar({ user }: TopbarProps) {
   return (
     <header className="flex h-16 items-center justify-between gap-4 border-b border-border bg-background px-4 sm:px-6">
       <div className="flex flex-1 items-center gap-2">
-        <Button variant="outline" size="sm" disabled className="gap-2 text-muted-foreground">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled
+          className="gap-2 text-muted-foreground"
+        >
           <Search className="size-4" />
           <span className="hidden sm:inline">Recherche…</span>
         </Button>
-        <Button size="sm" disabled className="gap-2">
-          <Zap className="size-4" />
-          <span className="hidden md:inline">Quick Book</span>
-          <kbd className="ml-1 hidden rounded bg-primary-foreground/10 px-1.5 py-0.5 text-[10px] font-medium md:inline">
-            ⌘K
-          </kbd>
-        </Button>
+        <QuickBookTriggerButton />
       </div>
 
       <div className="flex items-center gap-2">
@@ -37,14 +37,19 @@ export function Topbar({ user }: TopbarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2">
-              <span className="hidden sm:inline text-sm">{user.name ?? user.email}</span>
+              <span className="hidden sm:inline text-sm">
+                {user.name ?? user.email}
+              </span>
               <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium uppercase">
                 {user.role.toLowerCase()}
               </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+            <DropdownMenuItem
+              disabled
+              className="text-xs text-muted-foreground"
+            >
               {user.email}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -54,7 +59,10 @@ export function Topbar({ user }: TopbarProps) {
                 await signOut({ redirectTo: "/signin" });
               }}
             >
-              <button type="submit" className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent">
+              <button
+                type="submit"
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+              >
                 <LogOut className="size-4" />
                 Déconnexion
               </button>
