@@ -2,28 +2,28 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Calendar, Users } from "lucide-react";
-import { differenceInCalendarDays, format } from "date-fns";
+import { differenceInCalendarDays } from "date-fns";
+import { Minus, Plus, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatTND } from "@/lib/money";
+import { DateRangePicker } from "./date-range-picker";
 
 interface BookingWidgetProps {
   propertyId: string;
   propertySlug: string;
-  basePrice: number; // millimes
+  basePrice: number;
   cleaningFee: number;
   capacity: number;
   taxRate: number;
 }
 
 /**
- * Sticky booking widget on the property detail page.
+ * Sticky booking widget on the property detail page. Airbnb-style:
+ * compact pricing header, custom date range picker, guests popover,
+ * itemised price breakdown, single primary CTA.
  *
- * Phase 3 MVP: collects dates + guests and forwards to /book?... where
- * the funnel computes the real tariff (with seasonal multiplier) and
- * collects guest details + payment.
+ * Tax + cleaning fee shown here are an *estimate* — the real total is
+ * computed at the funnel step (seasonal multipliers, promo codes).
  */
 export function BookingWidget({
   propertyId,
@@ -34,11 +34,11 @@ export function BookingWidget({
   taxRate,
 }: BookingWidgetProps) {
   const router = useRouter();
-  const today = format(new Date(), "yyyy-MM-dd");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
+  const [guestsOpen, setGuestsOpen] = useState(false);
 
   const nights = useMemo(() => {
     if (!checkIn || !checkOut) return null;
@@ -49,18 +49,25 @@ export function BookingWidget({
     return n > 0 ? n : null;
   }, [checkIn, checkOut]);
 
-  const totalEstimate = useMemo(() => {
+  const totals = useMemo(() => {
     if (!nights) return null;
-    const base = basePrice * nights;
-    const subtotal = base + cleaningFee;
+    const stay = basePrice * nights;
+    const subtotal = stay + cleaningFee;
     const tax = Math.round(subtotal * taxRate);
-    return subtotal + tax;
+    return { stay, subtotal, tax, total: subtotal + tax };
   }, [nights, basePrice, cleaningFee, taxRate]);
 
-  const tooManyGuests = adults + children > capacity;
+  const guestsTotal = adults + children;
+  const tooMany = guestsTotal > capacity;
+
+  /** Cards-style TND display (no millimes decimals if integer). */
+  const tnd = basePrice / 1000;
+  const priceLabel = Number.isInteger(tnd)
+    ? tnd.toLocaleString("fr-FR")
+    : tnd.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
 
   function submit() {
-    if (!checkIn || !checkOut || !nights || tooManyGuests) return;
+    if (!checkIn || !checkOut || !nights || tooMany) return;
     const params = new URLSearchParams({
       propertyId,
       propertySlug,
@@ -73,118 +80,188 @@ export function BookingWidget({
   }
 
   return (
-    <aside className="sticky top-24 space-y-4 rounded-2xl border border-border bg-card p-6 shadow-md">
-      <div className="flex items-baseline justify-between">
-        <span className="text-2xl font-medium text-primary">
-          {formatTND(basePrice)}
-        </span>
-        <span className="text-xs text-muted-foreground">par nuit</span>
+    <aside className="sticky top-24 rounded-3xl border border-border bg-card p-6 shadow-xl">
+      <div className="mb-5 flex items-baseline justify-between">
+        <div className="flex items-baseline gap-1.5">
+          <span className="font-heading text-2xl text-foreground">
+            {priceLabel} TND
+          </span>
+          <span className="text-sm text-muted-foreground">/ nuit</span>
+        </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="ci" className="text-xs">
-              Arrivée
-            </Label>
-            <Input
-              id="ci"
-              type="date"
-              min={today}
-              value={checkIn}
-              onChange={(e) => setCheckIn(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="co" className="text-xs">
-              Départ
-            </Label>
-            <Input
-              id="co"
-              type="date"
-              min={checkIn || today}
-              value={checkOut}
-              onChange={(e) => setCheckOut(e.target.value)}
-            />
-          </div>
+      {/* Date + guests stacked inside a single bordered group, Airbnb style */}
+      <div className="overflow-hidden rounded-2xl border border-border">
+        <div className="border-b border-border">
+          <DateRangePicker
+            checkIn={checkIn}
+            checkOut={checkOut}
+            onChange={(r) => {
+              setCheckIn(r.checkIn);
+              setCheckOut(r.checkOut);
+            }}
+          />
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="ad" className="text-xs">
-              Adultes
-            </Label>
-            <Input
-              id="ad"
-              type="number"
-              min={1}
-              max={capacity}
+
+        {/* Guests trigger */}
+        <button
+          type="button"
+          onClick={() => setGuestsOpen((v) => !v)}
+          className="flex w-full items-center justify-between gap-2 px-5 py-3 text-left transition-colors hover:bg-bone"
+        >
+          <div className="flex flex-col">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              <Users className="mr-1 inline size-3" /> Voyageurs
+            </span>
+            <span className="text-sm font-medium text-foreground">
+              {adults + children} voyageur{adults + children > 1 ? "s" : ""}
+              {children > 0 &&
+                `, dont ${children} enfant${children > 1 ? "s" : ""}`}
+            </span>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {guestsOpen ? "Fermer" : "Modifier"}
+          </span>
+        </button>
+        {guestsOpen && (
+          <div className="space-y-3 border-t border-border bg-bone/30 px-5 py-4">
+            <CounterRow
+              label="Adultes"
+              hint="13 ans et plus"
               value={adults}
-              onChange={(e) => setAdults(Number(e.target.value))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="ch" className="text-xs">
-              Enfants
-            </Label>
-            <Input
-              id="ch"
-              type="number"
-              min={0}
+              min={1}
+              onChange={setAdults}
               max={capacity}
+            />
+            <CounterRow
+              label="Enfants"
+              hint="2 à 12 ans"
               value={children}
-              onChange={(e) => setChildren(Number(e.target.value))}
+              min={0}
+              onChange={setChildren}
+              max={capacity}
             />
           </div>
-        </div>
+        )}
       </div>
 
-      {nights ? (
-        <dl className="space-y-1 border-t border-border pt-3 text-sm">
-          <div className="flex items-baseline justify-between">
-            <dt>
-              {nights} × {formatTND(basePrice)}
-            </dt>
-            <dd>{formatTND(basePrice * nights)}</dd>
-          </div>
-          {cleaningFee > 0 && (
-            <div className="flex items-baseline justify-between text-muted-foreground">
-              <dt>Frais de ménage</dt>
-              <dd>{formatTND(cleaningFee)}</dd>
-            </div>
-          )}
-          {totalEstimate !== null && (
-            <div className="flex items-baseline justify-between border-t border-border pt-2 font-medium">
-              <dt>Total estimé</dt>
-              <dd className="text-primary">{formatTND(totalEstimate)}</dd>
-            </div>
-          )}
-        </dl>
-      ) : (
-        <p className="text-xs text-muted-foreground">
-          <Calendar className="mr-1 inline size-3.5" /> Choisissez vos dates
-          pour voir le tarif.
-        </p>
-      )}
-
-      {tooManyGuests && (
-        <p className="text-xs text-destructive">
-          <Users className="mr-1 inline size-3.5" /> Capacité maximum :{" "}
-          {capacity} personnes.
+      {tooMany && (
+        <p className="mt-3 text-xs text-destructive">
+          Capacité maximum : {capacity} personnes.
         </p>
       )}
 
       <Button
         type="button"
-        className="w-full"
+        size="lg"
+        shape="pill"
+        className="mt-4 w-full bg-primary text-primary-foreground hover:bg-deep"
         onClick={submit}
-        disabled={!nights || tooManyGuests}
+        disabled={!nights || tooMany}
       >
-        Continuer la réservation
+        {nights ? "Réserver" : "Vérifier la disponibilité"}
       </Button>
 
-      <p className="text-[10px] text-muted-foreground">
-        Tarif définitif calculé à l&apos;étape suivante (saison, TVA, remises).
+      <p className="mt-3 text-center text-xs text-muted-foreground">
+        Vous ne serez pas débité maintenant
       </p>
+
+      {totals && (
+        <dl className="mt-5 space-y-2 border-t border-border pt-5 text-sm">
+          <Row
+            label={`${priceLabel} TND × ${nights} nuit${nights! > 1 ? "s" : ""}`}
+            value={formatTND(totals.stay)}
+          />
+          {cleaningFee > 0 && (
+            <Row label="Frais de ménage" value={formatTND(cleaningFee)} />
+          )}
+          <Row
+            label={`Taxes (${Math.round(taxRate * 100)}%)`}
+            value={formatTND(totals.tax)}
+            muted
+          />
+          <div className="flex items-baseline justify-between border-t border-border pt-3 font-medium">
+            <dt>Total estimé</dt>
+            <dd className="font-heading text-lg text-foreground">
+              {formatTND(totals.total)}
+            </dd>
+          </div>
+        </dl>
+      )}
+
+      <div className="mt-5 flex items-start gap-2 rounded-2xl bg-bone/60 p-3 text-xs text-muted-foreground">
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+        <span>
+          Réservation directe — pas d&apos;intermédiaire ni de commission
+          cachée. Annulation gratuite jusqu&apos;à 14 jours avant
+          l&apos;arrivée.
+        </span>
+      </div>
     </aside>
+  );
+}
+
+function Row({
+  label,
+  value,
+  muted,
+}: {
+  label: string;
+  value: string;
+  muted?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-baseline justify-between ${muted ? "text-muted-foreground" : "text-foreground"}`}
+    >
+      <dt className="underline-offset-4 decoration-dotted">{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+
+function CounterRow({
+  label,
+  hint,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={value <= min}
+          className="inline-flex size-8 items-center justify-center rounded-full border border-border bg-card text-foreground hover:border-foreground disabled:cursor-not-allowed disabled:opacity-30"
+          aria-label="Moins"
+        >
+          <Minus className="size-3.5" />
+        </button>
+        <span className="w-5 text-center text-sm font-medium">{value}</span>
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(max, value + 1))}
+          disabled={value >= max}
+          className="inline-flex size-8 items-center justify-center rounded-full border border-border bg-card text-foreground hover:border-foreground disabled:cursor-not-allowed disabled:opacity-30"
+          aria-label="Plus"
+        >
+          <Plus className="size-3.5" />
+        </button>
+      </div>
+    </div>
   );
 }

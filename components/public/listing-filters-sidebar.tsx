@@ -4,6 +4,8 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Eye,
+  Minus,
+  Plus,
   RotateCcw,
   SlidersHorizontal,
   Users,
@@ -15,9 +17,14 @@ import { cn } from "@/lib/utils";
 import { DateRangePicker } from "./date-range-picker";
 
 /**
- * Vertical left-sidebar filter panel for the listing pages. On desktop it
- * sticks below the hero; on mobile it lives inside a drawer toggled by a
- * floating button.
+ * Vertical filter panel for the listing pages.
+ *
+ * Desktop: sticky in a 280-px sidebar.
+ * Mobile: hidden until the floating "Filtres" button opens a bottom drawer.
+ *
+ * Visual goals: looks like a section of the page, not a busy form. Each
+ * filter row uses a single visual rhythm (line under each block) instead
+ * of multiple stacked cards.
  */
 export function ListingFiltersSidebar({
   resultCount,
@@ -66,8 +73,6 @@ export function ListingFiltersSidebar({
     startTransition(() => router.push("?", { scroll: false }));
   }
 
-  /* Re-apply when toggles, dates, or guests change. Numeric inputs apply on
-   * blur to avoid spamming the router on every keystroke. */
   useEffect(() => {
     apply();
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
@@ -84,8 +89,8 @@ export function ListingFiltersSidebar({
     (maxPrice ? 1 : 0);
 
   const Body = (
-    <div className="space-y-7">
-      <Section title="Dates">
+    <div className="divide-y divide-border">
+      <Row label="Dates">
         <DateRangePicker
           checkIn={checkIn}
           checkOut={checkOut}
@@ -93,124 +98,81 @@ export function ListingFiltersSidebar({
             setCheckIn(r.checkIn);
             setCheckOut(r.checkOut);
           }}
-          labels={{
-            checkIn: "Arrivée",
-            checkOut: "Départ",
-            pickDates: "Choisir les dates",
-            clear: "Effacer",
-            nights: (n) => `${n} nuit${n > 1 ? "s" : ""}`,
-          }}
         />
-      </Section>
+      </Row>
 
-      <Section title="Voyageurs">
-        <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3">
-          <div className="flex items-center gap-2 text-sm text-foreground">
+      <Row label="Voyageurs">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2.5 text-sm text-foreground">
             <Users className="size-4 text-muted-foreground" />
             <span>
               {guests} voyageur{guests > 1 ? "s" : ""}
             </span>
-          </div>
+          </span>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setGuests((g) => Math.max(1, g - 1))}
-              className="inline-flex size-7 items-center justify-center rounded-full border border-border text-foreground hover:bg-bone disabled:opacity-30"
+            <Counter
+              dir="dec"
               disabled={guests <= 1}
-              aria-label="Moins"
-            >
-              −
-            </button>
-            <button
-              type="button"
-              onClick={() => setGuests((g) => Math.min(20, g + 1))}
-              className="inline-flex size-7 items-center justify-center rounded-full border border-border text-foreground hover:bg-bone disabled:opacity-30"
+              onClick={() => setGuests((g) => Math.max(1, g - 1))}
+            />
+            <Counter
+              dir="inc"
               disabled={guests >= 20}
-              aria-label="Plus"
-            >
-              +
-            </button>
+              onClick={() => setGuests((g) => Math.min(20, g + 1))}
+            />
           </div>
         </div>
-      </Section>
+      </Row>
 
-      <Section title="Caractéristiques">
-        <div className="grid gap-2">
-          <Toggle
+      <Row label="Caractéristiques">
+        <div className="space-y-2">
+          <Amenity
             active={beachfront}
             onClick={() => setBeachfront((v) => !v)}
             icon={<Waves className="size-4" />}
             label="Pieds dans l'eau"
           />
-          <Toggle
+          <Amenity
             active={pool}
             onClick={() => setPool((v) => !v)}
             icon={<Waves className="size-4" />}
             label="Piscine privée"
           />
-          <Toggle
+          <Amenity
             active={seaView}
             onClick={() => setSeaView((v) => !v)}
             icon={<Eye className="size-4" />}
             label="Vue mer"
           />
         </div>
-      </Section>
+      </Row>
 
-      <Section title="Prix par nuit">
-        <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3">
-          <input
-            type="number"
-            min={0}
+      <Row label="Prix par nuit">
+        <div className="grid grid-cols-2 gap-2">
+          <PriceInput
             placeholder="Min"
             value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
+            onChange={setMinPrice}
             onBlur={apply}
-            className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
           />
-          <span className="text-muted-foreground">—</span>
-          <input
-            type="number"
-            min={0}
+          <PriceInput
             placeholder="Max"
             value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
+            onChange={setMaxPrice}
             onBlur={apply}
-            className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
           />
-          <span className="text-xs text-muted-foreground">TND</span>
         </div>
-      </Section>
-
-      <div className="flex items-center justify-between border-t border-border pt-5">
-        <p className="text-xs text-muted-foreground">
-          {pending
-            ? "Mise à jour…"
-            : `${resultCount} résultat${resultCount === 1 ? "" : "s"}`}
-        </p>
-        {activeCount > 0 && (
-          <Button
-            variant="ghost"
-            shape="pill"
-            size="sm"
-            onClick={reset}
-            className="gap-1.5 text-muted-foreground"
-          >
-            <RotateCcw className="size-3" />
-            Réinitialiser
-          </Button>
-        )}
-      </div>
+      </Row>
     </div>
   );
 
   return (
     <>
-      {/* Mobile trigger — floating button just below the hero */}
+      {/* Mobile trigger */}
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="sticky top-20 z-30 mx-4 -mb-4 inline-flex items-center gap-2 self-start rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-md lg:hidden"
+        className="sticky top-20 z-30 mb-4 inline-flex items-center gap-2 self-start rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-md lg:hidden"
       >
         <SlidersHorizontal className="size-4" />
         Filtres
@@ -221,17 +183,31 @@ export function ListingFiltersSidebar({
         )}
       </button>
 
-      {/* Desktop sidebar */}
-      <aside className="sticky top-24 hidden h-fit max-h-[calc(100vh-7rem)] overflow-y-auto rounded-3xl border border-border bg-card p-6 shadow-sm lg:block">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="font-heading text-xl text-foreground">Filtres</h2>
-          {activeCount > 0 && (
-            <span className="inline-flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
-              {activeCount}
-            </span>
-          )}
+      {/* Desktop */}
+      <aside className="sticky top-24 hidden h-fit max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-border bg-card lg:block">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <h2 className="font-heading text-lg text-foreground">Filtres</h2>
+          <div className="flex items-center gap-2">
+            {activeCount > 0 && (
+              <button
+                type="button"
+                onClick={reset}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <RotateCcw className="size-3" />
+                Effacer ({activeCount})
+              </button>
+            )}
+          </div>
         </div>
-        {Body}
+        <div className="px-6">{Body}</div>
+        <div className="border-t border-border px-6 py-4">
+          <p className="text-xs text-muted-foreground">
+            {pending
+              ? "Mise à jour…"
+              : `${resultCount} résultat${resultCount === 1 ? "" : "s"}`}
+          </p>
+        </div>
       </aside>
 
       {/* Mobile drawer */}
@@ -241,8 +217,8 @@ export function ListingFiltersSidebar({
             className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[90vh] overflow-y-auto rounded-t-3xl bg-card p-6 shadow-2xl">
-            <div className="mb-5 flex items-center justify-between">
+          <div className="absolute inset-x-0 bottom-0 max-h-[90vh] overflow-y-auto rounded-t-3xl bg-card shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border px-6 py-4">
               <h2 className="font-heading text-xl text-foreground">Filtres</h2>
               <button
                 type="button"
@@ -253,15 +229,21 @@ export function ListingFiltersSidebar({
                 <X className="size-5" />
               </button>
             </div>
-            {Body}
-            <div className="mt-6">
+            <div className="px-6 pb-6">{Body}</div>
+            <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border bg-card px-6 py-4">
+              <button
+                type="button"
+                onClick={reset}
+                className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
+              >
+                Tout effacer
+              </button>
               <Button
                 shape="pill"
-                size="lg"
-                className="w-full"
                 onClick={() => setMobileOpen(false)}
+                className="px-6"
               >
-                Voir les {resultCount} résultat{resultCount === 1 ? "" : "s"}
+                Voir {resultCount} résultat{resultCount === 1 ? "" : "s"}
               </Button>
             </div>
           </div>
@@ -271,24 +253,50 @@ export function ListingFiltersSidebar({
   );
 }
 
-function Section({
-  title,
+function Row({
+  label,
   children,
 }: {
-  title: string;
+  label: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-2.5">
-      <h3 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-        {title}
+    <div className="py-5">
+      <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+        {label}
       </h3>
       {children}
     </div>
   );
 }
 
-function Toggle({
+function Counter({
+  dir,
+  disabled,
+  onClick,
+}: {
+  dir: "inc" | "dec";
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="inline-flex size-8 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:border-foreground hover:bg-bone disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-card"
+      aria-label={dir === "inc" ? "Plus" : "Moins"}
+    >
+      {dir === "inc" ? (
+        <Plus className="size-3.5" />
+      ) : (
+        <Minus className="size-3.5" />
+      )}
+    </button>
+  );
+}
+
+function Amenity({
   active,
   onClick,
   icon,
@@ -304,43 +312,50 @@ function Toggle({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex items-center justify-between rounded-2xl border px-4 py-3 text-sm transition-all",
+        "flex w-full items-center gap-3 rounded-xl border px-3.5 py-2.5 text-sm transition-all",
         active
-          ? "border-primary bg-primary/5 text-foreground"
-          : "border-border bg-card text-foreground/80 hover:border-foreground/30",
+          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+          : "border-border bg-card text-foreground/85 hover:border-foreground/30 hover:bg-bone/50",
       )}
     >
-      <span className="flex items-center gap-2.5">
-        <span
-          className={cn(
-            "transition-colors",
-            active ? "text-primary" : "text-muted-foreground",
-          )}
-        >
-          {icon}
-        </span>
-        {label}
-      </span>
       <span
         className={cn(
-          "inline-flex size-4 items-center justify-center rounded-full border transition-all",
-          active
-            ? "border-primary bg-primary text-primary-foreground"
-            : "border-border bg-card",
+          "transition-colors",
+          active ? "text-primary-foreground" : "text-muted-foreground",
         )}
       >
-        {active && (
-          <svg
-            viewBox="0 0 12 12"
-            className="size-2.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          >
-            <path d="M2 6l2.5 2.5L10 3" strokeLinecap="round" />
-          </svg>
-        )}
+        {icon}
       </span>
+      <span>{label}</span>
     </button>
+  );
+}
+
+function PriceInput({
+  placeholder,
+  value,
+  onChange,
+  onBlur,
+}: {
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  onBlur: () => void;
+}) {
+  return (
+    <label className="block rounded-xl border border-border bg-card px-3 py-2 text-xs transition-colors focus-within:border-primary">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+        {placeholder} · TND
+      </span>
+      <input
+        type="number"
+        min={0}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
+        placeholder="0"
+        className="mt-0.5 w-full bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/40"
+      />
+    </label>
   );
 }

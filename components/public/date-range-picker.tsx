@@ -142,8 +142,18 @@ export function DateRangePicker({
             <Calendar className="mr-1 inline size-3" />
             {labels.checkIn}
           </span>
-          <span className="text-sm font-medium">
-            {inDate ? format(inDate, "d MMM yyyy", { locale: fr }) : "—"}
+          <span
+            className={cn(
+              "text-sm font-medium",
+              !inDate &&
+                (variant === "dark"
+                  ? "text-white/50"
+                  : "text-muted-foreground/70"),
+            )}
+          >
+            {inDate
+              ? format(inDate, "d MMM yyyy", { locale: fr })
+              : "Sélectionner"}
           </span>
         </button>
 
@@ -169,8 +179,18 @@ export function DateRangePicker({
             <Calendar className="mr-1 inline size-3" />
             {labels.checkOut}
           </span>
-          <span className="text-sm font-medium">
-            {outDate ? format(outDate, "d MMM yyyy", { locale: fr }) : "—"}
+          <span
+            className={cn(
+              "text-sm font-medium",
+              !outDate &&
+                (variant === "dark"
+                  ? "text-white/50"
+                  : "text-muted-foreground/70"),
+            )}
+          >
+            {outDate
+              ? format(outDate, "d MMM yyyy", { locale: fr })
+              : "Sélectionner"}
           </span>
         </button>
       </div>

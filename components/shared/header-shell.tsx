@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, Phone, Search, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,15 +18,19 @@ interface HeaderItem {
 interface HeaderShellProps {
   items: HeaderItem[];
   cta: string;
+  /** Kept for backwards-compat; not surfaced as a separate band anymore. */
   contactPhone?: string;
 }
 
 /**
- * Editorial header. Transparent over the home + listing heroes (full-bleed
- * photo pages), solid ivory everywhere else. Detects route via pathname so
- * non-hero pages don't get the dark-text-on-light visual glitch.
+ * Editorial header. Transparent only over true full-bleed photo heroes
+ * (home + listing index pages), solid everywhere else — including the
+ * property detail page, which presents a photo grid rather than a hero.
+ *
+ * The previous "top thin band" with contact info has been removed; the
+ * phone now lives in the contact page / footer to keep the header clean.
  */
-export function HeaderShell({ items, cta, contactPhone }: HeaderShellProps) {
+export function HeaderShell({ items, cta }: HeaderShellProps) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -34,12 +38,7 @@ export function HeaderShell({ items, cta, contactPhone }: HeaderShellProps) {
   const hasHero = useMemo(() => {
     if (!pathname) return false;
     const p = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, "") || "/";
-    return (
-      p === "/" ||
-      p === "/chalets" ||
-      p === "/bungalows" ||
-      /^\/(chalets|bungalows)\/[^/]+$/.test(p)
-    );
+    return p === "/" || p === "/chalets" || p === "/bungalows";
   }, [pathname]);
 
   const transparent = hasHero && !scrolled;
@@ -66,46 +65,31 @@ export function HeaderShell({ items, cta, contactPhone }: HeaderShellProps) {
         "fixed inset-x-0 top-0 z-50 transition-all duration-500",
         transparent
           ? "bg-transparent"
-          : "border-b border-border bg-ivory/92 backdrop-blur-md",
+          : "border-b border-border bg-ivory/95 backdrop-blur-md",
       )}
     >
-      {/* Top thin band — visible only on hero pages until scroll */}
-      {hasHero && (
-        <div
-          className={cn(
-            "overflow-hidden transition-all duration-500",
-            transparent
-              ? "max-h-10 opacity-100 border-b border-white/15"
-              : "max-h-0 opacity-0",
-          )}
-        >
-          <div className="container-x flex items-center justify-between py-2 text-[11px] tracking-wide text-white/75">
-            <span className="hidden sm:inline">Tazarka — Cap Bon, Tunisie</span>
-            {contactPhone && (
-              <a
-                href={`tel:${contactPhone.replace(/[^0-9+]/g, "")}`}
-                className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
-              >
-                <Phone className="size-3" />
-                {contactPhone}
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
       <div
         className={cn(
           "container-x flex items-center justify-between gap-6 transition-all duration-500",
-          transparent ? "h-20" : "h-16",
+          transparent ? "h-20" : "h-18",
         )}
       >
+        {/* Logo + nav */}
         <div className="flex items-center gap-10">
-          <Logo
-            variant="wordmark"
-            heightClass={transparent ? "h-6" : "h-5"}
-            className={cn(transparent && "[&_img]:brightness-0 [&_img]:invert")}
-          />
+          <div
+            className={cn(
+              "flex items-center gap-3",
+              transparent && "[&_img]:brightness-0 [&_img]:invert",
+            )}
+          >
+            <Logo variant="mark" heightClass={transparent ? "h-10" : "h-9"} />
+            <span className="hidden sm:block">
+              <Logo
+                variant="wordmark"
+                heightClass={transparent ? "h-4" : "h-[14px]"}
+              />
+            </span>
+          </div>
           <nav className="hidden items-center gap-8 text-sm md:flex">
             {items.map((item) => (
               <Link
@@ -124,20 +108,8 @@ export function HeaderShell({ items, cta, contactPhone }: HeaderShellProps) {
           </nav>
         </div>
 
+        {/* Right cluster */}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={cn(
-              "hidden items-center gap-2 rounded-full border px-4 py-2 text-xs transition-all md:inline-flex",
-              transparent
-                ? "border-white/30 text-white/90 hover:border-white/50 hover:bg-white/10"
-                : "border-foreground/15 text-foreground/80 hover:border-foreground/30 hover:bg-secondary",
-            )}
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          >
-            <Search className="size-3.5" />
-            <span>Rechercher</span>
-          </button>
           <LanguageSwitcher dark={transparent} />
           <Button
             asChild

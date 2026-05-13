@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Grid3X3,
+  Heart,
+  Share2,
+  X,
+} from "lucide-react";
 
 interface Photo {
   url: string;
@@ -16,80 +22,186 @@ interface PropertyGalleryProps {
 }
 
 /**
- * Lightbox-capable photo gallery. Hero photo on the left at 2/3 width;
- * 4 thumbnails on the right (in 2×2 grid). Click any photo to open the
- * full-screen lightbox with arrow navigation.
+ * Airbnb-style photo arrangement: one large image left (50%) + four
+ * smaller images right (2×2). A "Toutes les photos" button bottom-right
+ * opens the full-grid modal; clicking any photo opens the lightbox at
+ * that index. Mobile collapses to a single hero with the same button.
  */
 export function PropertyGallery({
   photos,
   propertyName,
 }: PropertyGalleryProps) {
-  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [open, setOpen] = useState<
+    { mode: "lightbox"; idx: number } | { mode: "grid" } | null
+  >(null);
 
   if (photos.length === 0) {
     return (
-      <div className="flex aspect-[16/10] items-center justify-center rounded-xl bg-sand text-sm text-muted-foreground">
+      <div className="flex aspect-[16/9] items-center justify-center rounded-3xl bg-bone text-sm text-muted-foreground">
         Photos à venir
       </div>
     );
   }
 
-  const [hero, ...rest] = photos;
-  const sideThumbs = rest.slice(0, 4);
+  const hero = photos[0]!;
+  const tiles = photos.slice(1, 5);
 
   return (
     <>
-      <div className="grid gap-2 sm:grid-cols-3 sm:gap-3">
-        <button
-          type="button"
-          onClick={() => setOpenIdx(0)}
-          className="relative col-span-2 aspect-[4/3] overflow-hidden rounded-xl bg-sand focus:outline-none focus:ring-2 focus:ring-ring/40"
-        >
-          {hero ? (
+      <div className="relative">
+        <div className="grid h-[60vh] max-h-[560px] min-h-[360px] grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-3xl">
+          {/* Hero — 2 cols × 2 rows */}
+          <button
+            type="button"
+            onClick={() => setOpen({ mode: "lightbox", idx: 0 })}
+            className="relative col-span-4 row-span-2 overflow-hidden bg-bone sm:col-span-2"
+          >
             <Image
               src={hero.url}
               alt={hero.alt ?? `${propertyName} — photo 1`}
               fill
-              sizes="(max-width: 768px) 100vw, 66vw"
+              sizes="(max-width: 640px) 100vw, 50vw"
               priority
               className="object-cover transition-transform duration-500 hover:scale-[1.02]"
             />
-          ) : null}
-        </button>
-        <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          {sideThumbs.map((p, i) => (
+          </button>
+          {/* Tiles */}
+          {tiles.map((p, i) => (
             <button
-              key={i}
+              key={p.url}
               type="button"
-              onClick={() => setOpenIdx(i + 1)}
-              className="relative aspect-square overflow-hidden rounded-xl bg-sand focus:outline-none focus:ring-2 focus:ring-ring/40"
+              onClick={() => setOpen({ mode: "lightbox", idx: i + 1 })}
+              className="relative hidden overflow-hidden bg-bone sm:block"
             >
               <Image
                 src={p.url}
                 alt={p.alt ?? `${propertyName} — photo ${i + 2}`}
                 fill
-                sizes="(max-width: 768px) 50vw, 17vw"
-                className="object-cover transition-transform duration-300 hover:scale-[1.04]"
+                sizes="25vw"
+                className="object-cover transition-transform duration-500 hover:scale-[1.04]"
               />
-              {i === 3 && photos.length > 5 ? (
-                <span className="absolute inset-0 flex items-center justify-center bg-charcoal/55 text-sm font-medium text-ivory">
-                  +{photos.length - 5}
-                </span>
-              ) : null}
+            </button>
+          ))}
+          {/* Fill empty tiles if photos < 5 with sand placeholders */}
+          {Array.from({ length: Math.max(0, 4 - tiles.length) }).map((_, i) => (
+            <div
+              key={`empty-${i}`}
+              className="hidden bg-bone sm:block"
+              aria-hidden
+            />
+          ))}
+        </div>
+
+        {/* Floating controls */}
+        <div className="absolute right-4 top-4 flex gap-2">
+          <PillButton icon={<Share2 className="size-3.5" />} label="Partager" />
+          <PillButton
+            icon={<Heart className="size-3.5" />}
+            label="Sauvegarder"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setOpen({ mode: "grid" })}
+          className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full border border-charcoal/15 bg-white px-4 py-2 text-sm font-medium text-foreground shadow-md transition-all hover:shadow-lg"
+        >
+          <Grid3X3 className="size-4" />
+          Voir les {photos.length} photos
+        </button>
+      </div>
+
+      {open?.mode === "lightbox" && (
+        <Lightbox
+          photos={photos}
+          startIdx={open.idx}
+          propertyName={propertyName}
+          onClose={() => setOpen(null)}
+        />
+      )}
+      {open?.mode === "grid" && (
+        <GridModal
+          photos={photos}
+          propertyName={propertyName}
+          onClose={() => setOpen(null)}
+          onPick={(idx) => setOpen({ mode: "lightbox", idx })}
+        />
+      )}
+    </>
+  );
+}
+
+function PillButton({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <button
+      type="button"
+      className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur transition-all hover:bg-white hover:shadow"
+    >
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+}
+
+function GridModal({
+  photos,
+  propertyName,
+  onClose,
+  onPick,
+}: {
+  photos: Photo[];
+  propertyName: string;
+  onClose: () => void;
+  onPick: (idx: number) => void;
+}) {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-ivory">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-ivory/95 px-6 py-4 backdrop-blur">
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-bone"
+          aria-label="Fermer"
+        >
+          <X className="size-5" />
+        </button>
+        <h2 className="font-heading text-lg text-foreground">{propertyName}</h2>
+        <div className="size-10" />
+      </div>
+      <div className="container-x py-10">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {photos.map((p, i) => (
+            <button
+              key={p.url}
+              type="button"
+              onClick={() => onPick(i)}
+              className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-bone"
+            >
+              <Image
+                src={p.url}
+                alt={p.alt ?? `${propertyName} — photo ${i + 1}`}
+                fill
+                sizes="(max-width: 640px) 100vw, 50vw"
+                className="object-cover transition-transform duration-500 hover:scale-[1.03]"
+              />
             </button>
           ))}
         </div>
       </div>
-
-      {openIdx !== null ? (
-        <Lightbox
-          photos={photos}
-          startIdx={openIdx}
-          propertyName={propertyName}
-          onClose={() => setOpenIdx(null)}
-        />
-      ) : null}
-    </>
+    </div>
   );
 }
 
@@ -107,44 +219,44 @@ function Lightbox({
   const [idx, setIdx] = useState(startIdx);
   const photo = photos[idx]!;
 
-  function prev() {
-    setIdx((i) => (i === 0 ? photos.length - 1 : i - 1));
-  }
-  function next() {
-    setIdx((i) => (i === photos.length - 1 ? 0 : i + 1));
-  }
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft")
+        setIdx((i) => (i === 0 ? photos.length - 1 : i - 1));
+      if (e.key === "ArrowRight")
+        setIdx((i) => (i === photos.length - 1 ? 0 : i + 1));
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onClose, photos.length]);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/95 p-4"
+      className="fixed inset-0 z-50 flex flex-col bg-charcoal"
       role="dialog"
       aria-modal="true"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose();
-        if (e.key === "ArrowLeft") prev();
-        if (e.key === "ArrowRight") next();
-      }}
-      tabIndex={-1}
     >
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onClose}
-        className="absolute right-4 top-4 text-ivory hover:bg-ivory/10"
-        aria-label="Fermer"
-      >
-        <X className="size-5" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={prev}
-        className="absolute left-4 text-ivory hover:bg-ivory/10"
-        aria-label="Précédent"
-      >
-        <ChevronLeft className="size-6" />
-      </Button>
-      <div className="relative aspect-video w-full max-w-5xl">
+      <div className="flex items-center justify-between px-6 py-4 text-ivory">
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex size-10 items-center justify-center rounded-full text-ivory transition-colors hover:bg-white/10"
+          aria-label="Fermer"
+        >
+          <X className="size-5" />
+        </button>
+        <span className="text-sm">
+          {idx + 1} / {photos.length}
+        </span>
+        <div className="size-10" />
+      </div>
+      <div className="relative flex-1">
         <Image
           src={photo.url}
           alt={photo.alt ?? `${propertyName} — photo ${idx + 1}`}
@@ -153,19 +265,23 @@ function Lightbox({
           className="object-contain"
           priority
         />
+        <button
+          type="button"
+          onClick={() => setIdx((i) => (i === 0 ? photos.length - 1 : i - 1))}
+          className="absolute left-4 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-charcoal shadow-lg transition-transform hover:scale-105"
+          aria-label="Précédent"
+        >
+          <ChevronLeft className="size-5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setIdx((i) => (i === photos.length - 1 ? 0 : i + 1))}
+          className="absolute right-4 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-charcoal shadow-lg transition-transform hover:scale-105"
+          aria-label="Suivant"
+        >
+          <ChevronRight className="size-5" />
+        </button>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={next}
-        className="absolute right-4 text-ivory hover:bg-ivory/10"
-        aria-label="Suivant"
-      >
-        <ChevronRight className="size-6" />
-      </Button>
-      <p className="absolute bottom-4 text-xs text-ivory/70">
-        {idx + 1} / {photos.length}
-      </p>
     </div>
   );
 }
