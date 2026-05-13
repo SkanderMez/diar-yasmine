@@ -175,7 +175,15 @@ relying on training data.
   `headers()` — they're all Promises in Next 16.
 
 ## Current phase
-**Phase 1 — Fondations (in progress)**
+**Phases 1-7 complete.** Production-ready before the design swap.
+Functional surfaces shipped:
+- Phase 1 — Fondations
+- Phase 2 — PMS core (Quick Book ⌘K, calendar, reservation detail, voucher PDF)
+- Phase 3 — Public site (home, listings, fiches, tunnel)
+- Phase 4 — Caisse (admin paiements + CSV + refunds) + Properties CRUD admin
+- Phase 5 — Channel manager (iCal export, admin /channels, CRON sync)
+- Phase 6 — Rapports & analytics (KPIs, charts, CSV)
+- Phase 7 — /verify/[code] public, Playwright smoke tests, Vercel deploy guide
 
 ## Recent architectural decisions
 - 2026-05-13 — Use Setting key/value JSON table with a typed
@@ -203,14 +211,20 @@ relying on training data.
 (Append new decisions here as ADRs land in /docs/adr/*.)
 
 ## Active TODOs (project-level, not code-level)
-- [ ] Confirmer les 3 derniers noms de bungalows (9 confirmés : Amber,
-      Bougainvillier, Géranium, Lavande, Néroli, Orchidée, Tulipe,
-      Rose, Valeria. 3 placeholders restants : TBD-1..3)
-- [ ] Obtenir credentials Booking API
-- [ ] Configurer domaine mail.diaryasmine.tn (SPF/DKIM/DMARC)
-- [ ] Setup Stripe + Flouci/Konnect en TND
+- [ ] Confirmer les 3 derniers noms de bungalows (TBD-1..3) — créer via
+      /admin/properties → New
+- [ ] Brancher Flouci (FLOUCI_APP_TOKEN + FLOUCI_APP_SECRET) — adapter
+      en place, lève PaymentGatewayUnavailableError jusque-là
+- [ ] Brancher Resend pour l'envoi email + voucher attaché (variable
+      RESEND_API_KEY)
+- [ ] Brancher Twilio pour SMS / WhatsApp (TWILIO_*)
+- [ ] Configurer domaine mail.diaryasmine.tn (SPF/DKIM/DMARC) — docs
+      dans /docs/deploy.md
+- [ ] Provisionner Vercel project — guide pas-à-pas dans /docs/deploy.md
+- [ ] Pousser les vraies URLs iCal de Booking/Airbnb/Expedia depuis
+      /admin/channels
+- [ ] Lancer la passe de redesign (Figma → /globals.css tokens)
 - [x] Provisionner Supabase project (rtxgnvpyifoegccoljse, eu-west-3)
-- [ ] Provisionner Vercel project
 - [x] Fournir les vrais SVG du logo
 - [x] Décider du taux de TVA initial — 19% (Tunisian VAT)
 
