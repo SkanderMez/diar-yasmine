@@ -3,13 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { format } from "date-fns";
-import { Calendar, Search, Users } from "lucide-react";
+import { Calendar, ChevronDown, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Hero booking search — Airbnb-style segmented pill: type + dates +
- * guests + CTA. Submits to /chalets or /bungalows with dates as
- * searchParams (the listing pages preserve them for future filtering).
+ * Hero booking search bar — Airbnb-inspired pill layout. Five segments
+ * separated by vertical dividers; the right-most CTA is honey-coloured
+ * and casts a luminous shadow.
  */
 export function BookingSearch() {
   const router = useRouter();
@@ -29,17 +29,20 @@ export function BookingSearch() {
   }
 
   return (
-    <div className="rounded-full bg-white/95 p-1.5 shadow-2xl backdrop-blur-sm md:p-2">
-      <div className="grid grid-cols-1 items-center gap-1 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
-        <Field label="Type">
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as typeof type)}
-            className="w-full bg-transparent text-sm text-foreground outline-none"
-          >
-            <option value="chalets">Chalets</option>
-            <option value="bungalows">Bungalows</option>
-          </select>
+    <div className="rounded-full bg-ivory/95 p-2 shadow-2xl backdrop-blur-md">
+      <div className="grid grid-cols-1 items-stretch divide-y divide-border sm:grid-cols-[1.2fr_1fr_1fr_1fr_auto] sm:divide-x sm:divide-y-0">
+        <Field label="Hébergement">
+          <div className="flex items-center gap-2">
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as typeof type)}
+              className="w-full appearance-none bg-transparent text-sm font-medium text-foreground outline-none"
+            >
+              <option value="chalets">Chalets bord de mer</option>
+              <option value="bungalows">Bungalows jardin</option>
+            </select>
+            <ChevronDown className="size-3.5 text-muted-foreground" />
+          </div>
         </Field>
 
         <Field label="Arrivée" icon={<Calendar className="size-3.5" />}>
@@ -48,7 +51,7 @@ export function BookingSearch() {
             min={today}
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
-            className="w-full bg-transparent text-sm text-foreground outline-none"
+            className="w-full bg-transparent text-sm font-medium text-foreground outline-none [color-scheme:light]"
           />
         </Field>
 
@@ -58,7 +61,7 @@ export function BookingSearch() {
             min={checkIn || today}
             value={checkOut}
             onChange={(e) => setCheckOut(e.target.value)}
-            className="w-full bg-transparent text-sm text-foreground outline-none"
+            className="w-full bg-transparent text-sm font-medium text-foreground outline-none [color-scheme:light]"
           />
         </Field>
 
@@ -69,7 +72,7 @@ export function BookingSearch() {
             max={20}
             value={guests}
             onChange={(e) => setGuests(Number(e.target.value))}
-            className="w-full bg-transparent text-sm text-foreground outline-none"
+            className="w-full bg-transparent text-sm font-medium text-foreground outline-none"
           />
         </Field>
 
@@ -78,10 +81,10 @@ export function BookingSearch() {
           size="lg"
           shape="pill"
           onClick={submit}
-          className="m-1 gap-2 sm:m-0"
+          className="my-1 mx-1 gap-2 bg-honey text-charcoal shadow-md hover:bg-honey-light hover:text-charcoal sm:my-0"
         >
           <Search className="size-4" />
-          <span className="sm:hidden md:inline">Rechercher</span>
+          <span>Rechercher</span>
         </Button>
       </div>
     </div>
@@ -98,8 +101,8 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block cursor-pointer rounded-full px-5 py-3 transition-colors hover:bg-secondary/50">
-      <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+    <label className="block cursor-pointer rounded-full px-5 py-3 transition-colors hover:bg-bone/70">
+      <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
         {icon}
         {label}
       </span>

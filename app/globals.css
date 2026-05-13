@@ -1,38 +1,42 @@
 @import "tailwindcss";
 
 /*
- * Diar Yasmine — Mediterranean Editorial.
+ * Diar Yasmine — Editorial Coastal Luxury.
  *
  * Three-layer architecture:
  *   1. :root          — raw brand values + shadcn semantic mappings
  *   2. @theme inline  — expose values as Tailwind utilities
  *   3. /components/ui — consume Tailwind utilities only, no raw hex
  *
- * Aesthetic direction (validated 2026-05-13):
- *  - Ivory background dominant, teal in accent role only
- *  - Generous spacing, oversized serif headlines
- *  - Soft, diffuse shadows (never harsh)
- *  - Subtle scroll-triggered animations only
- *
- * Components must NEVER hardcode colors, radii, shadows, or font sizes.
- * See /docs/redesign.md.
+ * Design DNA:
+ *  - Layered palette: deep teal + warm honey accent + clean ivory
+ *  - Oversized serif headlines with tight tracking
+ *  - Generous spacing, multiple visual rhythms
+ *  - Soft diffuse shadows, never harsh
+ *  - Scroll-triggered fade-ins, subtle parallax
  */
 
 :root {
-  /* ===== Brand raw values (sampled from the official logo SVGs) ===== */
-  --brand-teal: #006378; /* primary */
+  /* ===== Brand raw values — refined palette ===== */
+  --brand-deep: #002a32; /* primary deep — for hero text on photos */
+  --brand-teal: #00505f; /* primary — slightly deeper than before */
   --brand-turquoise: #1d98a8; /* primary-light */
-  --brand-sand: #f5efe6;
-  --brand-ivory: #fbf9f4; /* slightly warmer than before */
-  --brand-charcoal: #1f2a2e;
+  --brand-honey: #c9a57f; /* warm honey accent */
+  --brand-honey-light: #e8d4b8;
+  --brand-clay: #b66a52; /* terracotta — for rare emphasis */
+  --brand-sand: #f0e9dd; /* sand background, warmer */
+  --brand-bone: #f6f1e7; /* mid layer between sand & ivory */
+  --brand-ivory: #fbf8f1; /* lightest layer */
+  --brand-charcoal: #14181a; /* deeper charcoal for headings */
+  --brand-graphite: #2c3438;
   --brand-bougainvillier: #c44e7a;
   --brand-olive: #7a8f6b;
-  --brand-green: #2f9e6a; /* success */
-  --brand-amber: #e0a458; /* warning */
-  --brand-red: #c44e4e; /* danger */
-  --brand-neutral-fg: #707876;
-  --brand-border: rgba(31, 42, 46, 0.08);
-  --brand-input: rgba(31, 42, 46, 0.12);
+  --brand-green: #2f9e6a;
+  --brand-amber: #e0a458;
+  --brand-red: #c44e4e;
+  --brand-neutral-fg: #6b7370;
+  --brand-border: rgba(20, 24, 26, 0.08);
+  --brand-input: rgba(20, 24, 26, 0.12);
 
   /* ===== Shadcn semantic mappings ===== */
   --background: var(--brand-ivory);
@@ -43,17 +47,17 @@
   --popover-foreground: var(--brand-charcoal);
   --primary: var(--brand-teal);
   --primary-foreground: var(--brand-ivory);
-  --secondary: var(--brand-sand);
+  --secondary: var(--brand-bone);
   --secondary-foreground: var(--brand-charcoal);
-  --muted: var(--brand-sand);
+  --muted: var(--brand-bone);
   --muted-foreground: var(--brand-neutral-fg);
-  --accent: var(--brand-sand);
+  --accent: var(--brand-bone);
   --accent-foreground: var(--brand-charcoal);
   --destructive: var(--brand-red);
   --destructive-foreground: var(--brand-ivory);
   --border: var(--brand-border);
   --input: var(--brand-input);
-  --ring: var(--brand-turquoise);
+  --ring: var(--brand-honey);
   --radius: 0.75rem;
 
   /* ===== Reservation source palette (admin calendar blocks) ===== */
@@ -89,11 +93,17 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Brand extras */
+  /* Brand extras — exposed as Tailwind utilities */
+  --color-deep: var(--brand-deep);
   --color-primary-light: var(--brand-turquoise);
+  --color-honey: var(--brand-honey);
+  --color-honey-light: var(--brand-honey-light);
+  --color-clay: var(--brand-clay);
   --color-sand: var(--brand-sand);
+  --color-bone: var(--brand-bone);
   --color-ivory: var(--brand-ivory);
   --color-charcoal: var(--brand-charcoal);
+  --color-graphite: var(--brand-graphite);
   --color-bougainvillier: var(--brand-bougainvillier);
   --color-olive: var(--brand-olive);
   --color-success: var(--brand-green);
@@ -116,7 +126,7 @@
   --font-script: var(--font-caveat);
   --font-arabic: var(--font-tajawal);
 
-  /* ===== Radii — finer scale for editorial finesse ===== */
+  /* Radii — finer scale */
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -126,31 +136,15 @@
   --radius-3xl: 48px;
   --radius-pill: 9999px;
 
-  /* ===== Shadows — luxe minimal, very diffuse ===== */
-  --shadow-xs: 0 1px 2px rgba(31, 42, 46, 0.04);
-  --shadow-sm: 0 2px 6px rgba(31, 42, 46, 0.05);
-  --shadow-md: 0 8px 24px rgba(31, 42, 46, 0.06);
-  --shadow-lg: 0 20px 50px rgba(31, 42, 46, 0.08);
-  --shadow-xl: 0 32px 80px rgba(31, 42, 46, 0.1);
-  --shadow-2xl: 0 50px 120px rgba(31, 42, 46, 0.12);
-  /* Inner shadow for inputs / pressed states */
-  --shadow-inner: inset 0 1px 2px rgba(31, 42, 46, 0.04);
-
-  /* ===== Type scale — editorial maximalist ===== */
-  --text-2xs: 10px;
-  --text-xs: 12px;
-  --text-sm: 14px;
-  --text-base: 16px;
-  --text-md: 17px; /* body */
-  --text-lg: 18px;
-  --text-xl: 22px;
-  --text-2xl: 28px;
-  --text-3xl: 36px;
-  --text-4xl: 48px;
-  --text-5xl: 64px;
-  --text-6xl: 80px;
-  --text-7xl: 96px;
-  --text-8xl: 128px;
+  /* Shadows — luxe diffuse */
+  --shadow-xs: 0 1px 2px rgba(20, 24, 26, 0.04);
+  --shadow-sm: 0 2px 8px rgba(20, 24, 26, 0.06);
+  --shadow-md: 0 8px 24px rgba(20, 24, 26, 0.08);
+  --shadow-lg: 0 20px 50px rgba(20, 24, 26, 0.1);
+  --shadow-xl: 0 32px 80px rgba(20, 24, 26, 0.14);
+  --shadow-2xl: 0 50px 120px rgba(20, 24, 26, 0.18);
+  --shadow-inner: inset 0 1px 2px rgba(20, 24, 26, 0.04);
+  --shadow-glow: 0 0 0 6px rgba(201, 165, 127, 0.18);
 }
 
 @layer base {
@@ -166,8 +160,8 @@
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
-    font-size: 17px;
-    line-height: 1.7;
+    font-size: 16px;
+    line-height: 1.65;
     font-feature-settings:
       "rlig" 1,
       "calt" 1,
@@ -181,31 +175,21 @@
   h5,
   h6 {
     font-family: var(--font-heading);
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 1.05;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1.02;
     color: var(--foreground);
   }
 
   h1 {
-    font-weight: 400;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.04em;
   }
 
-  /* Editorial paragraph defaults — readable measure */
-  .prose-editorial p {
-    max-width: 60ch;
-    font-size: 1.0625rem;
-    line-height: 1.75;
-  }
-
-  /* Selection */
   ::selection {
-    background-color: var(--brand-teal);
-    color: var(--brand-ivory);
+    background-color: var(--brand-honey);
+    color: var(--brand-charcoal);
   }
 
-  /* Arabic typography */
   [lang="ar"] body {
     font-family: var(--font-arabic), var(--font-sans);
   }
@@ -220,49 +204,65 @@
     letter-spacing: 0;
   }
 
-  /* Focus ring — soft and elegant */
   :focus-visible {
-    outline: 2px solid var(--ring);
+    outline: 2px solid var(--brand-honey);
     outline-offset: 3px;
     border-radius: 4px;
   }
 
-  /* Smooth fade for any link hover */
   a {
     transition:
       color 200ms ease,
       opacity 200ms ease;
   }
-
-  /* Image rendering quality */
-  img {
-    image-rendering: auto;
-  }
 }
 
 @layer utilities {
-  /* Container with generous breathing room */
-  .container-editorial {
+  /* Editorial container with breathing room */
+  .container-x {
     margin-inline: auto;
-    padding-inline: clamp(1.5rem, 4vw, 4rem);
-    max-width: 80rem; /* 1280px */
-  }
-
-  .container-narrow {
-    margin-inline: auto;
-    padding-inline: clamp(1.5rem, 4vw, 4rem);
-    max-width: 48rem; /* 768px — editorial measure */
+    padding-inline: clamp(1.25rem, 4vw, 4rem);
+    max-width: 88rem; /* 1408px */
   }
 
   /* Section padding presets */
-  .section-py {
+  .section-y {
     padding-block: clamp(4rem, 8vw, 8rem);
   }
-  .section-py-lg {
+  .section-y-lg {
     padding-block: clamp(6rem, 10vw, 12rem);
   }
 
-  /* Hide scrollbar but keep scroll */
+  /* Editorial heading utility */
+  .heading-display {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+  }
+
+  /* Tag / eyebrow utility */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    color: var(--brand-honey);
+  }
+
+  /* Honey gradient text — for special emphasis */
+  .text-gradient-honey {
+    background: linear-gradient(
+      135deg,
+      var(--brand-honey) 0%,
+      var(--brand-clay) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Hide scrollbar */
   .scrollbar-hidden {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -271,15 +271,31 @@
     display: none;
   }
 
-  /* Print utilities (voucher PDFs use @react-pdf, but admin pages
-     might be printed too). */
+  /* Smooth horizontal scroll snap */
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .scroll-snap-x > * {
+    scroll-snap-align: start;
+  }
+
+  /* Decorative noise overlay */
+  .noise-overlay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
   @media print {
     .print-hidden {
       display: none !important;
     }
   }
 
-  /* Respect prefers-reduced-motion */
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;

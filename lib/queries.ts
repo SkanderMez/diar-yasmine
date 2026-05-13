@@ -135,8 +135,16 @@ export async function listPublicProperties(
     hasPrivatePool?: boolean;
     seaView?: boolean;
     beachfront?: boolean;
+    minPriceMillimes?: number;
+    maxPriceMillimes?: number;
   } = {},
 ) {
+  const priceFilter: { gte?: number; lte?: number } = {};
+  if (options.minPriceMillimes) priceFilter.gte = options.minPriceMillimes;
+  if (options.maxPriceMillimes) priceFilter.lte = options.maxPriceMillimes;
+  const hasPriceFilter =
+    priceFilter.gte !== undefined || priceFilter.lte !== undefined;
+
   return prisma.property.findMany({
     where: {
       deletedAt: null,
@@ -154,6 +162,7 @@ export async function listPublicProperties(
       ...(typeof options.beachfront === "boolean"
         ? { beachfront: options.beachfront }
         : {}),
+      ...(hasPriceFilter ? { basePrice: priceFilter } : {}),
     },
     select: {
       id: true,

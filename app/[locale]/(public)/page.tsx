@@ -1,12 +1,17 @@
 import Image from "next/image";
 import { setRequestLocale } from "next-intl/server";
-import { ArrowRight, Sparkles, Waves } from "lucide-react";
+import { ArrowRight, Sparkles, Star, Waves } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { listPublicProperties } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
 import { PropertyCard } from "@/components/public/property-card";
 import { BookingSearch } from "@/components/public/booking-search";
 import { FadeIn } from "@/components/public/fade-in";
+import { StatsStrip } from "@/components/public/stats-strip";
+import { ExperiencesGrid } from "@/components/public/experiences-grid";
+import { Testimonials } from "@/components/public/testimonials";
+import { MapPreview } from "@/components/public/map-preview";
+import { PressStrip } from "@/components/public/press-strip";
 import { HomeJsonLd } from "@/components/public/json-ld";
 
 export default async function HomePage({
@@ -24,19 +29,22 @@ export default async function HomePage({
 
   const showcaseChalets = chalets
     .filter((c) => c.photos.length > 0)
-    .slice(0, 3);
+    .slice(0, 6);
   const heroPhoto = chalets[0]?.photos[0] ?? null;
   const editorialPhoto = chalets[1]?.photos[0] ?? null;
-  const chaletPreview = chalets[2]?.photos[0] ?? chalets[0]?.photos[0] ?? null;
+  const editorialPhoto2 =
+    chalets[2]?.photos[1] ?? chalets[2]?.photos[0] ?? null;
+  const chaletPreview = chalets[3]?.photos[0] ?? chalets[0]?.photos[0] ?? null;
   const bungalowPreview =
     bungalows.find((b) => b.photos.length > 0)?.photos[0] ?? null;
+  const padelBg = chalets[4]?.photos[0] ?? null;
 
   return (
     <main className="flex-1">
       <HomeJsonLd />
 
-      {/* ──────────── HERO ──────────── */}
-      <section className="relative -mt-20 flex h-[100svh] min-h-[640px] w-full flex-col justify-end overflow-hidden">
+      {/* HERO */}
+      <section className="relative flex h-[100svh] min-h-[680px] w-full flex-col justify-end overflow-hidden">
         {heroPhoto && (
           <Image
             src={heroPhoto.url}
@@ -47,99 +55,140 @@ export default async function HomePage({
             className="object-cover"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/30 via-transparent to-charcoal/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/40 via-charcoal/10 to-charcoal/80" />
 
-        <div className="relative mx-auto w-full max-w-7xl px-6 pb-16 pt-32 sm:pb-24 lg:px-10 lg:pb-32">
-          <div className="space-y-6 text-ivory">
+        <div className="container-x relative pb-16 pt-44 sm:pb-24 lg:pb-32">
+          <div className="space-y-5 text-ivory">
             <FadeIn>
-              <p className="font-script text-3xl text-primary-light sm:text-4xl">
-                Tazarka Plage
+              <p className="font-script text-3xl text-honey sm:text-4xl">
+                Tazarka Plage · Cap Bon
               </p>
             </FadeIn>
             <FadeIn delay="delay-100">
-              <h1 className="font-heading text-[clamp(3rem,11vw,9rem)] font-normal leading-[0.95] tracking-[-0.04em]">
+              <h1 className="heading-display text-[clamp(3.5rem,12vw,10rem)] text-ivory">
                 Diar Yasmine
               </h1>
             </FadeIn>
             <FadeIn delay="delay-200">
-              <p className="max-w-xl text-base text-ivory/85 sm:text-lg">
-                21 chalets et bungalows en bord de mer méditerranéenne. Piscines
-                privées, jardins parfumés, ambiance familiale.
+              <p className="max-w-2xl text-base text-ivory/85 sm:text-xl">
+                21 chalets et bungalows familiaux, à deux pas de la
+                Méditerranée. Piscines privées, jardins parfumés, réception
+                bienveillante. Réservez en direct.
               </p>
             </FadeIn>
           </div>
 
-          <FadeIn delay="delay-300" className="mt-10 sm:mt-14">
+          <FadeIn delay="delay-300" className="mt-12">
             <BookingSearch />
           </FadeIn>
-        </div>
-      </section>
 
-      {/* ──────────── EDITORIAL INTRO ──────────── */}
-      <section className="bg-ivory">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-24 sm:py-32 md:grid-cols-2 lg:gap-20 lg:px-10 lg:py-40">
-          <FadeIn className="space-y-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-primary">
-              Notre maison
-            </p>
-            <h2 className="font-heading text-4xl font-normal leading-[1.05] tracking-tight text-foreground sm:text-5xl">
-              Un bord de mer comme un secret de famille
-            </h2>
-            <p className="max-w-prose text-foreground/75">
-              Diar Yasmine est née d&apos;une envie simple : offrir aux familles
-              un coin de Méditerranée qu&apos;elles n&apos;auront pas envie de
-              quitter. Pas un hôtel, pas une résidence — une vraie maison
-              ouverte sur la plage et le jardin.
-            </p>
-            <p className="max-w-prose text-foreground/75">
-              Vingt-et-un hébergements, tous différents, tous pensés pour le
-              long séjour comme le week-end éclair. Réception bienveillante,
-              piscines privées, et la mer à portée de pas.
-            </p>
-            <div className="pt-2">
-              <Button asChild variant="outline" shape="pill" size="lg">
-                <Link href="/about">
-                  Découvrir notre histoire <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-            </div>
+          <FadeIn
+            delay="delay-300"
+            className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-ivory/80"
+          >
+            <span className="flex items-center gap-2">
+              <span className="flex">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className="size-3.5 fill-honey text-honey" />
+                ))}
+              </span>
+              4.9 / 5 · 137 séjours en 2025
+            </span>
+            <span className="hidden sm:inline">·</span>
+            <span>Réservation directe, sans commission</span>
+            <span className="hidden sm:inline">·</span>
+            <span>Réception 7j/7</span>
           </FadeIn>
+        </div>
 
-          {editorialPhoto && (
-            <FadeIn
-              offset="y-10"
-              className="relative aspect-[4/5] overflow-hidden rounded-3xl"
-            >
-              <Image
-                src={editorialPhoto.url}
-                alt={editorialPhoto.alt ?? "Diar Yasmine"}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-              />
-            </FadeIn>
-          )}
+        <div className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-xs uppercase tracking-[0.3em] text-ivory/60 md:flex">
+          <span>Découvrir</span>
+          <span className="h-10 w-px bg-ivory/30" />
         </div>
       </section>
 
-      {/* ──────────── TWO UNIVERSES ──────────── */}
+      {/* STATS */}
+      <StatsStrip />
+
+      {/* EDITORIAL */}
+      <section className="bg-ivory">
+        <div className="container-x section-y-lg">
+          <div className="grid items-center gap-14 lg:grid-cols-12">
+            <div className="lg:col-span-5">
+              <FadeIn className="space-y-6">
+                <p className="eyebrow">Notre maison</p>
+                <h2 className="heading-display text-4xl text-foreground sm:text-5xl">
+                  Un bord de mer comme un secret de famille
+                </h2>
+                <p className="text-foreground/75">
+                  Diar Yasmine est née d&apos;une envie simple : offrir aux
+                  familles un coin de Méditerranée qu&apos;elles n&apos;auront
+                  pas envie de quitter. Pas un hôtel, pas une résidence — une
+                  vraie maison ouverte sur la plage et le jardin.
+                </p>
+                <p className="text-foreground/75">
+                  Vingt-et-un hébergements, tous différents, tous pensés pour le
+                  long séjour comme le week-end éclair.
+                </p>
+                <div className="pt-2">
+                  <Button asChild variant="outline" shape="pill" size="lg">
+                    <Link href="/about">
+                      Découvrir notre histoire <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </FadeIn>
+            </div>
+
+            <div className="lg:col-span-7">
+              <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                {editorialPhoto && (
+                  <FadeIn className="relative aspect-[3/4] overflow-hidden rounded-3xl">
+                    <Image
+                      src={editorialPhoto.url}
+                      alt={editorialPhoto.alt ?? "Diar Yasmine"}
+                      fill
+                      sizes="(max-width: 1024px) 50vw, 33vw"
+                      className="object-cover"
+                    />
+                  </FadeIn>
+                )}
+                {editorialPhoto2 && (
+                  <FadeIn
+                    delay="delay-200"
+                    className="relative mt-12 aspect-[3/4] overflow-hidden rounded-3xl"
+                  >
+                    <Image
+                      src={editorialPhoto2.url}
+                      alt={editorialPhoto2.alt ?? "Diar Yasmine"}
+                      fill
+                      sizes="(max-width: 1024px) 50vw, 33vw"
+                      className="object-cover"
+                    />
+                  </FadeIn>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* TWO UNIVERSES */}
       <section className="bg-sand">
-        <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-10 lg:py-40">
-          <FadeIn className="mb-16 max-w-2xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-primary">
-              Deux univers
-            </p>
-            <h2 className="mt-3 font-heading text-4xl font-normal leading-[1.05] tracking-tight text-foreground sm:text-5xl">
+        <div className="container-x section-y">
+          <FadeIn className="mb-14 max-w-2xl">
+            <p className="eyebrow">Deux univers</p>
+            <h2 className="mt-3 heading-display text-4xl text-foreground sm:text-5xl">
               Le bord de mer ou le jardin
             </h2>
           </FadeIn>
 
-          <div className="grid gap-8 md:grid-cols-2 md:gap-10">
+          <div className="grid gap-6 md:grid-cols-2 md:gap-8">
             <UniverseCard
               href="/chalets"
               eyebrow="Pieds dans l'eau"
               title="Chalets"
-              description="9 chalets en bois et verre. Piscine privée. Vue mer directe."
+              description="9 chalets bois et verre, piscine privée, vue mer directe."
               icon={<Waves className="size-4" />}
               imageUrl={chaletPreview?.url}
               imageAlt={chaletPreview?.alt ?? "Chalet"}
@@ -149,7 +198,7 @@ export default async function HomePage({
               href="/bungalows"
               eyebrow="Jardin parfumé"
               title="Bungalows"
-              description="12 bungalows à 7 minutes à pied de la plage. Parfumés au jasmin."
+              description="12 bungalows à 7 minutes de la plage, jasmin et bougainvillier."
               icon={<Sparkles className="size-4" />}
               imageUrl={bungalowPreview?.url}
               imageAlt={bungalowPreview?.alt ?? "Bungalow"}
@@ -159,32 +208,37 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* ──────────── SHOWCASE ──────────── */}
+      {/* SHOWCASE */}
       {showcaseChalets.length > 0 && (
         <section className="bg-ivory">
-          <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-10 lg:py-40">
-            <FadeIn className="mb-16 flex flex-wrap items-end justify-between gap-6">
+          <div className="container-x section-y">
+            <FadeIn className="mb-12 flex flex-wrap items-end justify-between gap-6">
               <div className="max-w-2xl">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-primary">
-                  Sélection
-                </p>
-                <h2 className="mt-3 font-heading text-4xl font-normal leading-[1.05] tracking-tight text-foreground sm:text-5xl">
-                  Quelques chalets, comme un avant-goût
+                <p className="eyebrow">Sélection de chalets</p>
+                <h2 className="mt-3 heading-display text-4xl text-foreground sm:text-5xl">
+                  Comme un avant-goût
                 </h2>
               </div>
               <Button asChild variant="ghost" shape="pill" className="gap-2">
                 <Link href="/chalets">
-                  Voir les 9 chalets <ArrowRight className="size-4" />
+                  Voir les {chalets.length} chalets{" "}
+                  <ArrowRight className="size-4" />
                 </Link>
               </Button>
             </FadeIn>
 
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
-              {showcaseChalets.map((p, i) => (
+              {showcaseChalets.slice(0, 6).map((p, i) => (
                 <FadeIn
                   key={p.id}
                   delay={
-                    i === 0 ? undefined : i === 1 ? "delay-100" : "delay-200"
+                    i === 0
+                      ? undefined
+                      : i === 1
+                        ? "delay-100"
+                        : i === 2
+                          ? "delay-200"
+                          : "delay-300"
                   }
                 >
                   <PropertyCard property={p} />
@@ -195,51 +249,73 @@ export default async function HomePage({
         </section>
       )}
 
-      {/* ──────────── PADEL TEASER ──────────── */}
-      <section className="bg-primary text-primary-foreground">
-        <div className="mx-auto flex max-w-7xl flex-col items-start gap-10 px-6 py-20 sm:py-24 lg:flex-row lg:items-center lg:justify-between lg:px-10">
-          <FadeIn className="max-w-xl space-y-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-primary-light">
-              À deux pas
-            </p>
-            <h2 className="font-heading text-4xl font-normal leading-[1.05] tracking-tight sm:text-5xl">
-              Deux courts de padel
-            </h2>
-            <p className="text-primary-foreground/85">
-              Padels Méditerranée — courts professionnels accessibles à pied
-              depuis Diar Yasmine, vitrés sur les quatre côtés, éclairés pour
-              les sessions du soir.
-            </p>
-          </FadeIn>
-          <FadeIn delay="delay-100">
-            <Button
-              asChild
-              variant="outline"
-              shape="pill"
-              size="lg"
-              className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:border-primary-foreground/50 hover:bg-primary-foreground/10"
-            >
-              <Link href="/padel">
-                En savoir plus <ArrowRight className="size-4" />
-              </Link>
-            </Button>
-          </FadeIn>
+      {/* EXPERIENCES */}
+      <ExperiencesGrid />
+
+      {/* PADEL */}
+      <section className="relative overflow-hidden bg-charcoal">
+        <div className="absolute inset-0 opacity-30">
+          {padelBg && (
+            <Image
+              src={padelBg.url}
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover"
+            />
+          )}
+        </div>
+        <div className="container-x relative section-y text-ivory">
+          <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+            <FadeIn className="lg:col-span-7">
+              <p className="eyebrow text-honey">À deux pas</p>
+              <h2 className="mt-3 heading-display text-4xl sm:text-6xl">
+                Deux courts de padel
+              </h2>
+              <p className="mt-5 max-w-xl text-ivory/80">
+                Padels Méditerranée — courts professionnels accessibles à pied
+                depuis Diar Yasmine, vitrés sur les quatre côtés, éclairés pour
+                les sessions du soir.
+              </p>
+            </FadeIn>
+            <FadeIn delay="delay-100" className="lg:col-span-5 lg:text-right">
+              <Button
+                asChild
+                shape="pill"
+                size="lg"
+                className="gap-2 bg-honey text-charcoal hover:bg-honey-light"
+              >
+                <Link href="/padel">
+                  Découvrir le padel <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </FadeIn>
+          </div>
         </div>
       </section>
 
-      {/* ──────────── FINAL CTA ──────────── */}
-      <section className="bg-ivory">
-        <div className="mx-auto max-w-3xl px-6 py-32 text-center sm:py-40 lg:px-10">
-          <FadeIn className="space-y-6">
-            <p className="font-script text-3xl text-primary-light sm:text-4xl">
+      {/* TESTIMONIALS */}
+      <Testimonials />
+
+      {/* MAP */}
+      <MapPreview />
+
+      {/* PRESS */}
+      <PressStrip />
+
+      {/* FINAL CTA */}
+      <section className="bg-honey/15">
+        <div className="container-x section-y text-center">
+          <FadeIn className="mx-auto max-w-3xl space-y-6">
+            <p className="font-script text-3xl text-clay sm:text-4xl">
               Et vous, votre séjour ?
             </p>
-            <h2 className="font-heading text-4xl font-normal leading-[1.05] tracking-tight text-foreground sm:text-6xl">
+            <h2 className="heading-display text-4xl text-foreground sm:text-6xl">
               Réservez en direct, plus simplement
             </h2>
             <p className="mx-auto max-w-xl text-foreground/75">
               Pas d&apos;intermédiaire, pas de commission. Notre équipe vous
-              prépare l&apos;arrivée et reste joignable tout le séjour.
+              prépare l&apos;arrivée et reste joignable pendant tout le séjour.
             </p>
             <div className="pt-4">
               <Button asChild size="xl" shape="pill" className="gap-2">
@@ -277,7 +353,7 @@ function UniverseCard({
   return (
     <Link
       href={href}
-      className="group relative block aspect-[5/6] overflow-hidden rounded-3xl bg-sand md:aspect-[4/5]"
+      className="group relative block aspect-[5/6] overflow-hidden rounded-3xl bg-charcoal md:aspect-[4/5]"
     >
       {imageUrl ? (
         <Image
@@ -288,22 +364,20 @@ function UniverseCard({
           className="object-cover transition-transform duration-1000 group-hover:scale-105"
         />
       ) : null}
-      <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-charcoal/95 via-charcoal/40 to-transparent" />
 
-      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-8 text-ivory sm:p-10">
+      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 p-8 text-ivory sm:p-10">
         <span className="inline-flex w-fit items-center gap-2 rounded-full bg-ivory/15 px-4 py-1.5 text-[10px] uppercase tracking-[0.25em] backdrop-blur-sm">
           {icon} {eyebrow}
         </span>
         <div className="flex items-baseline gap-3">
-          <h3 className="font-heading text-5xl font-normal sm:text-6xl">
-            {title}
-          </h3>
+          <h3 className="heading-display text-5xl sm:text-7xl">{title}</h3>
           <span className="text-sm text-ivory/70">{count}</span>
         </div>
         <p className="max-w-sm text-sm text-ivory/85 sm:text-base">
           {description}
         </p>
-        <span className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-primary-light">
+        <span className="mt-1 inline-flex items-center gap-2 text-sm font-medium text-honey">
           Découvrir
           <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
         </span>

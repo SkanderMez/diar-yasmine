@@ -11,8 +11,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
-export function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  /** When `dark` is true the trigger styles assume a dark background
+   *  (e.g. transparent header on hero), so we invert the text colour. */
+  dark?: boolean;
+}
+
+export function LanguageSwitcher({ dark = false }: LanguageSwitcherProps) {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -26,10 +33,15 @@ export function LanguageSwitcher() {
           variant="ghost"
           size="sm"
           aria-label={tCommon("language")}
-          className="gap-1"
+          className={cn(
+            "gap-1.5",
+            dark && "text-white/90 hover:bg-white/10 hover:text-white",
+          )}
         >
           <Globe className="size-4" />
-          <span className="text-xs font-medium uppercase">{locale}</span>
+          <span className="text-xs font-medium uppercase tracking-wider">
+            {locale}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
