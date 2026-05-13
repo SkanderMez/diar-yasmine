@@ -5,7 +5,10 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  typedRoutes: true,
+  // typedRoutes will be re-enabled in a later phase once /chalets,
+  // /bungalows, /book, /admin/* routes actually exist. Turning it on
+  // now would break the header placeholders.
+  typedRoutes: false,
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
