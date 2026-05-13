@@ -1,26 +1,144 @@
 @import "tailwindcss";
 
+/*
+ * Diar Yasmine design tokens.
+ *
+ * All visual values live in this file + tailwind utilities.
+ * Components must NEVER hardcode colors, radii, shadows, or
+ * font sizes. See /docs/redesign.md for the swap process.
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand palette */
+  --color-primary: #0e5a6b;
+  --color-primary-light: #4fb8c4;
+  --color-sand: #f5efe6;
+  --color-ivory: #faf7f2;
+  --color-charcoal: #1f2a2e;
+  --color-bougainvillier: #c44e7a;
+  --color-olive: #7a8f6b;
+  --color-success: #2f9e6a;
+  --color-warning: #e0a458;
+  --color-danger: #c44e4e;
+
+  /* Semantic */
+  --color-background: var(--color-ivory);
+  --color-foreground: var(--color-charcoal);
+  --color-muted: #6b7472;
+  --color-muted-foreground: #4a5350;
+  --color-border: rgba(31, 42, 46, 0.1);
+  --color-ring: var(--color-primary-light);
+
+  /* Reservation source colors (calendar blocks) */
+  --color-source-direct-web: var(--color-primary);
+  --color-source-walk-in: var(--color-olive);
+  --color-source-phone: var(--color-olive);
+  --color-source-booking: #1e3a8a;
+  --color-source-airbnb: #e11d48;
+  --color-source-expedia: var(--color-warning);
+  --color-source-partner: #7c3aed;
+  --color-source-other: #6b7280;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Colors → exposed as bg-*, text-*, border-*, ring-* utilities */
+  --color-primary: var(--color-primary);
+  --color-primary-light: var(--color-primary-light);
+  --color-sand: var(--color-sand);
+  --color-ivory: var(--color-ivory);
+  --color-charcoal: var(--color-charcoal);
+  --color-bougainvillier: var(--color-bougainvillier);
+  --color-olive: var(--color-olive);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-muted: var(--color-muted);
+  --color-muted-foreground: var(--color-muted-foreground);
+  --color-border: var(--color-border);
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-ring: var(--color-ring);
+  --color-source-direct-web: var(--color-source-direct-web);
+  --color-source-walk-in: var(--color-source-walk-in);
+  --color-source-phone: var(--color-source-phone);
+  --color-source-booking: var(--color-source-booking);
+  --color-source-airbnb: var(--color-source-airbnb);
+  --color-source-expedia: var(--color-source-expedia);
+  --color-source-partner: var(--color-source-partner);
+  --color-source-other: var(--color-source-other);
+
+  /* Fonts (variable injected by next/font in layout.tsx) */
+  --font-heading: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+  --font-script: var(--font-caveat);
+  --font-arabic: var(--font-tajawal);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-2xl: 36px;
+
+  /* Shadows — soft only, never harsh */
+  --shadow-sm: 0 1px 2px rgba(31, 42, 46, 0.04);
+  --shadow-md: 0 4px 12px rgba(31, 42, 46, 0.06);
+  --shadow-lg: 0 12px 32px rgba(31, 42, 46, 0.08);
+  --shadow-xl: 0 24px 48px rgba(31, 42, 46, 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  /* Arabic (RTL) typography */
+  [lang="ar"] body {
+    font-family: var(--font-arabic), var(--font-sans);
+  }
+
+  [lang="ar"] h1,
+  [lang="ar"] h2,
+  [lang="ar"] h3,
+  [lang="ar"] h4,
+  [lang="ar"] h5,
+  [lang="ar"] h6 {
+    font-family: var(--font-arabic), var(--font-heading);
+  }
+
+  /* Focus ring — accessibility */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  /* Print-friendly utilities used by voucher PDFs and admin pages */
+  @media print {
+    .print-hidden {
+      display: none !important;
+    }
+  }
 }
