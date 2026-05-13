@@ -1,15 +1,21 @@
 @import "tailwindcss";
 
 /*
- * Diar Yasmine design tokens.
+ * Diar Yasmine — Mediterranean Editorial.
  *
  * Three-layer architecture:
  *   1. :root          — raw brand values + shadcn semantic mappings
- *   2. @theme inline  — expose values as Tailwind utilities (bg-*, text-*, etc.)
+ *   2. @theme inline  — expose values as Tailwind utilities
  *   3. /components/ui — consume Tailwind utilities only, no raw hex
  *
+ * Aesthetic direction (validated 2026-05-13):
+ *  - Ivory background dominant, teal in accent role only
+ *  - Generous spacing, oversized serif headlines
+ *  - Soft, diffuse shadows (never harsh)
+ *  - Subtle scroll-triggered animations only
+ *
  * Components must NEVER hardcode colors, radii, shadows, or font sizes.
- * See /docs/redesign.md for the redesign swap process.
+ * See /docs/redesign.md.
  */
 
 :root {
@@ -17,18 +23,18 @@
   --brand-teal: #006378; /* primary */
   --brand-turquoise: #1d98a8; /* primary-light */
   --brand-sand: #f5efe6;
-  --brand-ivory: #faf7f2;
+  --brand-ivory: #fbf9f4; /* slightly warmer than before */
   --brand-charcoal: #1f2a2e;
   --brand-bougainvillier: #c44e7a;
   --brand-olive: #7a8f6b;
   --brand-green: #2f9e6a; /* success */
   --brand-amber: #e0a458; /* warning */
   --brand-red: #c44e4e; /* danger */
-  --brand-neutral-fg: #6b7472;
-  --brand-border: rgba(31, 42, 46, 0.1);
-  --brand-input: rgba(31, 42, 46, 0.15);
+  --brand-neutral-fg: #707876;
+  --brand-border: rgba(31, 42, 46, 0.08);
+  --brand-input: rgba(31, 42, 46, 0.12);
 
-  /* ===== Shadcn semantic mappings (consumed by /components/ui) ===== */
+  /* ===== Shadcn semantic mappings ===== */
   --background: var(--brand-ivory);
   --foreground: var(--brand-charcoal);
   --card: #ffffff;
@@ -48,7 +54,7 @@
   --border: var(--brand-border);
   --input: var(--brand-input);
   --ring: var(--brand-turquoise);
-  --radius: 0.75rem; /* 12px base — md radius */
+  --radius: 0.75rem;
 
   /* ===== Reservation source palette (admin calendar blocks) ===== */
   --source-direct-web: var(--brand-teal);
@@ -62,7 +68,7 @@
 }
 
 @theme inline {
-  /* ===== Shadcn semantic tokens → bg-primary, text-card-foreground, etc. ===== */
+  /* Shadcn semantic tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -83,7 +89,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* ===== Brand extras → bg-sand, text-charcoal, text-primary-light, etc. ===== */
+  /* Brand extras */
   --color-primary-light: var(--brand-turquoise);
   --color-sand: var(--brand-sand);
   --color-ivory: var(--brand-ivory);
@@ -94,7 +100,7 @@
   --color-warning: var(--brand-amber);
   --color-danger: var(--brand-red);
 
-  /* ===== Reservation sources → bg-source-booking, etc. ===== */
+  /* Reservation sources */
   --color-source-direct-web: var(--source-direct-web);
   --color-source-walk-in: var(--source-walk-in);
   --color-source-phone: var(--source-phone);
@@ -104,24 +110,47 @@
   --color-source-partner: var(--source-partner);
   --color-source-other: var(--source-other);
 
-  /* ===== Typography (CSS vars injected by next/font in layout.tsx) ===== */
+  /* Typography */
   --font-heading: var(--font-fraunces);
   --font-sans: var(--font-inter);
   --font-script: var(--font-caveat);
   --font-arabic: var(--font-tajawal);
 
-  /* ===== Radii (derived from --radius) ===== */
-  --radius-sm: calc(var(--radius) - 6px); /* 6px */
-  --radius-md: var(--radius); /* 12px */
-  --radius-lg: calc(var(--radius) + 8px); /* 20px */
-  --radius-xl: calc(var(--radius) + 16px); /* 28px */
-  --radius-2xl: calc(var(--radius) + 24px); /* 36px */
+  /* ===== Radii — finer scale for editorial finesse ===== */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-3xl: 48px;
+  --radius-pill: 9999px;
 
-  /* ===== Shadows — soft only, never harsh ===== */
-  --shadow-sm: 0 1px 2px rgba(31, 42, 46, 0.04);
-  --shadow-md: 0 4px 12px rgba(31, 42, 46, 0.06);
-  --shadow-lg: 0 12px 32px rgba(31, 42, 46, 0.08);
-  --shadow-xl: 0 24px 48px rgba(31, 42, 46, 0.1);
+  /* ===== Shadows — luxe minimal, very diffuse ===== */
+  --shadow-xs: 0 1px 2px rgba(31, 42, 46, 0.04);
+  --shadow-sm: 0 2px 6px rgba(31, 42, 46, 0.05);
+  --shadow-md: 0 8px 24px rgba(31, 42, 46, 0.06);
+  --shadow-lg: 0 20px 50px rgba(31, 42, 46, 0.08);
+  --shadow-xl: 0 32px 80px rgba(31, 42, 46, 0.1);
+  --shadow-2xl: 0 50px 120px rgba(31, 42, 46, 0.12);
+  /* Inner shadow for inputs / pressed states */
+  --shadow-inner: inset 0 1px 2px rgba(31, 42, 46, 0.04);
+
+  /* ===== Type scale — editorial maximalist ===== */
+  --text-2xs: 10px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-md: 17px; /* body */
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+  --text-4xl: 48px;
+  --text-5xl: 64px;
+  --text-6xl: 80px;
+  --text-7xl: 96px;
+  --text-8xl: 128px;
 }
 
 @layer base {
@@ -130,15 +159,19 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
   }
 
   body {
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.7;
     font-feature-settings:
       "rlig" 1,
-      "calt" 1;
+      "calt" 1,
+      "ss01" 1;
   }
 
   h1,
@@ -149,10 +182,30 @@
   h6 {
     font-family: var(--font-heading);
     font-weight: 500;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--foreground);
   }
 
-  /* Arabic (RTL) typography */
+  h1 {
+    font-weight: 400;
+    letter-spacing: -0.035em;
+  }
+
+  /* Editorial paragraph defaults — readable measure */
+  .prose-editorial p {
+    max-width: 60ch;
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: var(--brand-teal);
+    color: var(--brand-ivory);
+  }
+
+  /* Arabic typography */
   [lang="ar"] body {
     font-family: var(--font-arabic), var(--font-sans);
   }
@@ -164,20 +217,77 @@
   [lang="ar"] h5,
   [lang="ar"] h6 {
     font-family: var(--font-arabic), var(--font-heading);
+    letter-spacing: 0;
   }
 
-  /* Focus ring — accessibility */
+  /* Focus ring — soft and elegant */
   :focus-visible {
     outline: 2px solid var(--ring);
-    outline-offset: 2px;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Smooth fade for any link hover */
+  a {
+    transition:
+      color 200ms ease,
+      opacity 200ms ease;
+  }
+
+  /* Image rendering quality */
+  img {
+    image-rendering: auto;
   }
 }
 
 @layer utilities {
-  /* Print-friendly utilities used by voucher PDFs and admin pages */
+  /* Container with generous breathing room */
+  .container-editorial {
+    margin-inline: auto;
+    padding-inline: clamp(1.5rem, 4vw, 4rem);
+    max-width: 80rem; /* 1280px */
+  }
+
+  .container-narrow {
+    margin-inline: auto;
+    padding-inline: clamp(1.5rem, 4vw, 4rem);
+    max-width: 48rem; /* 768px — editorial measure */
+  }
+
+  /* Section padding presets */
+  .section-py {
+    padding-block: clamp(4rem, 8vw, 8rem);
+  }
+  .section-py-lg {
+    padding-block: clamp(6rem, 10vw, 12rem);
+  }
+
+  /* Hide scrollbar but keep scroll */
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Print utilities (voucher PDFs use @react-pdf, but admin pages
+     might be printed too). */
   @media print {
     .print-hidden {
       display: none !important;
+    }
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
     }
   }
 }
