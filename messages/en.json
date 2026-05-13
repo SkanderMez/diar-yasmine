@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "home": "Home",
+    "chalets": "Chalets",
+    "bungalows": "Bungalows",
+    "padel": "Padel",
+    "about": "About",
+    "contact": "Contact",
+    "book_cta": "Book"
+  },
+  "footer": {
+    "tagline": "Diar Yasmine Tazarka Plage — a Mediterranean seaside escape.",
+    "address_line": "Tazarka, Cap Bon, Tunisia",
+    "rights": "All rights reserved.",
+    "links_title": "Navigation",
+    "contact_title": "Contact",
+    "newsletter_title": "Stay in the loop"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error_title": "Something went wrong",
+    "error_description": "Please retry, or contact the front desk if the problem persists.",
+    "retry": "Retry",
+    "empty": "No results",
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "confirm": "Confirm",
+    "close": "Close",
+    "search": "Search",
+    "language": "Language"
+  },
+  "locale": {
+    "fr": "Français",
+    "en": "English",
+    "ar": "العربية"
+  },
+  "home": {
+    "tagline": "Phase 1 · Foundations",
+    "title": "Diar Yasmine",
+    "subtitle": "Tazarka Plage",
+    "intro": "Site under construction. The booking system is being installed."
+  },
+  "admin": {
+    "dashboard_title": "Dashboard",
+    "dashboard_intro": "Phase 1 complete — calendar coming up.",
+    "signin_title": "Staff sign in",
+    "signin_email_label": "Email",
+    "signin_password_label": "Password",
+    "signin_submit": "Sign in",
+    "signin_error": "Invalid credentials."
+  }
+}

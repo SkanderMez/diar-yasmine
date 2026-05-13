@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "chalets": "الشاليهات",
+    "bungalows": "البنغالو",
+    "padel": "البادل",
+    "about": "من نحن",
+    "contact": "اتصل بنا",
+    "book_cta": "حجز"
+  },
+  "footer": {
+    "tagline": "ديار ياسمين تزركة بلاج — استراحة متوسطية على شاطئ البحر.",
+    "address_line": "تزركة، الوطن القبلي، تونس",
+    "rights": "جميع الحقوق محفوظة.",
+    "links_title": "التنقل",
+    "contact_title": "اتصل بنا",
+    "newsletter_title": "ابق على اطلاع"
+  },
+  "common": {
+    "loading": "جاري التحميل…",
+    "error_title": "حدث خطأ ما",
+    "error_description": "يرجى المحاولة مرة أخرى، أو الاتصال بمكتب الاستقبال إذا استمرت المشكلة.",
+    "retry": "إعادة المحاولة",
+    "empty": "لا توجد نتائج",
+    "back": "رجوع",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "search": "بحث",
+    "language": "اللغة"
+  },
+  "locale": {
+    "fr": "Français",
+    "en": "English",
+    "ar": "العربية"
+  },
+  "home": {
+    "tagline": "المرحلة 1 · الأسس",
+    "title": "ديار ياسمين",
+    "subtitle": "تزركة بلاج",
+    "intro": "الموقع قيد الإنشاء. يتم تثبيت نظام الحجز."
+  },
+  "admin": {
+    "dashboard_title": "لوحة التحكم",
+    "dashboard_intro": "اكتملت المرحلة 1 — التقويم قادم.",
+    "signin_title": "تسجيل دخول الموظفين",
+    "signin_email_label": "البريد الإلكتروني",
+    "signin_password_label": "كلمة المرور",
+    "signin_submit": "تسجيل الدخول",
+    "signin_error": "بيانات الاعتماد غير صحيحة."
+  }
+}
