@@ -188,18 +188,31 @@ relying on training data.
   separate session cookie, not Auth.js. Auth.js is staff-only.
 - 2026-05-13 — Run on npm + Node 22 LTS. Continue on Next.js
   16.2.6 (auto-installed; same App Router paradigm).
+- 2026-05-13 — Supabase project provisioned (rtxgnvpyifoegccoljse,
+  eu-west-3, free tier). Direct connection is IPv6-only on free tier;
+  DIRECT_URL uses the Session pooler on port 5432 instead.
+- 2026-05-13 — Supabase API key migration: use the new
+  `sb_publishable_*` / `sb_secret_*` format (replaces anon /
+  service_role JWTs).
+- 2026-05-13 — Tunisian VAT confirmed at 19%. Seeded as
+  `Setting.tax.rate = 0.19`.
+- 2026-05-13 — Brand colors sampled from the official logo SVGs:
+  `--brand-teal: #006378`, `--brand-turquoise: #1d98a8` (replaces
+  the earlier estimates).
 
 (Append new decisions here as ADRs land in /docs/adr/*.)
 
 ## Active TODOs (project-level, not code-level)
-- [ ] Confirmer les 5 noms manquants de bungalows
+- [ ] Confirmer les 3 derniers noms de bungalows (9 confirmés : Amber,
+      Bougainvillier, Géranium, Lavande, Néroli, Orchidée, Tulipe,
+      Rose, Valeria. 3 placeholders restants : TBD-1..3)
 - [ ] Obtenir credentials Booking API
 - [ ] Configurer domaine mail.diaryasmine.tn (SPF/DKIM/DMARC)
 - [ ] Setup Stripe + Flouci/Konnect en TND
-- [ ] Provisionner Supabase project + récupérer DATABASE_URL
+- [x] Provisionner Supabase project (rtxgnvpyifoegccoljse, eu-west-3)
 - [ ] Provisionner Vercel project
-- [ ] Fournir les vrais SVG du logo (placeholders en place)
-- [ ] Décider du taux de TVA initial (currently 0)
+- [x] Fournir les vrais SVG du logo
+- [x] Décider du taux de TVA initial — 19% (Tunisian VAT)
 
 ## Useful commands
 ```

@@ -18,7 +18,9 @@ import { z } from "zod";
  */
 export const env = createEnv({
   server: {
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 
     DATABASE_URL: z.string().url(),
@@ -28,7 +30,8 @@ export const env = createEnv({
     AUTH_URL: z.string().url().optional(),
 
     SUPABASE_URL: z.string().url().optional(),
-    SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+    // New Supabase API key format (replaces service_role JWT).
+    SUPABASE_SECRET_KEY: z.string().startsWith("sb_secret_").optional(),
 
     RESEND_API_KEY: z.string().startsWith("re_").optional(),
     RESEND_FROM_EMAIL: z.string().optional(),
@@ -57,7 +60,11 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_SITE_URL: z.string().url(),
     NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
+    // New Supabase API key format (replaces anon JWT). Safe to ship to browser.
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z
+      .string()
+      .startsWith("sb_publishable_")
+      .optional(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith("pk_").optional(),
     NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
     NEXT_PUBLIC_WHATSAPP_NUMBER: z.string().optional(),
@@ -75,7 +82,7 @@ export const env = createEnv({
     AUTH_URL: process.env.AUTH_URL,
 
     SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
 
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
@@ -102,8 +109,10 @@ export const env = createEnv({
 
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_WHATSAPP_NUMBER: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER,
     NEXT_PUBLIC_CONTACT_EMAIL: process.env.NEXT_PUBLIC_CONTACT_EMAIL,
