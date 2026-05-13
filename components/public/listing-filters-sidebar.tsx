@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import * as LucideIcons from "lucide-react";
 import {
+  Check,
   Eye,
   Minus,
   Plus,
@@ -14,7 +16,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { FilterableAmenity } from "@/lib/queries";
 import { DateRangePicker } from "./date-range-picker";
+
+interface ListingFiltersSidebarProps {
+  resultCount: number;
+  filterableAmenities: FilterableAmenity[];
+}
 
 /**
  * Vertical filter panel for the listing pages.
@@ -28,9 +36,8 @@ import { DateRangePicker } from "./date-range-picker";
  */
 export function ListingFiltersSidebar({
   resultCount,
-}: {
-  resultCount: number;
-}) {
+  filterableAmenities,
+}: ListingFiltersSidebarProps) {
   const router = useRouter();
   const sp = useSearchParams();
   const [pending, startTransition] = useTransition();
@@ -44,6 +51,11 @@ export function ListingFiltersSidebar({
   const [beachfront, setBeachfront] = useState(sp?.get("beachfront") === "1");
   const [minPrice, setMinPrice] = useState(sp?.get("minPrice") ?? "");
   const [maxPrice, setMaxPrice] = useState(sp?.get("maxPrice") ?? "");
+  const initialAmenities = (sp?.get("amenities") ?? "")
+    .split(",")
+    .filter(Boolean);
+  const [activeAmenities, setActiveAmenities] =
+    useState<string[]>(initialAmenities);
 
   function apply() {
     const params = new URLSearchParams();
@@ -55,6 +67,8 @@ export function ListingFiltersSidebar({
     if (beachfront) params.set("beachfront", "1");
     if (minPrice) params.set("minPrice", minPrice);
     if (maxPrice) params.set("maxPrice", maxPrice);
+    if (activeAmenities.length > 0)
+      params.set("amenities", activeAmenities.join(","));
     const qs = params.toString();
     startTransition(() => {
       router.push(qs ? `?${qs}` : "?", { scroll: false });
@@ -70,13 +84,20 @@ export function ListingFiltersSidebar({
     setBeachfront(false);
     setMinPrice("");
     setMaxPrice("");
+    setActiveAmenities([]);
     startTransition(() => router.push("?", { scroll: false }));
+  }
+
+  function toggleAmenity(slug: string) {
+    setActiveAmenities((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
+    );
   }
 
   useEffect(() => {
     apply();
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  }, [pool, seaView, beachfront, guests, checkIn, checkOut]);
+  }, [pool, seaView, beachfront, guests, checkIn, checkOut, activeAmenities]);
 
   const activeCount =
     (pool ? 1 : 0) +
@@ -86,7 +107,8 @@ export function ListingFiltersSidebar({
     (checkIn ? 1 : 0) +
     (checkOut ? 1 : 0) +
     (minPrice ? 1 : 0) +
-    (maxPrice ? 1 : 0);
+    (maxPrice ? 1 : 0) +
+    activeAmenities.length;
 
   const Body = (
     <div className="divide-y divide-border">
@@ -146,6 +168,22 @@ export function ListingFiltersSidebar({
           />
         </div>
       </Row>
+
+      {filterableAmenities.length > 0 && (
+        <Row label="Équipements">
+          <div className="space-y-2">
+            {filterableAmenities.map((a) => (
+              <Amenity
+                key={a.slug}
+                active={activeAmenities.includes(a.slug)}
+                onClick={() => toggleAmenity(a.slug)}
+                icon={<AmenityIcon name={a.icon} />}
+                label={a.labelFr}
+              />
+            ))}
+          </div>
+        </Row>
+      )}
 
       <Row label="Prix par nuit">
         <div className="grid grid-cols-2 gap-2">
@@ -329,6 +367,20 @@ function Amenity({
       <span>{label}</span>
     </button>
   );
+}
+
+function AmenityIcon({ name }: { name: string | null }) {
+  if (!name) return <Check className="size-4" />;
+  const Icon =
+    name in LucideIcons
+      ? (
+          LucideIcons as unknown as Record<
+            string,
+            React.ComponentType<{ className?: string }>
+          >
+        )[name]
+      : null;
+  return Icon ? <Icon className="size-4" /> : <Check className="size-4" />;
 }
 
 function PriceInput({

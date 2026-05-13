@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { setRequestLocale } from "next-intl/server";
-import { listPublicProperties } from "@/lib/queries";
+import { listFilterableAmenities, listPublicProperties } from "@/lib/queries";
 import { PropertyCard } from "@/components/public/property-card";
 import { ListingFiltersSidebar } from "@/components/public/listing-filters-sidebar";
 import { FadeIn } from "@/components/public/fade-in";
@@ -26,6 +26,7 @@ export default async function BungalowsListingPage({
     maxPrice?: string;
     checkIn?: string;
     checkOut?: string;
+    amenities?: string;
   }>;
 }) {
   const { locale } = await params;
@@ -38,17 +39,24 @@ export default async function BungalowsListingPage({
   const beachfront = sp.beachfront === "1" ? true : undefined;
   const minPriceMillimes = sp.minPrice ? Number(sp.minPrice) * 1000 : undefined;
   const maxPriceMillimes = sp.maxPrice ? Number(sp.maxPrice) * 1000 : undefined;
+  const amenitySlugs = sp.amenities
+    ? sp.amenities.split(",").filter(Boolean)
+    : undefined;
 
-  const bungalows = await listPublicProperties("BUNGALOW", {
-    minCapacity,
-    hasPrivatePool,
-    seaView,
-    beachfront,
-    minPriceMillimes,
-    maxPriceMillimes,
-    checkIn: sp.checkIn,
-    checkOut: sp.checkOut,
-  });
+  const [bungalows, filterableAmenities] = await Promise.all([
+    listPublicProperties("BUNGALOW", {
+      minCapacity,
+      hasPrivatePool,
+      seaView,
+      beachfront,
+      minPriceMillimes,
+      maxPriceMillimes,
+      checkIn: sp.checkIn,
+      checkOut: sp.checkOut,
+      amenitySlugs,
+    }),
+    listFilterableAmenities(),
+  ]);
 
   const heroPhoto =
     bungalows.find((b) => b.photos.length > 0)?.photos[0] ?? null;
@@ -85,7 +93,10 @@ export default async function BungalowsListingPage({
 
       <section className="container-x py-10 lg:py-14">
         <div className="grid gap-10 lg:grid-cols-[280px_1fr] lg:gap-12">
-          <ListingFiltersSidebar resultCount={bungalows.length} />
+          <ListingFiltersSidebar
+            resultCount={bungalows.length}
+            filterableAmenities={filterableAmenities}
+          />
 
           <div>
             <div className="mb-6 flex items-baseline justify-between gap-4">

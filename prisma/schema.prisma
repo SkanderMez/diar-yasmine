@@ -222,15 +222,27 @@ model Photo {
 }
 
 model Amenity {
-  id       String  @id @default(cuid())
-  slug     String  @unique
-  labelFr  String
-  labelEn  String?
-  labelAr  String?
-  icon     String? // lucide icon name
-  category String?
+  id         String  @id @default(cuid())
+  slug       String  @unique
+  labelFr    String
+  labelEn    String?
+  labelAr    String?
+  icon       String? // lucide icon name
+  category   String?
+  /**
+   * Display this amenity as a quick-filter in the public listing sidebar.
+   * Off by default — only headline amenities (Wi-Fi, BBQ, etc.) should be
+   * surfaced as filters. Managed from /admin/amenities.
+   */
+  filterable Boolean @default(false)
+  /**
+   * Sort order for the admin catalog and the filter sidebar. Lower first.
+   */
+  sortOrder  Int     @default(100)
 
   properties PropertyAmenity[]
+
+  @@index([filterable, sortOrder])
 }
 
 model PropertyAmenity {

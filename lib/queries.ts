@@ -129,6 +129,28 @@ export type ReservationDetail = NonNullable<
  * active properties of the requested type plus their first 3 photos
  * for the card. Sorted by name.
  */
+/**
+ * Returns the catalog of amenities flagged `filterable=true`, sorted for
+ * the public listing sidebar. Light cache-key shape: only the fields the
+ * client actually renders.
+ */
+export async function listFilterableAmenities() {
+  return prisma.amenity.findMany({
+    where: { filterable: true },
+    select: {
+      id: true,
+      slug: true,
+      labelFr: true,
+      icon: true,
+    },
+    orderBy: [{ sortOrder: "asc" }, { labelFr: "asc" }],
+  });
+}
+
+export type FilterableAmenity = Awaited<
+  ReturnType<typeof listFilterableAmenities>
+>[number];
+
 export async function listPublicProperties(
   type: "CHALET" | "BUNGALOW",
   options: {
@@ -141,6 +163,8 @@ export async function listPublicProperties(
     /** ISO `yyyy-MM-dd` — both must be set to take effect. */
     checkIn?: string;
     checkOut?: string;
+    /** Amenity slugs that must ALL be present on the property. */
+    amenitySlugs?: string[];
   } = {},
 ) {
   const priceFilter: { gte?: number; lte?: number } = {};
@@ -178,6 +202,13 @@ export async function listPublicProperties(
       ...(hasPriceFilter ? { basePrice: priceFilter } : {}),
       ...(unavailableIds && unavailableIds.size > 0
         ? { id: { notIn: Array.from(unavailableIds) } }
+        : {}),
+      ...(options.amenitySlugs && options.amenitySlugs.length > 0
+        ? {
+            AND: options.amenitySlugs.map((slug) => ({
+              amenities: { some: { amenity: { slug } } },
+            })),
+          }
         : {}),
     },
     select: {
