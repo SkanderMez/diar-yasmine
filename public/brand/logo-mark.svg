@@ -1,0 +1,19 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diar Yasmine">
+  <defs>
+    <linearGradient id="dy-mark-grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0E5A6B"/>
+      <stop offset="1" stop-color="#4FB8C4"/>
+    </linearGradient>
+  </defs>
+  <!-- House silhouette -->
+  <path d="M32 6 L56 28 L56 56 L8 56 L8 28 Z" stroke="url(#dy-mark-grad)" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- Jasmine flower -->
+  <g transform="translate(32 40)">
+    <circle r="2.8" fill="url(#dy-mark-grad)"/>
+    <circle cx="-5" cy="-4" r="3.2" fill="url(#dy-mark-grad)" opacity="0.85"/>
+    <circle cx="5" cy="-4" r="3.2" fill="url(#dy-mark-grad)" opacity="0.85"/>
+    <circle cx="-5" cy="4" r="3.2" fill="url(#dy-mark-grad)" opacity="0.85"/>
+    <circle cx="5" cy="4" r="3.2" fill="url(#dy-mark-grad)" opacity="0.85"/>
+    <circle r="1.2" fill="#FAF7F2"/>
+  </g>
+</svg>
