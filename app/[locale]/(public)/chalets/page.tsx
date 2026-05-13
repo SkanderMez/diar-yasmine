@@ -24,6 +24,8 @@ export default async function ChaletsListingPage({
     beachfront?: string;
     minPrice?: string;
     maxPrice?: string;
+    checkIn?: string;
+    checkOut?: string;
   }>;
 }) {
   const { locale } = await params;
@@ -44,6 +46,8 @@ export default async function ChaletsListingPage({
     beachfront,
     minPriceMillimes,
     maxPriceMillimes,
+    checkIn: sp.checkIn,
+    checkOut: sp.checkOut,
   });
 
   const heroPhoto = chalets[0]?.photos[0] ?? null;
@@ -85,11 +89,19 @@ export default async function ChaletsListingPage({
           <ListingFiltersSidebar resultCount={chalets.length} />
 
           <div>
-            <div className="mb-6 flex items-baseline justify-between">
-              <h2 className="font-heading text-2xl text-foreground sm:text-3xl">
-                {chalets.length} chalet{chalets.length === 1 ? "" : "s"}{" "}
-                disponible{chalets.length === 1 ? "" : "s"}
-              </h2>
+            <div className="mb-6 flex items-baseline justify-between gap-4">
+              <div>
+                <h2 className="font-heading text-2xl text-foreground sm:text-3xl">
+                  {chalets.length} chalet{chalets.length === 1 ? "" : "s"}{" "}
+                  disponible{chalets.length === 1 ? "" : "s"}
+                </h2>
+                {sp.checkIn && sp.checkOut && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Du {sp.checkIn} au {sp.checkOut} · disponibilité en temps
+                    réel
+                  </p>
+                )}
+              </div>
               <span className="text-xs text-muted-foreground">
                 Trié par défaut
               </span>

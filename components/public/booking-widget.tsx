@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { differenceInCalendarDays } from "date-fns";
-import { Minus, Plus, ShieldCheck, Users } from "lucide-react";
+import { AlertCircle, Minus, Plus, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatTND } from "@/lib/money";
 import { DateRangePicker } from "./date-range-picker";
@@ -39,6 +39,41 @@ export function BookingWidget({
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
   const [guestsOpen, setGuestsOpen] = useState(false);
+  const [fetchedAvailability, setFetchedAvailability] = useState<
+    "checking" | "available" | "unavailable" | "error"
+  >("checking");
+
+  /** Hit the public availability endpoint whenever both dates are set so
+   *  the UI tells the user before they jump into the funnel. The
+   *  "checking" reset on each date change is intentional state init,
+   *  not a derived render — keep it. */
+  useEffect(() => {
+    if (!checkIn || !checkOut) return;
+    const controller = new AbortController();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFetchedAvailability("checking");
+    fetch(
+      `/api/properties/${propertyId}/availability?checkIn=${checkIn}&checkOut=${checkOut}`,
+      { signal: controller.signal },
+    )
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data: { available: boolean }) =>
+        setFetchedAvailability(data.available ? "available" : "unavailable"),
+      )
+      .catch((e) => {
+        if (e?.name !== "AbortError") setFetchedAvailability("error");
+      });
+    return () => controller.abort();
+  }, [checkIn, checkOut, propertyId]);
+
+  /** Derived: when no dates are picked, availability is "unknown" — we
+   *  never run the fetch, so the persisted internal state is irrelevant. */
+  const availability: "unknown" | "checking" | "available" | "unavailable" =
+    !checkIn || !checkOut
+      ? "unknown"
+      : fetchedAvailability === "error"
+        ? "unknown"
+        : fetchedAvailability;
 
   const nights = useMemo(() => {
     if (!checkIn || !checkOut) return null;
@@ -68,6 +103,7 @@ export function BookingWidget({
 
   function submit() {
     if (!checkIn || !checkOut || !nights || tooMany) return;
+    if (availability === "unavailable") return;
     const params = new URLSearchParams({
       propertyId,
       propertySlug,
@@ -151,15 +187,36 @@ export function BookingWidget({
         </p>
       )}
 
+      {availability === "unavailable" && (
+        <div className="mt-3 flex items-start gap-2 rounded-2xl bg-destructive/10 p-3 text-xs text-destructive">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" />
+          <span>
+            Ces dates ne sont plus disponibles pour cet hébergement. Essayez
+            d&apos;autres dates ou consultez les autres logements.
+          </span>
+        </div>
+      )}
+
       <Button
         type="button"
         size="lg"
         shape="pill"
         className="mt-4 w-full bg-primary text-primary-foreground hover:bg-deep"
         onClick={submit}
-        disabled={!nights || tooMany}
+        disabled={
+          !nights ||
+          tooMany ||
+          availability === "checking" ||
+          availability === "unavailable"
+        }
       >
-        {nights ? "Réserver" : "Vérifier la disponibilité"}
+        {!nights
+          ? "Choisir des dates"
+          : availability === "checking"
+            ? "Vérification…"
+            : availability === "unavailable"
+              ? "Indisponible"
+              : "Réserver"}
       </Button>
 
       <p className="mt-3 text-center text-xs text-muted-foreground">

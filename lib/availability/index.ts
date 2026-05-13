@@ -65,6 +65,35 @@ export async function findConflicts(range: AvailabilityRange) {
 }
 
 /**
+ * Returns the set of property IDs that have any active reservation
+ * overlapping `[checkIn, checkOut)`. Used by the public listings to
+ * exclude already-booked properties from a date-filtered search.
+ *
+ * Throws on inverted ranges. Empty Set if no conflicts.
+ */
+export async function findUnavailablePropertyIds(
+  checkIn: Date,
+  checkOut: Date,
+): Promise<Set<string>> {
+  if (checkOut <= checkIn) {
+    throw new RangeError(
+      "findUnavailablePropertyIds: checkOut must be after checkIn",
+    );
+  }
+  const rows = await prisma.reservation.findMany({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { lt: checkOut },
+      checkOut: { gt: checkIn },
+    },
+    select: { propertyId: true },
+    distinct: ["propertyId"],
+  });
+  return new Set(rows.map((r) => r.propertyId));
+}
+
+/**
  * Lookup the unique seasonal multiplier covering a given date range, if any.
  * Returns the multiplier in basis points (1000 = 1.0x). When the range
  * straddles seasons or no season matches, defaults to 1000.

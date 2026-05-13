@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { findUnavailablePropertyIds } from "./availability";
 
 /**
  * Server-only read helpers used by admin layouts and Server Components.
@@ -137,6 +138,9 @@ export async function listPublicProperties(
     beachfront?: boolean;
     minPriceMillimes?: number;
     maxPriceMillimes?: number;
+    /** ISO `yyyy-MM-dd` — both must be set to take effect. */
+    checkIn?: string;
+    checkOut?: string;
   } = {},
 ) {
   const priceFilter: { gte?: number; lte?: number } = {};
@@ -144,6 +148,15 @@ export async function listPublicProperties(
   if (options.maxPriceMillimes) priceFilter.lte = options.maxPriceMillimes;
   const hasPriceFilter =
     priceFilter.gte !== undefined || priceFilter.lte !== undefined;
+
+  let unavailableIds: Set<string> | null = null;
+  if (options.checkIn && options.checkOut) {
+    const ci = new Date(`${options.checkIn}T00:00:00`);
+    const co = new Date(`${options.checkOut}T00:00:00`);
+    if (co > ci) {
+      unavailableIds = await findUnavailablePropertyIds(ci, co);
+    }
+  }
 
   return prisma.property.findMany({
     where: {
@@ -163,6 +176,9 @@ export async function listPublicProperties(
         ? { beachfront: options.beachfront }
         : {}),
       ...(hasPriceFilter ? { basePrice: priceFilter } : {}),
+      ...(unavailableIds && unavailableIds.size > 0
+        ? { id: { notIn: Array.from(unavailableIds) } }
+        : {}),
     },
     select: {
       id: true,
