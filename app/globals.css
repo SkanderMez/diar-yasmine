@@ -3,84 +3,121 @@
 /*
  * Diar Yasmine design tokens.
  *
- * All visual values live in this file + tailwind utilities.
- * Components must NEVER hardcode colors, radii, shadows, or
- * font sizes. See /docs/redesign.md for the swap process.
+ * Three-layer architecture:
+ *   1. :root          — raw brand values + shadcn semantic mappings
+ *   2. @theme inline  — expose values as Tailwind utilities (bg-*, text-*, etc.)
+ *   3. /components/ui — consume Tailwind utilities only, no raw hex
+ *
+ * Components must NEVER hardcode colors, radii, shadows, or font sizes.
+ * See /docs/redesign.md for the redesign swap process.
  */
 
 :root {
-  /* Brand palette */
-  --color-primary: #0e5a6b;
-  --color-primary-light: #4fb8c4;
-  --color-sand: #f5efe6;
-  --color-ivory: #faf7f2;
-  --color-charcoal: #1f2a2e;
-  --color-bougainvillier: #c44e7a;
-  --color-olive: #7a8f6b;
-  --color-success: #2f9e6a;
-  --color-warning: #e0a458;
-  --color-danger: #c44e4e;
+  /* ===== Brand raw values ===== */
+  --brand-teal: #0e5a6b; /* primary */
+  --brand-turquoise: #4fb8c4; /* primary-light */
+  --brand-sand: #f5efe6;
+  --brand-ivory: #faf7f2;
+  --brand-charcoal: #1f2a2e;
+  --brand-bougainvillier: #c44e7a;
+  --brand-olive: #7a8f6b;
+  --brand-green: #2f9e6a; /* success */
+  --brand-amber: #e0a458; /* warning */
+  --brand-red: #c44e4e; /* danger */
+  --brand-neutral-fg: #6b7472;
+  --brand-border: rgba(31, 42, 46, 0.1);
+  --brand-input: rgba(31, 42, 46, 0.15);
 
-  /* Semantic */
-  --color-background: var(--color-ivory);
-  --color-foreground: var(--color-charcoal);
-  --color-muted: #6b7472;
-  --color-muted-foreground: #4a5350;
-  --color-border: rgba(31, 42, 46, 0.1);
-  --color-ring: var(--color-primary-light);
+  /* ===== Shadcn semantic mappings (consumed by /components/ui) ===== */
+  --background: var(--brand-ivory);
+  --foreground: var(--brand-charcoal);
+  --card: #ffffff;
+  --card-foreground: var(--brand-charcoal);
+  --popover: #ffffff;
+  --popover-foreground: var(--brand-charcoal);
+  --primary: var(--brand-teal);
+  --primary-foreground: var(--brand-ivory);
+  --secondary: var(--brand-sand);
+  --secondary-foreground: var(--brand-charcoal);
+  --muted: var(--brand-sand);
+  --muted-foreground: var(--brand-neutral-fg);
+  --accent: var(--brand-sand);
+  --accent-foreground: var(--brand-charcoal);
+  --destructive: var(--brand-red);
+  --destructive-foreground: var(--brand-ivory);
+  --border: var(--brand-border);
+  --input: var(--brand-input);
+  --ring: var(--brand-turquoise);
+  --radius: 0.75rem; /* 12px base — md radius */
 
-  /* Reservation source colors (calendar blocks) */
-  --color-source-direct-web: var(--color-primary);
-  --color-source-walk-in: var(--color-olive);
-  --color-source-phone: var(--color-olive);
-  --color-source-booking: #1e3a8a;
-  --color-source-airbnb: #e11d48;
-  --color-source-expedia: var(--color-warning);
-  --color-source-partner: #7c3aed;
-  --color-source-other: #6b7280;
+  /* ===== Reservation source palette (admin calendar blocks) ===== */
+  --source-direct-web: var(--brand-teal);
+  --source-walk-in: var(--brand-olive);
+  --source-phone: var(--brand-olive);
+  --source-booking: #1e3a8a;
+  --source-airbnb: #e11d48;
+  --source-expedia: var(--brand-amber);
+  --source-partner: #7c3aed;
+  --source-other: #6b7280;
 }
 
 @theme inline {
-  /* Colors → exposed as bg-*, text-*, border-*, ring-* utilities */
-  --color-primary: var(--color-primary);
-  --color-primary-light: var(--color-primary-light);
-  --color-sand: var(--color-sand);
-  --color-ivory: var(--color-ivory);
-  --color-charcoal: var(--color-charcoal);
-  --color-bougainvillier: var(--color-bougainvillier);
-  --color-olive: var(--color-olive);
-  --color-success: var(--color-success);
-  --color-warning: var(--color-warning);
-  --color-danger: var(--color-danger);
-  --color-muted: var(--color-muted);
-  --color-muted-foreground: var(--color-muted-foreground);
-  --color-border: var(--color-border);
-  --color-background: var(--color-background);
-  --color-foreground: var(--color-foreground);
-  --color-ring: var(--color-ring);
-  --color-source-direct-web: var(--color-source-direct-web);
-  --color-source-walk-in: var(--color-source-walk-in);
-  --color-source-phone: var(--color-source-phone);
-  --color-source-booking: var(--color-source-booking);
-  --color-source-airbnb: var(--color-source-airbnb);
-  --color-source-expedia: var(--color-source-expedia);
-  --color-source-partner: var(--color-source-partner);
-  --color-source-other: var(--color-source-other);
+  /* ===== Shadcn semantic tokens → bg-primary, text-card-foreground, etc. ===== */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-  /* Fonts (variable injected by next/font in layout.tsx) */
+  /* ===== Brand extras → bg-sand, text-charcoal, text-primary-light, etc. ===== */
+  --color-primary-light: var(--brand-turquoise);
+  --color-sand: var(--brand-sand);
+  --color-ivory: var(--brand-ivory);
+  --color-charcoal: var(--brand-charcoal);
+  --color-bougainvillier: var(--brand-bougainvillier);
+  --color-olive: var(--brand-olive);
+  --color-success: var(--brand-green);
+  --color-warning: var(--brand-amber);
+  --color-danger: var(--brand-red);
+
+  /* ===== Reservation sources → bg-source-booking, etc. ===== */
+  --color-source-direct-web: var(--source-direct-web);
+  --color-source-walk-in: var(--source-walk-in);
+  --color-source-phone: var(--source-phone);
+  --color-source-booking: var(--source-booking);
+  --color-source-airbnb: var(--source-airbnb);
+  --color-source-expedia: var(--source-expedia);
+  --color-source-partner: var(--source-partner);
+  --color-source-other: var(--source-other);
+
+  /* ===== Typography (CSS vars injected by next/font in layout.tsx) ===== */
   --font-heading: var(--font-fraunces);
   --font-sans: var(--font-inter);
   --font-script: var(--font-caveat);
   --font-arabic: var(--font-tajawal);
 
-  /* Radii */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-  --radius-2xl: 36px;
+  /* ===== Radii (derived from --radius) ===== */
+  --radius-sm: calc(var(--radius) - 6px); /* 6px */
+  --radius-md: var(--radius); /* 12px */
+  --radius-lg: calc(var(--radius) + 8px); /* 20px */
+  --radius-xl: calc(var(--radius) + 16px); /* 28px */
+  --radius-2xl: calc(var(--radius) + 24px); /* 36px */
 
-  /* Shadows — soft only, never harsh */
+  /* ===== Shadows — soft only, never harsh ===== */
   --shadow-sm: 0 1px 2px rgba(31, 42, 46, 0.04);
   --shadow-md: 0 4px 12px rgba(31, 42, 46, 0.06);
   --shadow-lg: 0 12px 32px rgba(31, 42, 46, 0.08);
@@ -96,8 +133,8 @@
   }
 
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    background-color: var(--background);
+    color: var(--foreground);
     font-family: var(--font-sans);
     font-feature-settings: "rlig" 1, "calt" 1;
   }
@@ -129,7 +166,7 @@
 
   /* Focus ring — accessibility */
   :focus-visible {
-    outline: 2px solid var(--color-ring);
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
 }
