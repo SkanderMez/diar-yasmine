@@ -855,6 +855,556 @@ html:has([data-admin-shell]) {
   border-bottom-color: var(--primary);
 }
 
+/* ==========================================================================
+   CALENDAR (timeline) — ported from the maquette page-level <style>.
+   Scoped to [data-admin-shell] so the public site is untouched.
+   ========================================================================== */
+
+[data-admin-shell] .cal-toolbar {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+[data-admin-shell] .cal-date-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+[data-admin-shell] .cal-date-nav .date-display {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+  padding: 0 12px;
+  min-width: 140px;
+  text-align: center;
+  text-transform: capitalize;
+}
+[data-admin-shell] .cal-toggle {
+  display: flex;
+  background: var(--bg-surface-2);
+  border-radius: var(--radius);
+  padding: 3px;
+  border: 1px solid var(--border);
+}
+[data-admin-shell] .cal-toggle button {
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-radius: 5px;
+}
+[data-admin-shell] .cal-toggle button.active {
+  background: var(--bg-surface-3);
+  color: var(--text);
+}
+
+[data-admin-shell] .filter-chip {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 12px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+[data-admin-shell] .filter-chip:hover {
+  color: var(--text);
+}
+[data-admin-shell] .filter-chip.active {
+  background: rgba(79, 184, 196, 0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+[data-admin-shell] .filter-chip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Grid container */
+[data-admin-shell] .cal-wrapper {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+[data-admin-shell] .cal-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  height: calc(100vh - 56px - 56px - 24px - 80px);
+  min-height: 600px;
+}
+[data-admin-shell] .cal-left {
+  background: var(--bg-surface-2);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+[data-admin-shell] .cal-right {
+  overflow: auto;
+  position: relative;
+}
+[data-admin-shell] .cal-header-row {
+  display: grid;
+  background: var(--bg-surface-2);
+  border-bottom: 1px solid var(--border);
+  height: 48px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+[data-admin-shell] .cal-header-row .month-marker {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+[data-admin-shell] .cal-day {
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 16px;
+  font-size: 0.78rem;
+}
+[data-admin-shell] .cal-day .dow {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+[data-admin-shell] .cal-day .dnum {
+  font-weight: 600;
+  margin-top: 2px;
+}
+[data-admin-shell] .cal-day.weekend {
+  background: rgba(127, 127, 127, 0.04);
+}
+[data-theme="light"] [data-admin-shell] .cal-day.weekend {
+  background: rgba(122, 143, 107, 0.06);
+}
+[data-admin-shell] .cal-day.today {
+  background: rgba(79, 184, 196, 0.1);
+}
+[data-theme="light"] [data-admin-shell] .cal-day.today {
+  background: rgba(14, 90, 107, 0.08);
+}
+[data-admin-shell] .cal-day.today .dnum {
+  color: var(--primary);
+}
+
+[data-admin-shell] .cal-left-header {
+  height: 48px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  background: var(--bg-surface-2);
+  position: sticky;
+  top: 0;
+  z-index: 11;
+}
+[data-admin-shell] .cal-left-header .label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Section headers */
+[data-admin-shell] .unit-section-header {
+  height: 32px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--primary);
+  font-weight: 700;
+}
+[data-admin-shell] .unit-section-header .count {
+  margin-left: 6px;
+  color: var(--text-dim);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+[data-admin-shell] .unit-section-spacer {
+  height: 32px;
+  background: var(--bg-surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Unit row */
+[data-admin-shell] .unit-row-label {
+  height: 44px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+[data-admin-shell] .unit-row-label:hover {
+  background: var(--bg-surface-3);
+}
+[data-admin-shell] .unit-row-label .thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--primary-deep);
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+}
+[data-admin-shell] .unit-row-label .info {
+  flex: 1;
+  min-width: 0;
+}
+[data-admin-shell] .unit-row-label .name {
+  font-weight: 500;
+}
+[data-admin-shell] .unit-row-label .meta {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+/* Bookings layer */
+[data-admin-shell] .booking-row {
+  position: relative;
+  height: 44px;
+  border-bottom: 1px solid var(--border);
+}
+[data-admin-shell] .booking-row.weekend-bg {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 180px,
+    rgba(127, 127, 127, 0.04) 180px,
+    rgba(127, 127, 127, 0.04) 252px
+  );
+}
+[data-theme="light"] [data-admin-shell] .booking-row.weekend-bg {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 180px,
+    rgba(122, 143, 107, 0.06) 180px,
+    rgba(122, 143, 107, 0.06) 252px
+  );
+}
+
+/* The booking bars */
+[data-admin-shell] .booking {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  border-radius: 5px;
+  padding: 0 6px 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.15) inset,
+    0 1px 2px rgba(0, 0, 0, 0.18);
+  border: none;
+  font-family: inherit;
+}
+[data-admin-shell] .booking:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+  z-index: 5;
+  filter: brightness(1.05);
+}
+[data-admin-shell] .booking.direct {
+  background: var(--ch-direct);
+  color: var(--ch-direct-fg);
+}
+[data-admin-shell] .booking.booking-ch {
+  background: var(--ch-booking);
+  color: var(--ch-booking-fg);
+}
+[data-admin-shell] .booking.airbnb {
+  background: var(--ch-airbnb);
+  color: var(--ch-airbnb-fg);
+}
+[data-admin-shell] .booking.expedia {
+  background: var(--ch-expedia);
+  color: var(--ch-expedia-fg);
+}
+[data-admin-shell] .booking.walkin {
+  background: var(--ch-walkin);
+  color: var(--ch-walkin-fg);
+}
+
+/* Channel mini-logo inside booking bar */
+[data-admin-shell] .booking .ch-logo {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.6rem;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+[data-admin-shell] .booking.direct .ch-logo {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ch-direct);
+}
+[data-admin-shell] .booking.booking-ch .ch-logo {
+  background: #ffffff;
+  color: #003580;
+}
+[data-admin-shell] .booking.airbnb .ch-logo {
+  background: #ffffff;
+  color: #ff385c;
+}
+[data-admin-shell] .booking.expedia .ch-logo {
+  background: #003b5c;
+  color: #ffcc00;
+}
+[data-admin-shell] .booking.walkin .ch-logo {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ch-walkin);
+}
+
+/* Payment dot indicator */
+[data-admin-shell] .booking .pay-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+[data-admin-shell] .booking .pay-dot.paid {
+  background: #4dd89b;
+}
+[data-admin-shell] .booking .pay-dot.deposit {
+  background: #ffd166;
+}
+[data-admin-shell] .booking .pay-dot.unpaid {
+  background: #ff6b6b;
+}
+[data-admin-shell] .booking .pay-dot.refunded {
+  background: #97a3ab;
+}
+
+[data-admin-shell] .booking .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  text-align: left;
+}
+[data-admin-shell] .booking .nights {
+  margin-left: 4px;
+  font-weight: 700;
+  opacity: 0.88;
+  font-size: 0.7rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.18);
+}
+[data-theme="light"] [data-admin-shell] .booking.expedia .nights {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* Option style — dashed */
+[data-admin-shell] .booking.option {
+  background: transparent !important;
+  border: 1.5px dashed var(--warning);
+  color: var(--warning);
+  box-shadow: none;
+}
+[data-admin-shell] .booking.option .ch-logo {
+  background: rgba(229, 185, 104, 0.2);
+  color: var(--warning);
+}
+[data-admin-shell] .booking.option .nights {
+  background: rgba(229, 185, 104, 0.15);
+}
+
+/* Today line */
+[data-admin-shell] .today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--primary);
+  z-index: 3;
+  pointer-events: none;
+}
+[data-admin-shell] .today-line::before {
+  content: "AUJ";
+  position: absolute;
+  top: 6px;
+  left: -16px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--bg-app);
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid var(--primary);
+}
+
+/* Legend */
+[data-admin-shell] .cal-legend {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  margin-top: 16px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+[data-admin-shell] .cal-legend-section {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+[data-admin-shell] .cal-legend-section .label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+[data-admin-shell] .cal-legend-item {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+[data-admin-shell] .cal-legend-bar {
+  width: 24px;
+  height: 8px;
+  border-radius: 3px;
+}
+[data-admin-shell] .cal-legend-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+}
+
+/* Drawer-image (booking detail) */
+[data-admin-shell] .drawer-image {
+  height: 160px;
+  background: linear-gradient(135deg, var(--primary-deep), var(--primary));
+  position: relative;
+  background-size: cover;
+  background-position: center;
+}
+[data-admin-shell] .drawer-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(13, 18, 22, 0.9));
+}
+[data-admin-shell] .drawer-image-label {
+  position: absolute;
+  bottom: 16px;
+  left: 20px;
+  color: var(--text);
+  z-index: 1;
+}
+[data-admin-shell] .drawer-image-label .name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+[data-admin-shell] .drawer-image-label .meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+[data-admin-shell] .drawer-section {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+[data-admin-shell] .drawer-section:last-child {
+  border-bottom: none;
+}
+[data-admin-shell] .drawer-section h4 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+[data-admin-shell] .info-pair {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.88rem;
+}
+[data-admin-shell] .info-pair .label {
+  color: var(--text-muted);
+}
+[data-admin-shell] .info-pair .value {
+  font-weight: 500;
+}
+[data-admin-shell] .price-total {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+[data-admin-shell] .price-total .value {
+  color: var(--primary);
+  font-size: 1.25rem;
+}
+
+/* Drawer slide animation when used outside of Sheet primitive */
+[data-admin-shell] .drawer-admin[data-state="open"] {
+  animation: drawer-admin-slide-in 0.25s ease-out;
+}
+@keyframes drawer-admin-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 /* ---------- UTILITY (renamed text-muted to avoid Tailwind collision) ---------- */
 .text-muted-admin {
   color: var(--text-muted);

@@ -350,3 +350,61 @@ export async function listPaymentsForRange(opts: {
 export type PaymentRow = Awaited<
   ReturnType<typeof listPaymentsForRange>
 >["payments"][number];
+
+/**
+ * Last N audit-log rows for a single reservation, newest first. Used by
+ * the calendar drawer's "Activité" timeline.
+ */
+export async function listReservationAuditLog(
+  reservationId: string,
+  limit = 10,
+) {
+  return prisma.auditLog.findMany({
+    where: { entity: "Reservation", entityId: reservationId },
+    orderBy: { timestamp: "desc" },
+    take: limit,
+    include: { user: { select: { name: true } } },
+  });
+}
+
+export type ReservationAuditEntry = Awaited<
+  ReturnType<typeof listReservationAuditLog>
+>[number];
+
+/**
+ * Drawer payload for the calendar timeline. Returns the reservation with
+ * its guest, property, photos (for the drawer header), and recent audit
+ * trail. Returns null if missing or soft-deleted.
+ */
+export async function findReservationForDrawer(reservationId: string) {
+  const reservation = await prisma.reservation.findUnique({
+    where: { id: reservationId },
+    include: {
+      guest: true,
+      property: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          type: true,
+          capacity: true,
+          beachfront: true,
+          seaView: true,
+          hasPrivatePool: true,
+          photos: {
+            orderBy: { order: "asc" },
+            take: 1,
+            select: { url: true, alt: true },
+          },
+        },
+      },
+    },
+  });
+  if (!reservation || reservation.deletedAt) return null;
+  const audit = await listReservationAuditLog(reservation.id, 10);
+  return { reservation, audit };
+}
+
+export type DrawerReservation = NonNullable<
+  Awaited<ReturnType<typeof findReservationForDrawer>>
+>;
