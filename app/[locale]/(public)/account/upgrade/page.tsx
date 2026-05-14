@@ -4,6 +4,7 @@ import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCustomerSession } from "@/lib/customer-auth";
 import { UpgradeFlow } from "@/components/public/upgrade-flow";
+import { FadeIn } from "@/components/public/fade-in";
 
 export const metadata: Metadata = {
   title: "Créer mon compte",
@@ -21,32 +22,36 @@ export default async function AccountUpgradePage({
   if (existing) redirect(`/${locale}/account`);
 
   return (
-    <main className="flex-1 bg-ivory pt-28 text-foreground">
-      <div className="container-x section-y">
-        <div className="mx-auto max-w-md">
-          <p className="eyebrow">Mon compte</p>
-          <h1 className="mt-3 heading-display text-4xl text-foreground sm:text-5xl">
+    <main className="flex-1 bg-sand pt-32 pb-24">
+      <div className="container-x">
+        <FadeIn className="mx-auto max-w-md text-center">
+          <p className="font-script text-2xl text-primary">
+            Restons en contact
+          </p>
+          <h1 className="heading-display mt-2 text-4xl text-charcoal sm:text-5xl">
             Créer mon compte
           </h1>
-          <p className="mt-3 text-sm text-muted-foreground">
+          <p className="mt-4 text-sm text-charcoal-soft">
             Si vous avez déjà séjourné chez nous, vos réservations seront
             automatiquement liées à votre compte.
           </p>
+        </FadeIn>
 
-          <div className="mt-10 rounded-3xl border border-border bg-card p-8 shadow-sm">
+        <FadeIn delay="delay-1" className="mx-auto mt-10 max-w-md">
+          <div className="rounded-lg border border-line-soft bg-white p-8 shadow-sm">
             <UpgradeFlow />
           </div>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          <p className="mt-6 text-center text-sm text-charcoal-soft">
             Déjà un compte ?{" "}
             <Link
               href="/account/login"
-              className="font-medium text-foreground underline-offset-4 hover:underline"
+              className="font-medium text-primary underline-offset-4 hover:text-bougainvillier hover:underline"
             >
               Se connecter
             </Link>
           </p>
-        </div>
+        </FadeIn>
       </div>
     </main>
   );

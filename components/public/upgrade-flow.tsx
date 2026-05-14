@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 type Step = "phone" | "verify";
 
@@ -68,49 +67,48 @@ export function UpgradeFlow() {
   if (step === "phone") {
     return (
       <form onSubmit={requestOtp} className="space-y-5">
-        <p className="flex items-start gap-2 rounded-2xl bg-bone/60 p-3 text-xs text-muted-foreground">
+        <p className="flex items-start gap-2 rounded-md bg-sand/60 p-3 text-xs text-charcoal-soft">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
           Vous recevrez un code à 6 chiffres sur ce numéro pour vérifier que
           vous êtes bien le ou la même personne.
         </p>
 
-        <Field label="Téléphone">
+        <Field label="Téléphone" htmlFor="upgrade-phone">
           <input
+            id="upgrade-phone"
             type="tel"
             required
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+216 98 000 000"
             autoComplete="tel"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+            className="w-full bg-transparent text-sm text-charcoal outline-none placeholder:text-muted-foreground/60"
           />
         </Field>
 
         {error && (
-          <div className="flex items-center gap-2 rounded-2xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          <div className="flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
             <AlertCircle className="size-4" /> {error}
           </div>
         )}
 
-        <Button
+        <button
           type="submit"
-          shape="pill"
-          size="lg"
           disabled={submitting}
-          className="w-full gap-2"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-ivory transition-all hover:-translate-y-px hover:bg-bougainvillier hover:shadow-md disabled:opacity-50"
         >
           {submitting && <Loader2 className="size-4 animate-spin" />}
           Recevoir le code
           <ArrowRight className="size-4" />
-        </Button>
+        </button>
       </form>
     );
   }
 
   return (
     <form onSubmit={verifyOtp} className="space-y-5">
-      <p className="text-sm text-muted-foreground">
-        Code envoyé à <strong className="text-foreground">{phone}</strong>.{" "}
+      <p className="text-sm text-charcoal-soft">
+        Code envoyé à <strong className="text-charcoal">{phone}</strong>.{" "}
         <button
           type="button"
           onClick={() => setStep("phone")}
@@ -120,8 +118,9 @@ export function UpgradeFlow() {
         </button>
       </p>
 
-      <Field label="Code à 6 chiffres">
+      <Field label="Code à 6 chiffres" htmlFor="upgrade-code">
         <input
+          id="upgrade-code"
           type="text"
           inputMode="numeric"
           maxLength={6}
@@ -129,12 +128,13 @@ export function UpgradeFlow() {
           required
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-          className="w-full bg-transparent text-center text-2xl font-semibold tracking-[0.5em] outline-none"
+          className="w-full bg-transparent text-center font-heading text-2xl font-medium tracking-[0.5em] text-charcoal outline-none"
         />
       </Field>
 
-      <Field label="Nouveau mot de passe">
+      <Field label="Nouveau mot de passe" htmlFor="upgrade-password">
         <input
+          id="upgrade-password"
           type="password"
           required
           minLength={8}
@@ -142,26 +142,24 @@ export function UpgradeFlow() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="8 caractères minimum"
-          className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+          className="w-full bg-transparent text-sm text-charcoal outline-none placeholder:text-muted-foreground/60"
         />
       </Field>
 
       {error && (
-        <div className="flex items-center gap-2 rounded-2xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <div className="flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="size-4" /> {error}
         </div>
       )}
 
-      <Button
+      <button
         type="submit"
-        shape="pill"
-        size="lg"
         disabled={submitting}
-        className="w-full gap-2"
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-ivory transition-all hover:-translate-y-px hover:bg-bougainvillier hover:shadow-md disabled:opacity-50"
       >
         {submitting && <Loader2 className="size-4 animate-spin" />}
         Valider et créer mon compte
-      </Button>
+      </button>
     </form>
   );
 }
@@ -183,17 +181,22 @@ function errorLabel(code: string | undefined): string {
 
 function Field({
   label,
+  htmlFor,
   children,
 }: {
   label: string;
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
-    <label className="block cursor-text rounded-2xl border border-border bg-bone/40 px-4 py-3 transition-colors focus-within:border-primary focus-within:bg-card">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+    <div className="rounded-md border border-line bg-white px-4 py-3 transition-colors focus-within:border-primary focus-within:ring-4 focus-within:ring-turquoise/15">
+      <label
+        htmlFor={htmlFor}
+        className="block text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+      >
         {label}
-      </span>
+      </label>
       <div className="mt-1">{children}</div>
-    </label>
+    </div>
   );
 }

@@ -3,8 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
+/**
+ * Customer login form — phone OR email + password. POSTs to the existing
+ * /api/auth/customer/login endpoint, then redirects to /account on success.
+ */
 export function CustomerLoginForm() {
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
@@ -32,61 +35,67 @@ export function CustomerLoginForm() {
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      <Field label="Téléphone ou email">
+      <Field label="Téléphone ou email" htmlFor="login-identifier">
         <input
+          id="login-identifier"
           type="text"
           required
           autoComplete="username"
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
-          placeholder="+216 …"
-          className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+          placeholder="+216 98 000 000 ou vous@email.com"
+          className="w-full bg-transparent text-sm text-charcoal outline-none placeholder:text-muted-foreground/60"
         />
       </Field>
-      <Field label="Mot de passe">
+
+      <Field label="Mot de passe" htmlFor="login-password">
         <input
+          id="login-password"
           type="password"
           required
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full bg-transparent text-sm outline-none"
+          className="w-full bg-transparent text-sm text-charcoal outline-none"
         />
       </Field>
 
       {error && (
-        <div className="flex items-center gap-2 rounded-2xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <div className="flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="size-4" /> {error}
         </div>
       )}
 
-      <Button
+      <button
         type="submit"
-        shape="pill"
-        size="lg"
         disabled={submitting}
-        className="w-full gap-2"
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-ivory transition-all hover:-translate-y-px hover:bg-bougainvillier hover:shadow-md disabled:opacity-50"
       >
         {submitting && <Loader2 className="size-4 animate-spin" />}
         Se connecter
-      </Button>
+      </button>
     </form>
   );
 }
 
 function Field({
   label,
+  htmlFor,
   children,
 }: {
   label: string;
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
-    <label className="block cursor-text rounded-2xl border border-border bg-bone/40 px-4 py-3 transition-colors focus-within:border-primary focus-within:bg-card">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+    <div className="rounded-md border border-line bg-white px-4 py-3 transition-colors focus-within:border-primary focus-within:ring-4 focus-within:ring-turquoise/15">
+      <label
+        htmlFor={htmlFor}
+        className="block text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+      >
         {label}
-      </span>
+      </label>
       <div className="mt-1">{children}</div>
-    </label>
+    </div>
   );
 }
