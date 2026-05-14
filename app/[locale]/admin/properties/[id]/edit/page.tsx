@@ -23,8 +23,13 @@ export default async function EditPropertyPage({
       },
     }),
     prisma.amenity.findMany({
-      select: { slug: true, labelFr: true, category: true },
-      orderBy: [{ category: "asc" }, { labelFr: "asc" }],
+      select: {
+        slug: true,
+        labelFr: true,
+        category: true,
+        filterable: true,
+      },
+      orderBy: [{ category: "asc" }, { sortOrder: "asc" }, { labelFr: "asc" }],
     }),
   ]);
 

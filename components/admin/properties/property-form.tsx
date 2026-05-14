@@ -28,6 +28,7 @@ interface AmenityOption {
   slug: string;
   labelFr: string;
   category: string | null;
+  filterable?: boolean;
 }
 
 export interface PropertyFormDefaults {
@@ -349,12 +350,22 @@ export function PropertyForm({ mode, defaults, amenities }: PropertyFormProps) {
                 <label
                   key={a.slug}
                   className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent"
+                  title={
+                    a.filterable
+                      ? "Visible dans les filtres publics"
+                      : undefined
+                  }
                 >
                   <Checkbox
                     checked={form.amenitySlugs.has(a.slug)}
                     onCheckedChange={() => toggleAmenity(a.slug)}
                   />
-                  {a.labelFr}
+                  <span className="flex-1">{a.labelFr}</span>
+                  {a.filterable && (
+                    <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-primary">
+                      Filtre
+                    </span>
+                  )}
                 </label>
               ))}
             </div>

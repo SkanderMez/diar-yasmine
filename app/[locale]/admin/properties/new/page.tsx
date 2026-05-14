@@ -11,8 +11,13 @@ export default async function NewPropertyPage({
   setRequestLocale(locale);
 
   const amenities = await prisma.amenity.findMany({
-    select: { slug: true, labelFr: true, category: true },
-    orderBy: [{ category: "asc" }, { labelFr: "asc" }],
+    select: {
+      slug: true,
+      labelFr: true,
+      category: true,
+      filterable: true,
+    },
+    orderBy: [{ category: "asc" }, { sortOrder: "asc" }, { labelFr: "asc" }],
   });
 
   return (
