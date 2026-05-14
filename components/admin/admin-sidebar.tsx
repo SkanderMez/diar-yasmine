@@ -58,7 +58,7 @@ const SECTIONS: NavSection[] = [
       },
       {
         key: "clients",
-        href: "/admin/guests",
+        href: "/admin/clients",
         label: "Clients",
         icon: Users,
       },

@@ -1,112 +1,160 @@
-import { setRequestLocale } from "next-intl/server";
 import { Plus } from "lucide-react";
+import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { prisma } from "@/lib/prisma";
-import { formatTND } from "@/lib/money";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { listAdminPropertyCards, type AdminUnitCard } from "@/lib/queries";
+import {
+  UnitsFilters,
+  type UnitsFilterDefaults,
+} from "@/components/admin/units/units-filters";
+import { UnitsGrid } from "@/components/admin/units/units-grid";
 
-export default async function AdminPropertiesPage({
+export const dynamic = "force-dynamic";
+
+function parseSearchParam(raw: string | string[] | undefined): string {
+  if (typeof raw === "string") return raw;
+  if (Array.isArray(raw)) return raw[0] ?? "";
+  return "";
+}
+
+function matchPosition(unit: AdminUnitCard, position: string): boolean {
+  switch (position) {
+    case "beachfront":
+      return unit.beachfront;
+    case "pool":
+      return unit.hasPrivatePool;
+    case "seaview":
+      return unit.seaView;
+    case "garden":
+      return (
+        unit.type === "BUNGALOW" && !unit.beachfront && !unit.hasPrivatePool
+      );
+    default:
+      return true;
+  }
+}
+
+function matchCapacity(unit: AdminUnitCard, capacity: string): boolean {
+  if (!capacity || capacity === "all") return true;
+  if (capacity === "8") return unit.capacity >= 8;
+  const n = Number(capacity);
+  if (!Number.isFinite(n)) return true;
+  return unit.capacity === n;
+}
+
+function matchStatus(unit: AdminUnitCard, status: string): boolean {
+  if (!status || status === "all") return true;
+  return unit.status === status;
+}
+
+function matchSearch(unit: AdminUnitCard, query: string): boolean {
+  if (!query) return true;
+  return unit.name.toLowerCase().includes(query.toLowerCase());
+}
+
+function sortUnits(units: AdminUnitCard[], sort: string): AdminUnitCard[] {
+  const sorted = [...units];
+  switch (sort) {
+    case "price":
+      sorted.sort((a, b) => b.basePrice - a.basePrice);
+      break;
+    case "occupancy":
+      sorted.sort((a, b) => b.occupancyPct - a.occupancyPct);
+      break;
+    case "rating":
+      sorted.sort((a, b) => b.demoRating.value - a.demoRating.value);
+      break;
+    case "name":
+    default:
+      sorted.sort((a, b) => a.name.localeCompare(b.name, "fr"));
+      break;
+  }
+  return sorted;
+}
+
+export default async function AdminUnitsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{
+    q?: string | string[];
+    capacity?: string | string[];
+    status?: string | string[];
+    position?: string | string[];
+    sort?: string | string[];
+  }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const sp = await searchParams;
 
-  const properties = await prisma.property.findMany({
-    where: { deletedAt: null },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      type: true,
-      status: true,
-      capacity: true,
-      basePrice: true,
-      _count: { select: { photos: true, reservations: true } },
-    },
-    orderBy: [{ type: "asc" }, { name: "asc" }],
-  });
+  const defaults: UnitsFilterDefaults = {
+    search: parseSearchParam(sp.q),
+    capacity: parseSearchParam(sp.capacity) || "all",
+    status: parseSearchParam(sp.status) || "all",
+    position: parseSearchParam(sp.position) || "all",
+    sort: parseSearchParam(sp.sort) || "name",
+  };
 
-  const chalets = properties.filter((p) => p.type === "CHALET");
-  const bungalows = properties.filter((p) => p.type === "BUNGALOW");
+  const allUnits = await listAdminPropertyCards();
+
+  const filtered = allUnits.filter(
+    (u) =>
+      matchSearch(u, defaults.search) &&
+      matchCapacity(u, defaults.capacity) &&
+      matchStatus(u, defaults.status) &&
+      matchPosition(u, defaults.position),
+  );
+  const sorted = sortUnits(filtered, defaults.sort);
+
+  const totalChalets = allUnits.filter((u) => u.type === "CHALET").length;
+  const totalBungalows = allUnits.filter((u) => u.type === "BUNGALOW").length;
+
+  const chalets = sorted.filter((u) => u.type === "CHALET");
+  const bungalows = sorted.filter((u) => u.type === "BUNGALOW");
+
+  const occupancyAvg = allUnits.length
+    ? Math.round(
+        allUnits.reduce((sum, u) => sum + u.occupancyPct, 0) / allUnits.length,
+      )
+    : 0;
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-center justify-between">
+    <>
+      <div className="page-head">
         <div>
-          <h1 className="text-3xl font-medium text-foreground">Hébergements</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {properties.length} unités actives
+          <h1>Unités</h1>
+          <p>
+            {allUnits.length} hébergements · {totalChalets} chalets,{" "}
+            {totalBungalows} bungalows · taux d&apos;occupation {occupancyAvg}%
           </p>
         </div>
-        <Button asChild className="gap-2">
-          <Link href="/admin/properties/new">
-            <Plus className="size-4" />
-            Nouvel hébergement
+        <div className="page-actions">
+          <Link
+            href="/admin/properties/new"
+            className="btn-admin btn-admin-primary"
+          >
+            <Plus className="size-3.5" />
+            Nouvelle unité
           </Link>
-        </Button>
-      </header>
+        </div>
+      </div>
 
-      <Group title="Chalets" items={chalets} />
-      <Group title="Bungalows" items={bungalows} />
-    </div>
-  );
-}
+      <UnitsFilters filterDefaults={defaults} />
 
-function Group({
-  title,
-  items,
-}: {
-  title: string;
-  items: {
-    id: string;
-    slug: string;
-    name: string;
-    status: string;
-    capacity: number;
-    basePrice: number;
-    _count: { photos: number; reservations: number };
-  }[];
-}) {
-  if (items.length === 0) return null;
-  return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-        {title}
-      </h2>
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((p) => (
-          <li key={p.id}>
-            <Link
-              href={`/admin/properties/${p.id}/edit`}
-              className="block rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-md"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="font-medium text-foreground">{p.name}</h3>
-                  <p className="text-xs text-muted-foreground">{p.slug}</p>
-                </div>
-                <Badge
-                  variant={p.status === "ACTIVE" ? "secondary" : "outline"}
-                  className="text-[10px]"
-                >
-                  {p.status}
-                </Badge>
-              </div>
-              <div className="mt-3 flex items-baseline justify-between text-xs">
-                <span className="text-muted-foreground">
-                  {p.capacity} pers · {p._count.photos} photo
-                  {p._count.photos === 1 ? "" : "s"} · {p._count.reservations}{" "}
-                  résa
-                </span>
-                <span className="text-primary">{formatTND(p.basePrice)}/n</span>
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
+      <UnitsGrid
+        units={chalets}
+        title="Les Chalets de la Méditerranée"
+        count={totalChalets}
+        showAllHref="/admin/properties?sort=name"
+      />
+
+      <UnitsGrid
+        units={bungalows}
+        title="Les Bungalows du jardin"
+        count={totalBungalows}
+        showAllHref="/admin/properties?sort=name"
+      />
+    </>
   );
 }

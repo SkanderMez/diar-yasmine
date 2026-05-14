@@ -26,7 +26,8 @@ export const SETTING_REGISTRY = {
   "currency.code": {
     schema: z.enum(["TND", "EUR", "USD"]),
     default: "TND" as const,
-    description: "Display currency on the public site (storage stays in millimes TND).",
+    description:
+      "Display currency on the public site (storage stays in millimes TND).",
     role: "ADMIN",
   },
   timezone: {
@@ -51,6 +52,74 @@ export const SETTING_REGISTRY = {
     schema: z.string(),
     default: "",
     description: "Terms & conditions printed on the voucher (Arabic).",
+    role: "MANAGER",
+  },
+  // ---------------------------------------------------------------------------
+  // Pricing — supplements & rules. Percentages are stored in basis points
+  // (10000 = 100%) so the math stays in Int. Negative values allowed for
+  // discounts (e.g. Ramadan, long-stay).
+  // ---------------------------------------------------------------------------
+  "pricing.weekend_pct": {
+    schema: z.number().int().min(-10000).max(10000),
+    default: 1500,
+    description:
+      "Weekend (Fri-Sun) supplement, basis points. 1500 = +15%, negative allowed.",
+    role: "MANAGER",
+  },
+  "pricing.tn_holidays_pct": {
+    schema: z.number().int().min(-10000).max(10000),
+    default: 1000,
+    description: "Tunisian school holidays supplement, basis points.",
+    role: "MANAGER",
+  },
+  "pricing.ramadan_pct": {
+    schema: z.number().int().min(-10000).max(10000),
+    default: -2000,
+    description: "Ramadan supplement, basis points (negative = discount).",
+    role: "MANAGER",
+  },
+  "pricing.aid_pct": {
+    schema: z.number().int().min(-10000).max(10000),
+    default: 2500,
+    description: "Aïd supplement, basis points.",
+    role: "MANAGER",
+  },
+  "pricing.min_stay_low": {
+    schema: z.number().int().min(1).max(30),
+    default: 2,
+    description: "Minimum nights for low-season bookings.",
+    role: "MANAGER",
+  },
+  "pricing.min_stay_high": {
+    schema: z.number().int().min(1).max(30),
+    default: 3,
+    description: "Minimum nights for high-season bookings.",
+    role: "MANAGER",
+  },
+  "pricing.min_stay_peak": {
+    schema: z.number().int().min(1).max(30),
+    default: 5,
+    description: "Minimum nights for peak-season bookings.",
+    role: "MANAGER",
+  },
+  "pricing.longstay_discount_pct": {
+    schema: z.number().int().min(-10000).max(10000),
+    default: -1000,
+    description:
+      "Long-stay discount, basis points (negative = discount). Applied when nights >= threshold.",
+    role: "MANAGER",
+  },
+  "pricing.longstay_threshold_nights": {
+    schema: z.number().int().min(1).max(60),
+    default: 5,
+    description:
+      "Nights threshold above which the long-stay discount kicks in.",
+    role: "MANAGER",
+  },
+  "pricing.published_at": {
+    schema: z.string(),
+    default: "",
+    description: "ISO timestamp of the last pricing publication.",
     role: "MANAGER",
   },
 } as const satisfies Record<
