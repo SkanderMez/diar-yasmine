@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
-import { listFilterableAmenities, listPublicProperties } from "@/lib/queries";
+import {
+  getPropertyPriceRange,
+  listFilterableAmenities,
+  listPublicProperties,
+} from "@/lib/queries";
 import { ListingPageHero } from "@/components/public/listings/listing-page-hero";
 import { FloatingFilterBar } from "@/components/public/listings/floating-filter-bar";
 import { ListingSidebarFilters } from "@/components/public/listings/listing-sidebar-filters";
@@ -62,7 +66,7 @@ export default async function ChaletsListingPage({
     ? sp.amenities.split(",").filter(Boolean)
     : undefined;
 
-  const [chalets, filterableAmenities] = await Promise.all([
+  const [chalets, filterableAmenities, priceRange] = await Promise.all([
     listPublicProperties("CHALET", {
       minCapacity,
       hasPrivatePool,
@@ -75,7 +79,13 @@ export default async function ChaletsListingPage({
       amenitySlugs,
     }),
     listFilterableAmenities(),
+    getPropertyPriceRange("CHALET"),
   ]);
+
+  // Fallback bounds when the catalog is empty (shouldn't happen in prod
+  // since the seed always has properties, but keep the filter sensible).
+  const priceMinTnd = Math.floor((priceRange?.min ?? 0) / 1000);
+  const priceMaxTnd = Math.ceil((priceRange?.max ?? 1000_000) / 1000);
 
   const heroPhoto = chalets[0]?.photos[0] ?? null;
   const dateLabel =
@@ -114,6 +124,8 @@ export default async function ChaletsListingPage({
           <ListingSidebarFilters
             resultCount={chalets.length}
             filterableAmenities={filterableAmenities}
+            priceMinTnd={priceMinTnd}
+            priceMaxTnd={priceMaxTnd}
           />
 
           <div>

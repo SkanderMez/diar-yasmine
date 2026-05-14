@@ -155,6 +155,29 @@ export type ReservationDetail = NonNullable<
  * for the card. Sorted by name.
  */
 /**
+ * Returns the cheapest + most expensive nightly rate (in millimes) across
+ * the active catalog of the requested property type. Used to bound the
+ * public listing price filter so users can only ask for values inside the
+ * real catalog range. Returns null when no properties exist yet.
+ */
+export async function getPropertyPriceRange(
+  type: "CHALET" | "BUNGALOW",
+): Promise<{ min: number; max: number } | null> {
+  const result = await prisma.property.aggregate({
+    where: { deletedAt: null, status: "ACTIVE", type },
+    _min: { basePrice: true },
+    _max: { basePrice: true },
+  });
+  if (result._min.basePrice === null || result._max.basePrice === null) {
+    return null;
+  }
+  return {
+    min: result._min.basePrice,
+    max: result._max.basePrice,
+  };
+}
+
+/**
  * Returns the catalog of amenities flagged `filterable=true`, sorted for
  * the public listing sidebar. Light cache-key shape: only the fields the
  * client actually renders.

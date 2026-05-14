@@ -8,6 +8,12 @@ import { cn } from "@/lib/utils";
 interface ListingSidebarFiltersProps {
   resultCount: number;
   filterableAmenities: FilterableAmenity[];
+  /**
+   * Real min/max nightly rate from the catalog (in TND). The price filter
+   * defaults to this range and clamps user input within it.
+   */
+  priceMinTnd: number;
+  priceMaxTnd: number;
 }
 
 type PositionValue = "" | "beachfront" | "second-line";
@@ -37,6 +43,8 @@ const CAPACITY_BUCKETS: {
 export function ListingSidebarFilters({
   resultCount,
   filterableAmenities,
+  priceMinTnd,
+  priceMaxTnd,
 }: ListingSidebarFiltersProps) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -58,8 +66,15 @@ export function ListingSidebarFilters({
   const [capacityBuckets, setCapacityBuckets] = useState<string[]>(
     initialCapacityBuckets,
   );
-  const [minPrice, setMinPrice] = useState(sp?.get("minPrice") ?? "");
-  const [maxPrice, setMaxPrice] = useState(sp?.get("maxPrice") ?? "");
+  /* Price filter — default to the actual catalog bounds when the URL
+   * carries no value. The numeric inputs commit on blur; meanwhile the
+   * track + thumb visuals update in real time as the user types. */
+  const [minPrice, setMinPrice] = useState(
+    sp?.get("minPrice") ?? String(priceMinTnd),
+  );
+  const [maxPrice, setMaxPrice] = useState(
+    sp?.get("maxPrice") ?? String(priceMaxTnd),
+  );
   const initialAmenities = (sp?.get("amenities") ?? "")
     .split(",")
     .filter(Boolean);
@@ -90,9 +105,21 @@ export function ListingSidebarFilters({
       params.delete("capacityBuckets");
       params.delete("guests");
     }
-    // Prices
-    setOrDelete(params, "minPrice", minPrice || null);
-    setOrDelete(params, "maxPrice", maxPrice || null);
+    /* Prices — only set them when they actually narrow the catalog range.
+     * If the input equals the catalog bound we don't want the URL to carry
+     * "minPrice=350&maxPrice=900" since that's equivalent to "no filter". */
+    const minN = Number(minPrice);
+    const maxN = Number(maxPrice);
+    if (Number.isFinite(minN) && minN > priceMinTnd) {
+      params.set("minPrice", String(minN));
+    } else {
+      params.delete("minPrice");
+    }
+    if (Number.isFinite(maxN) && maxN < priceMaxTnd) {
+      params.set("maxPrice", String(maxN));
+    } else {
+      params.delete("maxPrice");
+    }
     // Amenities
     if (activeAmenities.length > 0) {
       params.set("amenities", activeAmenities.join(","));
@@ -112,8 +139,8 @@ export function ListingSidebarFilters({
     setBeachfrontAmenity(false);
     setPosition("");
     setCapacityBuckets([]);
-    setMinPrice("");
-    setMaxPrice("");
+    setMinPrice(String(priceMinTnd));
+    setMaxPrice(String(priceMaxTnd));
     setActiveAmenities([]);
     startTransition(() => router.push("?", { scroll: false }));
   }
@@ -196,33 +223,15 @@ export function ListingSidebarFilters({
       </FilterSection>
 
       <FilterSection title="Prix par nuit">
-        <div className="relative h-[30px]">
-          <div className="absolute left-0 right-0 top-[13px] h-1 rounded-full bg-line-soft" />
-          <div className="absolute left-[20%] right-[5%] top-[13px] h-1 rounded-full bg-primary" />
-          <div className="absolute left-[20%] top-[8px] size-3.5 -translate-x-1/2 rounded-full border-2 border-primary bg-card" />
-          <div className="absolute left-[95%] top-[8px] size-3.5 -translate-x-1/2 rounded-full border-2 border-primary bg-card" />
-        </div>
-        <div className="mt-4 flex items-center gap-3">
-          <input
-            type="number"
-            min={0}
-            placeholder="Min"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            onBlur={apply}
-            className="flex-1 rounded-md border border-line bg-card px-3 py-2.5 text-[0.85rem] outline-none transition-colors focus:border-primary"
-          />
-          <span className="text-muted-foreground">—</span>
-          <input
-            type="number"
-            min={0}
-            placeholder="Max"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-            onBlur={apply}
-            className="flex-1 rounded-md border border-line bg-card px-3 py-2.5 text-[0.85rem] outline-none transition-colors focus:border-primary"
-          />
-        </div>
+        <PriceRangeSlider
+          min={priceMinTnd}
+          max={priceMaxTnd}
+          minValue={minPrice}
+          maxValue={maxPrice}
+          onMinChange={setMinPrice}
+          onMaxChange={setMaxPrice}
+          onCommit={apply}
+        />
       </FilterSection>
 
       <div className="pt-5">
@@ -315,6 +324,106 @@ function CheckOption({
         </span>
       )}
     </label>
+  );
+}
+
+/**
+ * Dual-thumb price range slider. The numeric inputs commit on blur (no
+ * router thrash while typing); the visual track + thumbs stay reactive
+ * by reading the current min/max values directly. Inputs are clamped to
+ * the catalog bounds on blur so a user can't ask for less than the
+ * cheapest or more than the most expensive nightly rate.
+ */
+function PriceRangeSlider({
+  min,
+  max,
+  minValue,
+  maxValue,
+  onMinChange,
+  onMaxChange,
+  onCommit,
+}: {
+  min: number;
+  max: number;
+  minValue: string;
+  maxValue: string;
+  onMinChange: (v: string) => void;
+  onMaxChange: (v: string) => void;
+  onCommit: () => void;
+}) {
+  const span = Math.max(1, max - min);
+  const minNum = Number(minValue);
+  const maxNum = Number(maxValue);
+  const minSafe = Number.isFinite(minNum) ? minNum : min;
+  const maxSafe = Number.isFinite(maxNum) ? maxNum : max;
+  const minPct = Math.max(0, Math.min(100, ((minSafe - min) / span) * 100));
+  const maxPct = Math.max(0, Math.min(100, ((maxSafe - min) / span) * 100));
+
+  function commitMin() {
+    const n = Number(minValue);
+    if (!Number.isFinite(n) || n < min) onMinChange(String(min));
+    else if (n > maxSafe) onMinChange(String(maxSafe));
+    else onMinChange(String(Math.round(n)));
+    onCommit();
+  }
+
+  function commitMax() {
+    const n = Number(maxValue);
+    if (!Number.isFinite(n) || n > max) onMaxChange(String(max));
+    else if (n < minSafe) onMaxChange(String(minSafe));
+    else onMaxChange(String(Math.round(n)));
+    onCommit();
+  }
+
+  return (
+    <div>
+      {/* Track + thumbs (visual only; commit happens through the inputs). */}
+      <div className="relative h-[30px]">
+        <div className="absolute left-0 right-0 top-[13px] h-1 rounded-full bg-line-soft" />
+        <div
+          className="absolute top-[13px] h-1 rounded-full bg-primary"
+          style={{ left: `${minPct}%`, right: `${100 - maxPct}%` }}
+        />
+        <div
+          className="absolute top-[8px] size-3.5 -translate-x-1/2 rounded-full border-2 border-primary bg-card shadow-sm"
+          style={{ left: `${minPct}%` }}
+          aria-hidden
+        />
+        <div
+          className="absolute top-[8px] size-3.5 -translate-x-1/2 rounded-full border-2 border-primary bg-card shadow-sm"
+          style={{ left: `${maxPct}%` }}
+          aria-hidden
+        />
+      </div>
+      <div className="mt-4 flex items-center gap-3">
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step={10}
+          value={minValue}
+          onChange={(e) => onMinChange(e.target.value)}
+          onBlur={commitMin}
+          aria-label="Prix minimum par nuit (TND)"
+          className="flex-1 rounded-md border border-line bg-card px-3 py-2.5 text-[0.85rem] outline-none transition-colors focus:border-primary"
+        />
+        <span className="text-muted-foreground">—</span>
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step={10}
+          value={maxValue}
+          onChange={(e) => onMaxChange(e.target.value)}
+          onBlur={commitMax}
+          aria-label="Prix maximum par nuit (TND)"
+          className="flex-1 rounded-md border border-line bg-card px-3 py-2.5 text-[0.85rem] outline-none transition-colors focus:border-primary"
+        />
+      </div>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        Entre {min} TND et {max} TND / nuit.
+      </p>
+    </div>
   );
 }
 
