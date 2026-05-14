@@ -2,52 +2,57 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ChevronDown, Minus, Plus, Search, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Minus, Plus, Search, Users } from "lucide-react";
 import { DateRangePicker } from "./date-range-picker";
 
 /**
- * Hero booking search — single pill containing four segments plus the
- * primary CTA. The date range picker uses the custom calendar component
- * so empty states read "Sélectionner" rather than a bare dash.
+ * Hero booking widget — pixel match of the maquette `.booking-widget`.
+ *
+ * Layout: white pill, 4 segments separated by vertical dividers, primary
+ * search CTA on the right. The date range picker opens a custom popover.
+ * Guests popover holds an adults + children counter pair.
  */
 export function BookingSearch() {
   const router = useRouter();
   const [type, setType] = useState<"chalets" | "bungalows">("chalets");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState(2);
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
+  const [guestsOpen, setGuestsOpen] = useState(false);
 
   function submit() {
     const params = new URLSearchParams();
     if (checkIn) params.set("checkIn", checkIn);
     if (checkOut) params.set("checkOut", checkOut);
-    if (guests) params.set("guests", String(guests));
+    const total = adults + children;
+    if (total > 1) params.set("guests", String(total));
     const qs = params.toString();
     router.push(`/${type}${qs ? `?${qs}` : ""}`);
   }
 
-  return (
-    <div className="rounded-[28px] bg-ivory/97 p-1.5 shadow-2xl ring-1 ring-charcoal/5 backdrop-blur-md">
-      <div className="grid grid-cols-1 items-stretch gap-1.5 sm:grid-cols-[1.1fr_2.4fr_1.2fr_auto]">
-        <label className="group flex cursor-pointer flex-col justify-center rounded-3xl px-5 py-3 transition-colors hover:bg-bone">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Hébergement
-          </span>
-          <div className="mt-0.5 flex items-center gap-2">
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as typeof type)}
-              className="w-full appearance-none bg-transparent text-sm font-medium text-foreground outline-none"
-            >
-              <option value="chalets">Chalets bord de mer</option>
-              <option value="bungalows">Bungalows jardin</option>
-            </select>
-            <ChevronDown className="size-3.5 text-muted-foreground" />
-          </div>
-        </label>
+  const guestsLabel =
+    children > 0
+      ? `${adults} adulte${adults > 1 ? "s" : ""}, ${children} enfant${children > 1 ? "s" : ""}`
+      : `${adults} adulte${adults > 1 ? "s" : ""}`;
 
-        <div className="rounded-3xl bg-transparent transition-colors hover:bg-bone">
+  return (
+    <div className="rounded-2xl bg-white p-1.5 shadow-2xl">
+      <div className="grid grid-cols-1 items-stretch gap-0.5 sm:grid-cols-[1.4fr_minmax(0,2fr)_1fr_auto]">
+        {/* Hébergement */}
+        <Field label="Hébergement">
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value as typeof type)}
+            className="w-full appearance-none bg-transparent text-[15px] font-medium text-charcoal outline-none"
+          >
+            <option value="chalets">Les Chalets</option>
+            <option value="bungalows">Les Bungalows</option>
+          </select>
+        </Field>
+
+        {/* Dates */}
+        <div className="px-1">
           <DateRangePicker
             checkIn={checkIn}
             checkOut={checkOut}
@@ -58,47 +63,121 @@ export function BookingSearch() {
           />
         </div>
 
-        <div className="flex cursor-default items-center justify-between gap-2 rounded-3xl px-5 py-3 transition-colors hover:bg-bone">
-          <div className="flex flex-col">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+        {/* Voyageurs */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setGuestsOpen((v) => !v)}
+            className="block w-full rounded-xl px-4 py-3 text-left transition-colors hover:bg-sand"
+          >
+            <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               <Users className="mr-1 inline size-3" /> Voyageurs
             </span>
-            <span className="text-sm font-medium text-foreground">
-              {guests} voyageur{guests > 1 ? "s" : ""}
+            <span className="mt-0.5 block text-[15px] font-medium text-charcoal">
+              {guestsLabel}
             </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setGuests((g) => Math.max(1, g - 1))}
-              disabled={guests <= 1}
-              className="inline-flex size-7 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:border-foreground disabled:opacity-30"
-              aria-label="Moins"
-            >
-              <Minus className="size-3" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setGuests((g) => Math.min(20, g + 1))}
-              disabled={guests >= 20}
-              className="inline-flex size-7 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:border-foreground disabled:opacity-30"
-              aria-label="Plus"
-            >
-              <Plus className="size-3" />
-            </button>
-          </div>
+          </button>
+          {guestsOpen && (
+            <div className="absolute right-0 top-full z-20 mt-2 w-72 space-y-3 rounded-2xl border border-line-soft bg-white p-5 shadow-xl">
+              <Counter
+                label="Adultes"
+                hint="13 ans et +"
+                value={adults}
+                min={1}
+                max={20}
+                onChange={setAdults}
+              />
+              <Counter
+                label="Enfants"
+                hint="2 à 12 ans"
+                value={children}
+                min={0}
+                max={10}
+                onChange={setChildren}
+              />
+              <button
+                type="button"
+                onClick={() => setGuestsOpen(false)}
+                className="ml-auto block text-xs font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Fermer
+              </button>
+            </div>
+          )}
         </div>
 
-        <Button
+        {/* Search CTA */}
+        <button
           type="button"
-          size="lg"
-          shape="pill"
           onClick={submit}
-          className="my-0.5 mx-0.5 gap-2 bg-primary text-primary-foreground hover:bg-deep sm:my-0"
+          className="my-1 mx-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-7 text-sm font-medium text-ivory shadow-sm transition-all hover:-translate-y-px hover:bg-bougainvillier hover:shadow-md sm:my-0"
         >
           <Search className="size-4" />
           <span>Rechercher</span>
-        </Button>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block cursor-pointer rounded-xl px-4 py-3 transition-colors hover:bg-sand">
+      <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </span>
+      <div className="mt-0.5">{children}</div>
+    </label>
+  );
+}
+
+function Counter({
+  label,
+  hint,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-charcoal">{label}</p>
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={value <= min}
+          aria-label="Moins"
+          className="inline-flex size-8 items-center justify-center rounded-full border border-line text-charcoal transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          <Minus className="size-3.5" />
+        </button>
+        <span className="w-5 text-center text-sm font-medium">{value}</span>
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(max, value + 1))}
+          disabled={value >= max}
+          aria-label="Plus"
+          className="inline-flex size-8 items-center justify-center rounded-full border border-line text-charcoal transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          <Plus className="size-3.5" />
+        </button>
       </div>
     </div>
   );
