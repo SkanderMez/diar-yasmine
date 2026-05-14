@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { setRequestLocale } from "next-intl/server";
 import { listFilterableAmenities, listPublicProperties } from "@/lib/queries";
-import { PropertyCard } from "@/components/public/property-card";
-import { ListingFiltersSidebar } from "@/components/public/listing-filters-sidebar";
+import { ListingPageHero } from "@/components/public/listings/listing-page-hero";
+import { FloatingFilterBar } from "@/components/public/listings/floating-filter-bar";
+import { ListingSidebarFilters } from "@/components/public/listings/listing-sidebar-filters";
+import { ListingToolbar } from "@/components/public/listings/listing-toolbar";
+import { ListingCard } from "@/components/public/listings/listing-card";
+import { ListingEmptyState } from "@/components/public/listings/listing-empty-state";
 import { FadeIn } from "@/components/public/fade-in";
 
 export const metadata: Metadata = {
@@ -11,6 +14,14 @@ export const metadata: Metadata = {
   description:
     "Nos 9 chalets en bord de mer à Tazarka, tous avec piscine privée et vue mer directe.",
 };
+
+const SORT_OPTIONS = [
+  { value: "recommended", label: "Recommandé" },
+  { value: "price-asc", label: "Prix croissant" },
+  { value: "price-desc", label: "Prix décroissant" },
+  { value: "capacity", label: "Capacité" },
+  { value: "rating", label: "Mieux notés" },
+];
 
 export default async function ChaletsListingPage({
   params,
@@ -27,16 +38,24 @@ export default async function ChaletsListingPage({
     checkIn?: string;
     checkOut?: string;
     amenities?: string;
+    capacity?: string;
+    sort?: string;
   }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const sp = await searchParams;
 
-  const minCapacity = sp.guests ? Number(sp.guests) : undefined;
+  const guestsParam = sp.guests ? Number(sp.guests) : undefined;
+  const capacityParam = sp.capacity ? Number(sp.capacity) : undefined;
+  const minCapacity =
+    guestsParam && capacityParam
+      ? Math.max(guestsParam, capacityParam)
+      : (guestsParam ?? capacityParam);
   const hasPrivatePool = sp.pool === "1" ? true : undefined;
   const seaView = sp.seaView === "1" ? true : undefined;
-  const beachfront = sp.beachfront === "1" ? true : undefined;
+  const beachfront =
+    sp.beachfront === "1" ? true : sp.beachfront === "0" ? false : undefined;
   const minPriceMillimes = sp.minPrice ? Number(sp.minPrice) * 1000 : undefined;
   const maxPriceMillimes = sp.maxPrice ? Number(sp.maxPrice) * 1000 : undefined;
   const amenitySlugs = sp.amenities
@@ -59,84 +78,60 @@ export default async function ChaletsListingPage({
   ]);
 
   const heroPhoto = chalets[0]?.photos[0] ?? null;
+  const dateLabel =
+    sp.checkIn && sp.checkOut
+      ? `du ${sp.checkIn} au ${sp.checkOut}`
+      : undefined;
 
   return (
     <main className="flex-1 bg-ivory text-foreground">
-      {/* Hero — editorial photo */}
-      <section className="relative h-[55vh] min-h-[420px] w-full overflow-hidden">
-        {heroPhoto && (
-          <Image
-            src={heroPhoto.url}
-            alt={heroPhoto.alt ?? "Chalets Diar Yasmine"}
-            fill
-            sizes="100vw"
-            priority
-            className="object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/30 via-charcoal/10 to-charcoal/70" />
-        <div className="container-x relative flex h-full flex-col justify-end pb-14 text-ivory">
-          <FadeIn className="space-y-3">
-            <p className="font-script text-3xl text-clay-light sm:text-4xl">
-              Pieds dans l&apos;eau
-            </p>
-            <h1 className="heading-display text-[clamp(2.75rem,8vw,6.5rem)] text-ivory">
-              Chalets
-            </h1>
-            <p className="max-w-2xl text-ivory/85 sm:text-lg">
-              9 chalets bois et verre, tous équipés d&apos;une piscine privée et
-              offrant une vue mer directe.
-            </p>
-          </FadeIn>
-        </div>
-      </section>
+      <ListingPageHero
+        photoUrl={heroPhoto?.url ?? null}
+        photoAlt={heroPhoto?.alt ?? "Chalets Diar Yasmine"}
+        breadcrumb={[
+          { href: "/", label: "Accueil" },
+          { href: "/chalets", label: "Les Chalets" },
+        ]}
+        eyebrowScript="9 hébergements pieds dans l'eau"
+        title={
+          <>
+            Les Chalets de la <em className="heading-em-light">Méditerranée</em>
+          </>
+        }
+        lead="Bois, verre, piscines privées. Pour ceux qui veulent que le ressac fasse partie du séjour."
+      />
 
-      {/* Sidebar + grid */}
-      <section className="container-x py-10 lg:py-14">
+      <FloatingFilterBar
+        initialCheckIn={sp.checkIn}
+        initialCheckOut={sp.checkOut}
+        initialGuests={guestsParam}
+        initialMaxPrice={sp.maxPrice ? Number(sp.maxPrice) : undefined}
+        sortOptions={SORT_OPTIONS}
+      />
+
+      <section className="container-x section-y">
         <div className="grid gap-10 lg:grid-cols-[280px_1fr] lg:gap-12">
-          <ListingFiltersSidebar
+          <ListingSidebarFilters
             resultCount={chalets.length}
             filterableAmenities={filterableAmenities}
           />
 
           <div>
-            <div className="mb-6 flex items-baseline justify-between gap-4">
-              <div>
-                <h2 className="font-heading text-2xl text-foreground sm:text-3xl">
-                  {chalets.length} chalet{chalets.length === 1 ? "" : "s"}{" "}
-                  disponible{chalets.length === 1 ? "" : "s"}
-                </h2>
-                {sp.checkIn && sp.checkOut && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Du {sp.checkIn} au {sp.checkOut} · disponibilité en temps
-                    réel
-                  </p>
-                )}
-              </div>
-              <span className="text-xs text-muted-foreground">
-                Trié par défaut
-              </span>
-            </div>
+            <ListingToolbar
+              resultCount={chalets.length}
+              label={`chalet${chalets.length === 1 ? "" : "s"}`}
+              dateLabel={dateLabel}
+              sortOptions={SORT_OPTIONS}
+              view="grid"
+            />
 
             {chalets.length === 0 ? (
-              <FadeIn className="rounded-3xl border border-dashed border-border bg-card p-12 text-center">
-                <h3 className="font-heading text-2xl text-foreground">
-                  Aucun chalet ne correspond
-                </h3>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Essayez d&apos;élargir vos critères, ou appelez la réception
-                  au{" "}
-                  <a
-                    href="tel:+21698000000"
-                    className="font-medium text-primary underline-offset-4 hover:underline"
-                  >
-                    +216 98 000 000
-                  </a>
-                  .
-                </p>
-              </FadeIn>
+              <ListingEmptyState
+                title="Aucun chalet ne correspond"
+                body="Essayez d'élargir vos critères, ou explorez l'ensemble de nos hébergements."
+              />
             ) : (
-              <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-5 sm:grid-cols-2">
                 {chalets.map((p, i) => (
                   <FadeIn
                     key={p.id}
@@ -148,7 +143,7 @@ export default async function ChaletsListingPage({
                           : "delay-200"
                     }
                   >
-                    <PropertyCard property={p} />
+                    <ListingCard property={p} />
                   </FadeIn>
                 ))}
               </div>
