@@ -355,7 +355,7 @@ export default async function AboutPage({
                 shape="pill"
                 className="bg-ivory text-primary-900 hover:bg-white hover:text-primary-900"
               >
-                <Link href="/book">Réserver</Link>
+                <Link href="/search">Réserver</Link>
               </Button>
               <Button
                 asChild
@@ -364,7 +364,7 @@ export default async function AboutPage({
                 variant="outline"
                 className="border-ivory/60 bg-transparent text-ivory hover:border-ivory hover:bg-ivory/10 hover:text-ivory"
               >
-                <Link href="/chalets">Découvrir nos hébergements</Link>
+                <Link href="/search">Découvrir nos hébergements</Link>
               </Button>
             </div>
           </FadeIn>

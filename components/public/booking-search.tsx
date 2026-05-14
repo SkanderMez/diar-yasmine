@@ -139,19 +139,51 @@ function TypeSelect({
   onChange: (v: TypeKey) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [anchor, setAnchor] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
+  // Position the floating dropdown against the trigger's bounding rect.
+  // Recomputes on open + on resize/scroll while open so the menu always
+  // sits flush under the trigger regardless of section stacking context.
+  useEffect(() => {
     if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    function update() {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setAnchor({
+        top: rect.bottom + 8,
+        left: rect.left,
+        width: rect.width,
+      });
     }
+    update();
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
+    function onDown(e: MouseEvent) {
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t)) return;
+      const menu = document.getElementById("dy-type-select-menu");
+      if (menu?.contains(t)) return;
+      setOpen(false);
+    }
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
@@ -163,8 +195,9 @@ function TypeSelect({
   }
 
   return (
-    <div ref={rootRef} className="relative">
+    <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
@@ -190,51 +223,66 @@ function TypeSelect({
         />
       </button>
 
-      {open && (
-        <div
-          role="listbox"
-          className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-line-soft bg-white shadow-xl"
-        >
-          {TYPE_OPTIONS.map((option) => {
-            const active = option.value === value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                role="option"
-                aria-selected={active}
-                onClick={() => pick(option.value)}
-                className={cn(
-                  "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-sand",
-                  active && "bg-sand/70",
-                )}
-              >
-                <span
+      {open &&
+        mounted &&
+        anchor &&
+        createPortal(
+          <div
+            id="dy-type-select-menu"
+            role="listbox"
+            className="fixed z-[100] overflow-hidden rounded-2xl border border-line-soft bg-white shadow-2xl"
+            style={{
+              top: `${anchor.top}px`,
+              left: `${anchor.left}px`,
+              width: `${anchor.width}px`,
+            }}
+          >
+            {TYPE_OPTIONS.map((option) => {
+              const active = option.value === value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  onClick={() => pick(option.value)}
                   className={cn(
-                    "inline-flex size-9 shrink-0 items-center justify-center rounded-full",
-                    active ? "bg-primary text-ivory" : "bg-sand text-charcoal",
+                    "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-sand",
+                    active && "bg-sand/70",
                   )}
-                  aria-hidden
                 >
-                  {option.icon}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[14px] font-medium text-charcoal">
-                    {option.label}
+                  <span
+                    className={cn(
+                      "inline-flex size-9 shrink-0 items-center justify-center rounded-full",
+                      active
+                        ? "bg-primary text-ivory"
+                        : "bg-sand text-charcoal",
+                    )}
+                    aria-hidden
+                  >
+                    {option.icon}
                   </span>
-                  <span className="block text-[11px] text-muted-foreground">
-                    {option.hint}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[14px] font-medium text-charcoal">
+                      {option.label}
+                    </span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      {option.hint}
+                    </span>
                   </span>
-                </span>
-                {active && (
-                  <Check className="size-4 shrink-0 text-primary" aria-hidden />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
+                  {active && (
+                    <Check
+                      className="size-4 shrink-0 text-primary"
+                      aria-hidden
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 

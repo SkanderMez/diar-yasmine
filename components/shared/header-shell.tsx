@@ -114,7 +114,7 @@ export function HeaderShell({ items, cta }: HeaderShellProps) {
           <LanguageSwitcher dark={overHero} />
 
           <Link
-            href="/book"
+            href="/search"
             className={cn(
               "hidden items-center justify-center rounded-full px-4 py-2 text-sm font-medium transition-all sm:inline-flex",
               "shadow-sm hover:-translate-y-0.5 hover:shadow-md",
@@ -161,7 +161,7 @@ export function HeaderShell({ items, cta }: HeaderShellProps) {
               </Link>
             ))}
             <Link
-              href="/book"
+              href="/search"
               onClick={() => setMobileOpen(false)}
               className="mt-3 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-bougainvillier"
             >

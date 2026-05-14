@@ -42,7 +42,7 @@ export function FinalCta({ photoUrl }: FinalCtaProps) {
           Disponibilités en temps réel, paiement sécurisé, voucher instantané.
         </p>
         <Link
-          href="/book"
+          href="/search"
           className="inline-flex items-center justify-center rounded-full bg-white/95 px-9 py-[18px] text-base font-medium text-primary backdrop-blur transition-all hover:-translate-y-px hover:bg-white hover:shadow-md"
         >
           Vérifier les disponibilités
