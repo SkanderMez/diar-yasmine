@@ -10,7 +10,19 @@ import { prisma } from "./prisma";
 import { findUnavailablePropertyIds } from "./availability";
 import { TZ } from "./date";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
-import { addDays, startOfDay } from "date-fns";
+import {
+  addDays,
+  addMonths,
+  differenceInCalendarDays,
+  endOfMonth,
+  endOfYear,
+  getISOWeek,
+  max as maxDate,
+  min as minDate,
+  parseISO,
+  startOfDay,
+  startOfYear,
+} from "date-fns";
 
 /**
  * Server-only read helpers used by admin layouts and Server Components.
@@ -1689,4 +1701,764 @@ export async function listChannelSyncLog(
       isDanger,
     };
   });
+}
+
+// =============================================================================
+// ADMIN — /admin/reports analytics dashboard
+// =============================================================================
+
+/**
+ * Parse a `YYYY-MM` string into the UTC [start, end) range covering that
+ * calendar month. Throws on malformed input so the page can fall back to
+ * the current month deterministically.
+ */
+function parseMonthIso(monthIso: string): { start: Date; end: Date } {
+  const match = /^([0-9]{4})-([0-9]{2})$/.exec(monthIso);
+  if (!match) {
+    throw new RangeError(`parseMonthIso: invalid month-iso "${monthIso}"`);
+  }
+  const yearStr = match[1];
+  const monthStr = match[2];
+  if (!yearStr || !monthStr) {
+    throw new RangeError(`parseMonthIso: invalid month-iso "${monthIso}"`);
+  }
+  const year = Number.parseInt(yearStr, 10);
+  const month = Number.parseInt(monthStr, 10);
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    month < 1 ||
+    month > 12
+  ) {
+    throw new RangeError(`parseMonthIso: invalid month-iso "${monthIso}"`);
+  }
+  const start = new Date(Date.UTC(year, month - 1, 1));
+  const end = new Date(Date.UTC(year, month, 1));
+  return { start, end };
+}
+
+async function countActiveProperties(): Promise<number> {
+  return prisma.property.count({
+    where: { deletedAt: null, status: "ACTIVE" },
+  });
+}
+
+interface MonthMetrics {
+  revenue: number;
+  occupiedNights: number;
+  availableNights: number;
+  adr: number;
+  revpar: number;
+}
+
+/**
+ * Compute revenue/occupancy/ADR/RevPAR for the `[start, end)` window.
+ *
+ * Stay revenue is attributed pro-rata to the days the stay falls in the
+ * window (same definition as `lib/reports.ts`). Available nights = active
+ * portfolio × days in the window.
+ */
+async function computeMonthMetrics(
+  start: Date,
+  end: Date,
+  totalProperties: number,
+): Promise<MonthMetrics> {
+  const reservations = await prisma.reservation.findMany({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { lt: end },
+      checkOut: { gt: start },
+    },
+    select: {
+      checkIn: true,
+      checkOut: true,
+      total: true,
+    },
+  });
+
+  let revenue = 0;
+  let occupiedNights = 0;
+  for (const r of reservations) {
+    const totalStayDays = differenceInCalendarDays(r.checkOut, r.checkIn);
+    if (totalStayDays <= 0) continue;
+    const overlapStart = maxDate([r.checkIn, start]);
+    const overlapEnd = minDate([r.checkOut, end]);
+    const nights = Math.max(
+      0,
+      differenceInCalendarDays(overlapEnd, overlapStart),
+    );
+    if (nights <= 0) continue;
+    const ratio = nights / totalStayDays;
+    revenue += Math.round(r.total * ratio);
+    occupiedNights += nights;
+  }
+
+  const windowDays = Math.max(0, differenceInCalendarDays(end, start));
+  const availableNights = windowDays * totalProperties;
+  const adr = occupiedNights > 0 ? Math.round(revenue / occupiedNights) : 0;
+  const revpar =
+    availableNights > 0 ? Math.round(revenue / availableNights) : 0;
+  return { revenue, occupiedNights, availableNights, adr, revpar };
+}
+
+export interface AnalyticsKpiNumber {
+  value: number;
+  prevValue: number;
+  deltaPct: number;
+}
+
+export interface AnalyticsKpiPct {
+  pct: number;
+  prevPct: number;
+  deltaPts: number;
+}
+
+export interface AnalyticsKpis {
+  revenue: AnalyticsKpiNumber;
+  occupancy: AnalyticsKpiPct;
+  adr: AnalyticsKpiNumber;
+  revpar: AnalyticsKpiNumber;
+}
+
+function deltaPct(current: number, prev: number): number {
+  if (prev <= 0) return 0;
+  return ((current - prev) / prev) * 100;
+}
+
+export async function getAnalyticsKpis(
+  monthIso: string,
+): Promise<AnalyticsKpis> {
+  const { start, end } = parseMonthIso(monthIso);
+  const prevStart = addMonths(start, -1);
+  const prevEnd = start;
+
+  const [totalProperties, current, previous] = await Promise.all([
+    countActiveProperties(),
+    countActiveProperties().then((tp) => computeMonthMetrics(start, end, tp)),
+    countActiveProperties().then((tp) =>
+      computeMonthMetrics(prevStart, prevEnd, tp),
+    ),
+  ]);
+  void totalProperties;
+
+  const occPct =
+    current.availableNights > 0
+      ? (current.occupiedNights / current.availableNights) * 100
+      : 0;
+  const prevOccPct =
+    previous.availableNights > 0
+      ? (previous.occupiedNights / previous.availableNights) * 100
+      : 0;
+
+  return {
+    revenue: {
+      value: current.revenue,
+      prevValue: previous.revenue,
+      deltaPct: deltaPct(current.revenue, previous.revenue),
+    },
+    occupancy: {
+      pct: occPct,
+      prevPct: prevOccPct,
+      deltaPts: occPct - prevOccPct,
+    },
+    adr: {
+      value: current.adr,
+      prevValue: previous.adr,
+      deltaPct: deltaPct(current.adr, previous.adr),
+    },
+    revpar: {
+      value: current.revpar,
+      prevValue: previous.revpar,
+      deltaPct: deltaPct(current.revpar, previous.revpar),
+    },
+  };
+}
+
+export interface RevenueMonthlyData {
+  current: number[];
+  previous: number[];
+  currentYear: number;
+  previousYear: number;
+}
+
+/**
+ * Monthly revenue (millimes) for the given year and the year before, both
+ * as 12-slot arrays Jan..Dec. Stays touching multiple months are split
+ * pro-rata via the same logic as `computeMonthMetrics`.
+ */
+export async function getRevenueMonthly(
+  year: number,
+): Promise<RevenueMonthlyData> {
+  const endCur = new Date(Date.UTC(year + 1, 0, 1));
+  const startPrev = new Date(Date.UTC(year - 1, 0, 1));
+
+  const reservations = await prisma.reservation.findMany({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { lt: endCur },
+      checkOut: { gt: startPrev },
+    },
+    select: { checkIn: true, checkOut: true, total: true },
+  });
+
+  const current = new Array<number>(12).fill(0);
+  const previous = new Array<number>(12).fill(0);
+
+  for (const r of reservations) {
+    const totalStayDays = differenceInCalendarDays(r.checkOut, r.checkIn);
+    if (totalStayDays <= 0) continue;
+    let cursor = new Date(
+      Date.UTC(r.checkIn.getUTCFullYear(), r.checkIn.getUTCMonth(), 1),
+    );
+    while (cursor < r.checkOut) {
+      const monthStart = cursor;
+      const monthEnd = addMonths(monthStart, 1);
+      const overlapStart = maxDate([monthStart, r.checkIn]);
+      const overlapEnd = minDate([monthEnd, r.checkOut]);
+      const nights = Math.max(
+        0,
+        differenceInCalendarDays(overlapEnd, overlapStart),
+      );
+      if (nights > 0) {
+        const ratio = nights / totalStayDays;
+        const share = Math.round(r.total * ratio);
+        const y = monthStart.getUTCFullYear();
+        const m = monthStart.getUTCMonth();
+        if (y === year) {
+          const cell = current[m];
+          if (cell !== undefined) current[m] = cell + share;
+        } else if (y === year - 1) {
+          const cell = previous[m];
+          if (cell !== undefined) previous[m] = cell + share;
+        }
+      }
+      cursor = monthEnd;
+    }
+  }
+
+  return { current, previous, currentYear: year, previousYear: year - 1 };
+}
+
+export type SourceSplitKey = "direct" | "booking" | "airbnb" | "expedia";
+
+export interface SourceSplitRow {
+  key: SourceSplitKey;
+  label: string;
+  count: number;
+  pct: number;
+}
+
+const DIRECT_LIKE: ReservationSource[] = [
+  "DIRECT_WEB",
+  "WALK_IN",
+  "PHONE",
+  "PARTNER",
+  "OTHER",
+];
+
+const SOURCE_LABEL: Record<SourceSplitKey, string> = {
+  direct: "Direct",
+  booking: "Booking",
+  airbnb: "Airbnb",
+  expedia: "Expedia",
+};
+
+export async function getSourceSplit(
+  monthIso: string,
+): Promise<{ rows: SourceSplitRow[]; totalCount: number }> {
+  const { start, end } = parseMonthIso(monthIso);
+  const reservations = await prisma.reservation.findMany({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { gte: start, lt: end },
+    },
+    select: { source: true },
+  });
+
+  const counts: Record<SourceSplitKey, number> = {
+    direct: 0,
+    booking: 0,
+    airbnb: 0,
+    expedia: 0,
+  };
+  for (const r of reservations) {
+    if (r.source === "BOOKING") counts.booking += 1;
+    else if (r.source === "AIRBNB") counts.airbnb += 1;
+    else if (r.source === "EXPEDIA") counts.expedia += 1;
+    else if (DIRECT_LIKE.includes(r.source)) counts.direct += 1;
+  }
+
+  const totalCount =
+    counts.direct + counts.booking + counts.airbnb + counts.expedia;
+  const order: SourceSplitKey[] = ["direct", "booking", "airbnb", "expedia"];
+  const rows: SourceSplitRow[] = order.map((key) => ({
+    key,
+    label: SOURCE_LABEL[key],
+    count: counts[key],
+    pct: totalCount > 0 ? (counts[key] / totalCount) * 100 : 0,
+  }));
+
+  return { rows, totalCount };
+}
+
+export type HeatmapIntensity = 0 | 1 | 2 | 3 | 4 | 5 | "peak";
+
+export interface HeatmapCell {
+  /** ISO date YYYY-MM-DD (UTC). */
+  date: string;
+  /** 0..6 — 0=Mon..6=Sun. */
+  weekday: number;
+  /** 0..11 calendar month. */
+  month: number;
+  /** Number of properties occupied that day (0..21). */
+  occupied: number;
+  /** Bucketed intensity for the heatmap colour. */
+  intensity: HeatmapIntensity;
+}
+
+function bucketIntensity(occupied: number): HeatmapIntensity {
+  if (occupied <= 0) return 0;
+  if (occupied <= 3) return 1;
+  if (occupied <= 7) return 2;
+  if (occupied <= 12) return 3;
+  if (occupied <= 17) return 4;
+  if (occupied <= 19) return 5;
+  return "peak";
+}
+
+/**
+ * Heatmap of daily occupied-property counts across the full year. Each
+ * cell is a (UTC) day. Stays are counted via overlap with [day, day+1).
+ */
+export async function getYearHeatmap(year: number): Promise<HeatmapCell[]> {
+  const start = startOfYear(new Date(Date.UTC(year, 0, 1)));
+  const end = endOfYear(start);
+  const lastDay = new Date(Date.UTC(year, 11, 31));
+
+  const reservations = await prisma.reservation.findMany({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { lt: addDays(end, 1) },
+      checkOut: { gt: start },
+    },
+    select: { checkIn: true, checkOut: true },
+  });
+
+  // Tally occupied-property nights per UTC day.
+  const counts = new Map<string, number>();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  for (const r of reservations) {
+    const cursorStart = r.checkIn < start ? start : r.checkIn;
+    const cursorEnd =
+      r.checkOut > addDays(lastDay, 1) ? addDays(lastDay, 1) : r.checkOut;
+    let t = cursorStart.getTime();
+    while (t < cursorEnd.getTime()) {
+      const d = new Date(t);
+      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+      t += oneDayMs;
+    }
+  }
+
+  const cells: HeatmapCell[] = [];
+  let cursor = start;
+  while (cursor <= lastDay) {
+    const yy = cursor.getUTCFullYear();
+    const mm = cursor.getUTCMonth();
+    const dd = cursor.getUTCDate();
+    const date = `${yy}-${String(mm + 1).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+    const jsWeekday = cursor.getUTCDay(); // 0=Sun..6=Sat
+    const weekday = (jsWeekday + 6) % 7; // 0=Mon..6=Sun
+    const occupied = counts.get(date) ?? 0;
+    cells.push({
+      date,
+      weekday,
+      month: mm,
+      occupied,
+      intensity: bucketIntensity(occupied),
+    });
+    cursor = addDays(cursor, 1);
+  }
+  return cells;
+}
+
+export interface TopUnitRow {
+  id: string;
+  slug: string;
+  name: string;
+  type: PropertyType;
+  photoUrl: string | null;
+  revenue: number;
+  occupiedNights: number;
+  availableNights: number;
+}
+
+export async function getTopUnits(
+  monthIso: string,
+  limit = 5,
+): Promise<TopUnitRow[]> {
+  const { start, end } = parseMonthIso(monthIso);
+  const monthDays = differenceInCalendarDays(end, start);
+
+  const properties = await prisma.property.findMany({
+    where: { deletedAt: null, status: "ACTIVE" },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      type: true,
+      photos: {
+        orderBy: { order: "asc" },
+        take: 1,
+        select: { url: true },
+      },
+    },
+  });
+
+  const reservations = await prisma.reservation.findMany({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { lt: end },
+      checkOut: { gt: start },
+    },
+    select: {
+      checkIn: true,
+      checkOut: true,
+      total: true,
+      propertyId: true,
+    },
+  });
+
+  const stats = new Map<string, { revenue: number; occupiedNights: number }>();
+  for (const r of reservations) {
+    const totalStayDays = differenceInCalendarDays(r.checkOut, r.checkIn);
+    if (totalStayDays <= 0) continue;
+    const overlapStart = maxDate([r.checkIn, start]);
+    const overlapEnd = minDate([r.checkOut, end]);
+    const nights = Math.max(
+      0,
+      differenceInCalendarDays(overlapEnd, overlapStart),
+    );
+    if (nights <= 0) continue;
+    const ratio = nights / totalStayDays;
+    const share = Math.round(r.total * ratio);
+    const cur = stats.get(r.propertyId) ?? { revenue: 0, occupiedNights: 0 };
+    cur.revenue += share;
+    cur.occupiedNights += nights;
+    stats.set(r.propertyId, cur);
+  }
+
+  const rows: TopUnitRow[] = properties.map((p) => {
+    const s = stats.get(p.id) ?? { revenue: 0, occupiedNights: 0 };
+    return {
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      type: p.type,
+      photoUrl: p.photos[0]?.url ?? null,
+      revenue: s.revenue,
+      occupiedNights: s.occupiedNights,
+      availableNights: monthDays,
+    };
+  });
+
+  rows.sort((a, b) => b.revenue - a.revenue);
+  return rows.slice(0, limit);
+}
+
+export type StayBucket = "1" | "2" | "3" | "4" | "5" | "6" | "7+";
+
+export interface LengthOfStayDistributionRow {
+  bucket: StayBucket;
+  count: number;
+  pct: number;
+}
+
+export interface LengthOfStayResult {
+  avgNights: number;
+  distribution: LengthOfStayDistributionRow[];
+}
+
+export async function getLengthOfStayDistribution(
+  monthIso: string,
+): Promise<LengthOfStayResult> {
+  const { start, end } = parseMonthIso(monthIso);
+  const reservations = await prisma.reservation.findMany({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { gte: start, lt: end },
+    },
+    select: { nights: true },
+  });
+
+  const buckets: Record<StayBucket, number> = {
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7+": 0,
+  };
+  let sumNights = 0;
+  for (const r of reservations) {
+    sumNights += r.nights;
+    if (r.nights <= 1) buckets["1"] += 1;
+    else if (r.nights === 2) buckets["2"] += 1;
+    else if (r.nights === 3) buckets["3"] += 1;
+    else if (r.nights === 4) buckets["4"] += 1;
+    else if (r.nights === 5) buckets["5"] += 1;
+    else if (r.nights === 6) buckets["6"] += 1;
+    else buckets["7+"] += 1;
+  }
+
+  const total = reservations.length;
+  const order: StayBucket[] = ["1", "2", "3", "4", "5", "6", "7+"];
+  const distribution: LengthOfStayDistributionRow[] = order.map((bucket) => ({
+    bucket,
+    count: buckets[bucket],
+    pct: total > 0 ? (buckets[bucket] / total) * 100 : 0,
+  }));
+
+  const avgNights = total > 0 ? sumNights / total : 0;
+  return { avgNights, distribution };
+}
+
+export interface GuestOriginRow {
+  code: string;
+  label: string;
+  pct: number;
+  count: number;
+}
+
+const COUNTRY_LABEL_FR: Record<string, string> = {
+  TN: "Tunisie",
+  FR: "France",
+  DE: "Allemagne",
+  GB: "Royaume-Uni",
+  IT: "Italie",
+  ES: "Espagne",
+  BE: "Belgique",
+  NL: "Pays-Bas",
+  CH: "Suisse",
+  US: "États-Unis",
+  CA: "Canada",
+  MA: "Maroc",
+  DZ: "Algérie",
+  LY: "Libye",
+  EG: "Égypte",
+};
+
+function labelForCountry(code: string | null): string {
+  if (!code) return "Inconnu";
+  const upper = code.toUpperCase();
+  return COUNTRY_LABEL_FR[upper] ?? upper;
+}
+
+export async function getGuestOriginSplit(
+  monthIso: string,
+): Promise<GuestOriginRow[]> {
+  const { start, end } = parseMonthIso(monthIso);
+  const reservations = await prisma.reservation.findMany({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { gte: start, lt: end },
+    },
+    select: { guest: { select: { country: true } } },
+  });
+
+  const counts = new Map<string, number>();
+  for (const r of reservations) {
+    const raw = r.guest.country?.trim().toUpperCase() ?? "";
+    const code = raw.length > 0 ? raw : "OTHER";
+    counts.set(code, (counts.get(code) ?? 0) + 1);
+  }
+
+  const total = reservations.length;
+  const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+  const top = sorted.slice(0, 5);
+  const otherCount = sorted.slice(5).reduce((acc, [, n]) => acc + n, 0);
+
+  const rows: GuestOriginRow[] = top.map(([code, count]) => ({
+    code,
+    label: code === "OTHER" ? "Autres" : labelForCountry(code),
+    count,
+    pct: total > 0 ? (count / total) * 100 : 0,
+  }));
+
+  if (otherCount > 0) {
+    rows.push({
+      code: "OTHER",
+      label: "Autres",
+      count: otherCount,
+      pct: total > 0 ? (otherCount / total) * 100 : 0,
+    });
+  }
+
+  return rows;
+}
+
+export interface NextMonthForecast {
+  monthIso: string;
+  monthLabel: string;
+  projectedRevenue: number;
+  projectedOccupancyPct: number;
+  peakWeeks: number[];
+  recommendation: string;
+}
+
+const FR_MONTHS_FULL = [
+  "Janvier",
+  "Février",
+  "Mars",
+  "Avril",
+  "Mai",
+  "Juin",
+  "Juillet",
+  "Août",
+  "Septembre",
+  "Octobre",
+  "Novembre",
+  "Décembre",
+];
+
+export async function getNextMonthForecast(
+  monthIso: string,
+): Promise<NextMonthForecast> {
+  const { start } = parseMonthIso(monthIso);
+  const nextStart = addMonths(start, 1);
+  const nextEnd = endOfMonth(nextStart);
+  const exclusiveEnd = addDays(nextEnd, 1);
+
+  const totalProperties = await countActiveProperties();
+  const metrics = await computeMonthMetrics(
+    nextStart,
+    exclusiveEnd,
+    totalProperties,
+  );
+
+  // Find peak ISO weeks (occupied >= 18 days across portfolio per day, i.e.
+  // intensity 5 or peak in the heatmap bucketing).
+  const reservations = await prisma.reservation.findMany({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { lt: exclusiveEnd },
+      checkOut: { gt: nextStart },
+    },
+    select: { checkIn: true, checkOut: true },
+  });
+
+  const perDay = new Map<string, number>();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  for (const r of reservations) {
+    const s = r.checkIn < nextStart ? nextStart : r.checkIn;
+    const e = r.checkOut > exclusiveEnd ? exclusiveEnd : r.checkOut;
+    for (let t = s.getTime(); t < e.getTime(); t += oneDayMs) {
+      const d = new Date(t);
+      const key = d.toISOString().slice(0, 10);
+      perDay.set(key, (perDay.get(key) ?? 0) + 1);
+    }
+  }
+
+  const peakWeekSet = new Set<number>();
+  for (const [iso, count] of perDay.entries()) {
+    if (count >= 18) {
+      const d = parseISO(`${iso}T00:00:00Z`);
+      peakWeekSet.add(getISOWeek(d));
+    }
+  }
+  const peakWeeks = Array.from(peakWeekSet).sort((a, b) => a - b);
+
+  const nextMonthIso = `${nextStart.getUTCFullYear()}-${String(nextStart.getUTCMonth() + 1).padStart(2, "0")}`;
+  const monthLabel = `${FR_MONTHS_FULL[nextStart.getUTCMonth()] ?? ""} ${nextStart.getUTCFullYear()}`;
+
+  // Pick the top-3 most-booked properties for the recommendation copy.
+  const topNames = await prisma.reservation.groupBy({
+    by: ["propertyId"],
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { lt: exclusiveEnd },
+      checkOut: { gt: nextStart },
+    },
+    _count: { _all: true },
+    orderBy: { _count: { propertyId: "desc" } },
+    take: 3,
+  });
+  const propIds = topNames.map((t) => t.propertyId);
+  const props =
+    propIds.length > 0
+      ? await prisma.property.findMany({
+          where: { id: { in: propIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+  const orderedNames = propIds
+    .map((id) => props.find((p) => p.id === id)?.name)
+    .filter((n): n is string => Boolean(n));
+
+  const recommendation =
+    orderedNames.length > 0
+      ? `Augmenter les tarifs de +8% sur ${orderedNames.join(", ")} (déjà très bookés).`
+      : "Activer une promotion ciblée pour stimuler la demande.";
+
+  const projectedOccupancyPct =
+    metrics.availableNights > 0
+      ? (metrics.occupiedNights / metrics.availableNights) * 100
+      : 0;
+
+  return {
+    monthIso: nextMonthIso,
+    monthLabel,
+    projectedRevenue: metrics.revenue,
+    projectedOccupancyPct,
+    peakWeeks,
+    recommendation,
+  };
+}
+
+export interface KpiSparklines {
+  revenue: number[];
+  occupancy: number[];
+  adr: number[];
+  revpar: number[];
+}
+
+/**
+ * Trailing 12 months ending on the given month (inclusive). Each array is
+ * 12 numbers, oldest → newest. Used for the sparkline under each KPI card.
+ */
+export async function getKpiSparklines(
+  monthIso: string,
+): Promise<KpiSparklines> {
+  const { start } = parseMonthIso(monthIso);
+  const totalProperties = await countActiveProperties();
+
+  const months: { start: Date; end: Date }[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const s = addMonths(start, -i);
+    const e = addMonths(s, 1);
+    months.push({ start: s, end: e });
+  }
+
+  const all = await Promise.all(
+    months.map((m) => computeMonthMetrics(m.start, m.end, totalProperties)),
+  );
+
+  return {
+    revenue: all.map((m) => m.revenue),
+    occupancy: all.map((m) =>
+      m.availableNights > 0 ? (m.occupiedNights / m.availableNights) * 100 : 0,
+    ),
+    adr: all.map((m) => m.adr),
+    revpar: all.map((m) => m.revpar),
+  };
 }
