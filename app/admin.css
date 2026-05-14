@@ -1405,6 +1405,246 @@ html:has([data-admin-shell]) {
   }
 }
 
+/* ==========================================================================
+   NEW BOOKING WIZARD — full-page admin reservation flow.
+   Scoped to [data-admin-shell] so the public site is untouched.
+   ========================================================================== */
+
+[data-admin-shell] .new-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  [data-admin-shell] .new-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Stepper */
+[data-admin-shell] .stepper-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+[data-admin-shell] .stepper-row .stp {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  border: none;
+}
+[data-admin-shell] .stepper-row .stp.active {
+  background: rgba(79, 184, 196, 0.12);
+  color: var(--primary);
+}
+[data-admin-shell] .stepper-row .stp.done {
+  color: var(--success);
+}
+[data-admin-shell] .stepper-row .stp .n {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-surface-3);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+[data-admin-shell] .stepper-row .stp.active .n {
+  background: var(--primary);
+  color: var(--bg-app);
+}
+[data-admin-shell] .stepper-row .stp.done .n {
+  background: var(--success);
+  color: var(--bg-app);
+}
+[data-admin-shell] .stepper-row .arrow {
+  color: var(--text-dim);
+  margin: 0 4px;
+}
+
+/* Step cards */
+[data-admin-shell] .step-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 12px;
+}
+[data-admin-shell] .step-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+[data-admin-shell] .step-card h3 .num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--bg-app);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+[data-admin-shell] .step-card .sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-left: 32px;
+  margin-bottom: 16px;
+}
+[data-admin-shell] .step-card.collapsed {
+  padding: 12px 20px;
+  opacity: 0.85;
+}
+[data-admin-shell] .step-card.collapsed .sub {
+  display: none;
+}
+
+/* Price table editor */
+[data-admin-shell] .price-table {
+  background: var(--bg-surface-2);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 16px;
+}
+[data-admin-shell] .price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  gap: 8px;
+}
+[data-admin-shell] .price-row .label {
+  color: var(--text-muted);
+}
+[data-admin-shell] .price-row.editable {
+  padding: 4px 0;
+}
+[data-admin-shell] .price-row.editable .label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+[data-admin-shell] .price-row.editable input.line-label {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-muted);
+  flex: 1;
+  font-size: 0.9rem;
+  padding: 4px;
+  min-width: 0;
+}
+[data-admin-shell] .price-row.editable input.line-label:focus {
+  background: var(--bg-app);
+  border-radius: 4px;
+  color: var(--text);
+}
+[data-admin-shell] .price-row.editable input.line-value {
+  background: var(--bg-app);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 5px 10px;
+  width: 120px;
+  text-align: right;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+}
+[data-admin-shell] .price-row.editable input.line-value:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+[data-admin-shell] .price-row.discount {
+  color: var(--success);
+}
+[data-admin-shell] .price-row.totals {
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  font-weight: 600;
+}
+[data-admin-shell] .price-row.grand-total {
+  padding: 10px 0;
+  margin-top: 4px;
+  color: var(--primary);
+  font-size: 1.1rem;
+  border-top: 1px solid var(--border);
+}
+[data-admin-shell] .price-row.grand-total .label {
+  color: var(--text);
+  font-weight: 600;
+}
+[data-admin-shell] .price-row.grand-total .value {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
+/* Discount %/TND toggle */
+[data-admin-shell] .discount-toggle {
+  display: inline-flex;
+  background: var(--bg-app);
+  border-radius: 4px;
+  padding: 2px;
+  border: 1px solid var(--border);
+}
+[data-admin-shell] .discount-toggle button {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: 3px;
+  color: var(--text-muted);
+  font-weight: 500;
+  background: transparent;
+}
+[data-admin-shell] .discount-toggle button.active {
+  background: var(--bg-surface-3);
+  color: var(--primary);
+}
+
+[data-admin-shell] .add-line-btn {
+  color: var(--primary);
+  font-size: 0.82rem;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding: 6px 0;
+  background: none;
+}
+[data-admin-shell] .add-line-btn:hover {
+  color: var(--accent);
+}
+
+/* Summary aside helpers */
+[data-admin-shell] .summary-section {
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+}
+[data-admin-shell] .summary-section:last-of-type {
+  border-bottom: none;
+}
+
 /* ---------- UTILITY (renamed text-muted to avoid Tailwind collision) ---------- */
 .text-muted-admin {
   color: var(--text-muted);
