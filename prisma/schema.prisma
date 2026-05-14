@@ -414,6 +414,41 @@ model AuditLog {
 }
 
 // =============================================================================
+// CUSTOMER OTP — short-lived codes for the Guest → account upgrade flow
+// =============================================================================
+
+enum OtpPurpose {
+  ACCOUNT_UPGRADE
+  PHONE_VERIFY
+  PASSWORD_RESET
+}
+
+model CustomerOtp {
+  id         String     @id @default(cuid())
+  /**
+   * Bcrypt-hashed 6-digit code. Never stored in clear.
+   */
+  codeHash   String
+  /**
+   * E.164 phone the OTP was sent to. Indexed for lookup.
+   */
+  phone      String
+  /**
+   * Optional link to the existing Guest (set when upgrading a known guest).
+   */
+  guestId    String?
+  purpose    OtpPurpose
+  expiresAt  DateTime   @db.Timestamptz(3)
+  consumedAt DateTime?  @db.Timestamptz(3)
+  attempts   Int        @default(0)
+  ipAddress  String?
+  createdAt  DateTime   @default(now()) @db.Timestamptz(3)
+
+  @@index([phone, purpose, expiresAt])
+  @@index([guestId])
+}
+
+// =============================================================================
 // SETTINGS — typed key/value store (registry-validated in /lib/settings)
 // =============================================================================
 
