@@ -156,15 +156,15 @@ export type ReservationDetail = NonNullable<
  */
 /**
  * Returns the cheapest + most expensive nightly rate (in millimes) across
- * the active catalog of the requested property type. Used to bound the
- * public listing price filter so users can only ask for values inside the
- * real catalog range. Returns null when no properties exist yet.
+ * the active catalog. Pass `type` to scope to chalets or bungalows; omit
+ * it for the unified ("Tous les hébergements") search page. Returns null
+ * when no properties exist yet.
  */
 export async function getPropertyPriceRange(
-  type: "CHALET" | "BUNGALOW",
+  type?: "CHALET" | "BUNGALOW",
 ): Promise<{ min: number; max: number } | null> {
   const result = await prisma.property.aggregate({
-    where: { deletedAt: null, status: "ACTIVE", type },
+    where: { deletedAt: null, status: "ACTIVE", ...(type ? { type } : {}) },
     _min: { basePrice: true },
     _max: { basePrice: true },
   });
@@ -200,7 +200,8 @@ export type FilterableAmenity = Awaited<
 >[number];
 
 export async function listPublicProperties(
-  type: "CHALET" | "BUNGALOW",
+  /** Property type to filter on, or omit/`null` for the unified search. */
+  type: "CHALET" | "BUNGALOW" | null,
   options: {
     minCapacity?: number;
     hasPrivatePool?: boolean;
@@ -234,7 +235,7 @@ export async function listPublicProperties(
     where: {
       deletedAt: null,
       status: "ACTIVE",
-      type,
+      ...(type ? { type } : {}),
       ...(options.minCapacity
         ? { capacity: { gte: options.minCapacity } }
         : {}),

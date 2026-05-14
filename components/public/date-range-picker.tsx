@@ -153,10 +153,13 @@ export function DateRangePicker({
           <span
             className={cn(
               "text-sm font-medium",
-              !inDate &&
-                (variant === "dark"
-                  ? "text-white/50"
-                  : "text-muted-foreground/70"),
+              inDate
+                ? variant === "dark"
+                  ? "text-white"
+                  : "text-charcoal"
+                : variant === "dark"
+                  ? "text-white/55"
+                  : "text-muted-foreground",
             )}
           >
             {inDate
@@ -190,10 +193,13 @@ export function DateRangePicker({
           <span
             className={cn(
               "text-sm font-medium",
-              !outDate &&
-                (variant === "dark"
-                  ? "text-white/50"
-                  : "text-muted-foreground/70"),
+              outDate
+                ? variant === "dark"
+                  ? "text-white"
+                  : "text-charcoal"
+                : variant === "dark"
+                  ? "text-white/55"
+                  : "text-muted-foreground",
             )}
           >
             {outDate

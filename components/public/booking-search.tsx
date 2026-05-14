@@ -14,7 +14,7 @@ import { DateRangePicker } from "./date-range-picker";
  */
 export function BookingSearch() {
   const router = useRouter();
-  const [type, setType] = useState<"chalets" | "bungalows">("chalets");
+  const [type, setType] = useState<"all" | "chalets" | "bungalows">("all");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [adults, setAdults] = useState(2);
@@ -28,7 +28,10 @@ export function BookingSearch() {
     const total = adults + children;
     if (total > 1) params.set("guests", String(total));
     const qs = params.toString();
-    router.push(`/${type}${qs ? `?${qs}` : ""}`);
+    // "all" routes to the unified search page; the per-type routes
+    // (chalets/bungalows) keep the same sidebar layout.
+    const destination = type === "all" ? "/search" : `/${type}`;
+    router.push(`${destination}${qs ? `?${qs}` : ""}`);
   }
 
   const guestsLabel =
@@ -46,6 +49,7 @@ export function BookingSearch() {
             onChange={(e) => setType(e.target.value as typeof type)}
             className="w-full appearance-none bg-transparent text-[15px] font-medium text-charcoal outline-none"
           >
+            <option value="all">Tous les hébergements</option>
             <option value="chalets">Les Chalets</option>
             <option value="bungalows">Les Bungalows</option>
           </select>
