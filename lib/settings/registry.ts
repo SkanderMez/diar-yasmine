@@ -122,6 +122,100 @@ export const SETTING_REGISTRY = {
     description: "ISO timestamp of the last pricing publication.",
     role: "MANAGER",
   },
+  // ---------------------------------------------------------------------------
+  // Taxes & currency — Phase 8 settings page.
+  // ---------------------------------------------------------------------------
+  "tax.stay_sejour_millimes": {
+    schema: z.number().int().min(0).max(100000),
+    default: 2330,
+    description:
+      "Tourist tax per guest, per night, in millimes (TND × 1000). 2330 = 2,330 TND.",
+    role: "ADMIN",
+  },
+  "currency.primary": {
+    schema: z.enum(["TND", "EUR", "USD"]),
+    default: "TND" as const,
+    description:
+      "Primary currency used by default on the public site and the PMS.",
+    role: "ADMIN",
+  },
+  "currency.displayed": {
+    schema: z.array(z.enum(["TND", "EUR", "USD"])).min(1),
+    default: ["TND", "EUR", "USD"] as const,
+    description: "Currencies shown to public visitors (with auto-conversion).",
+    role: "ADMIN",
+  },
+  // ---------------------------------------------------------------------------
+  // Languages — public site toggles.
+  // ---------------------------------------------------------------------------
+  "languages.enabled": {
+    schema: z.array(z.enum(["fr", "en", "ar"])).min(1),
+    default: ["fr", "en", "ar"] as const,
+    description:
+      "Locales enabled on the public site. French is always enabled (default).",
+    role: "ADMIN",
+  },
+  // ---------------------------------------------------------------------------
+  // Branding — uploaded asset URLs (null = use the bundled defaults).
+  // ---------------------------------------------------------------------------
+  "branding.logo_url": {
+    schema: z.string().url().nullable(),
+    default: null,
+    description: "Custom primary logo URL (overrides the bundled SVG).",
+    role: "ADMIN",
+  },
+  "branding.logo_dark_url": {
+    schema: z.string().url().nullable(),
+    default: null,
+    description: "Custom dark/white logo URL for dark backgrounds.",
+    role: "ADMIN",
+  },
+  "branding.mark_url": {
+    schema: z.string().url().nullable(),
+    default: null,
+    description: "Custom mark (icon-only) URL for favicon, app, vouchers.",
+    role: "ADMIN",
+  },
+  // ---------------------------------------------------------------------------
+  // Notification preferences — each one is a global "do we alert the team?".
+  // ---------------------------------------------------------------------------
+  "notifications.new_reservation": {
+    schema: z.boolean(),
+    default: true,
+    description: "Email + push to the team on every new reservation.",
+    role: "ADMIN",
+  },
+  "notifications.cancellation": {
+    schema: z.boolean(),
+    default: true,
+    description: "Email to administrators when a reservation is cancelled.",
+    role: "ADMIN",
+  },
+  "notifications.conflict": {
+    schema: z.boolean(),
+    default: true,
+    description:
+      "Urgent push + email when a double-booking conflict is detected.",
+    role: "ADMIN",
+  },
+  "notifications.checkin_24h": {
+    schema: z.boolean(),
+    default: true,
+    description: "Reminder to reception and housekeeping 24h before check-in.",
+    role: "ADMIN",
+  },
+  "notifications.review_published": {
+    schema: z.boolean(),
+    default: false,
+    description: "Weekly digest of newly-published guest reviews.",
+    role: "ADMIN",
+  },
+  "notifications.monthly_report": {
+    schema: z.boolean(),
+    default: true,
+    description: "Monthly report — 1st of the month, administrators only.",
+    role: "ADMIN",
+  },
 } as const satisfies Record<
   string,
   {
