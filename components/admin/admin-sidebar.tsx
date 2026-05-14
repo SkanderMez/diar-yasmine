@@ -7,6 +7,7 @@ import {
   ChevronDown,
   ClipboardList,
   Globe,
+  Home,
   LineChart,
   Plus,
   Settings,
@@ -37,6 +38,12 @@ const SECTIONS: NavSection[] = [
   {
     label: "Opérations",
     items: [
+      {
+        key: "dashboard",
+        href: "/admin/dashboard",
+        label: "Vue d'ensemble",
+        icon: Home,
+      },
       {
         key: "calendar",
         href: "/admin/calendar",
@@ -135,7 +142,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
 
   return (
     <aside className="sidebar">
-      <Link href="/admin/calendar" className="sidebar-brand">
+      <Link href="/admin/dashboard" className="sidebar-brand">
         <Image
           src="/brand/logo-mark.svg"
           alt="Diar Yasmine"

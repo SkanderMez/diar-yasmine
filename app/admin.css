@@ -935,22 +935,25 @@ html:has([data-admin-shell]) {
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: clip;
 }
 [data-admin-shell] .cal-grid {
   display: grid;
-  grid-template-columns: 200px 1fr;
-  height: calc(100vh - 56px - 56px - 24px - 80px);
+  grid-template-columns: 200px minmax(0, 1fr);
   min-height: 600px;
 }
 [data-admin-shell] .cal-left {
   background: var(--bg-surface-2);
   border-right: 1px solid var(--border);
-  overflow: hidden;
 }
 [data-admin-shell] .cal-right {
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: visible;
   position: relative;
+}
+[data-admin-shell] .cal-tracks {
+  position: relative;
+  width: 100%;
 }
 [data-admin-shell] .cal-header-row {
   display: grid;
@@ -958,7 +961,7 @@ html:has([data-admin-shell]) {
   border-bottom: 1px solid var(--border);
   height: 48px;
   position: sticky;
-  top: 0;
+  top: calc(var(--topbar-h));
   z-index: 10;
 }
 [data-admin-shell] .cal-header-row .month-marker {
@@ -1014,7 +1017,7 @@ html:has([data-admin-shell]) {
   padding: 0 14px;
   background: var(--bg-surface-2);
   position: sticky;
-  top: 0;
+  top: calc(var(--topbar-h));
   z-index: 11;
 }
 [data-admin-shell] .cal-left-header .label {
@@ -1092,23 +1095,49 @@ html:has([data-admin-shell]) {
   height: 44px;
   border-bottom: 1px solid var(--border);
 }
-[data-admin-shell] .booking-row.weekend-bg {
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 180px,
-    rgba(127, 127, 127, 0.04) 180px,
-    rgba(127, 127, 127, 0.04) 252px
-  );
+
+/* Day-cell background layer (weekend stripes + drag/click interaction) */
+[data-admin-shell] .booking-row .cells {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  z-index: 0;
 }
-[data-theme="light"] [data-admin-shell] .booking-row.weekend-bg {
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 180px,
-    rgba(122, 143, 107, 0.06) 180px,
-    rgba(122, 143, 107, 0.06) 252px
-  );
+[data-admin-shell] .booking-row .cells .cell {
+  border-right: 1px solid transparent;
+  position: relative;
+}
+[data-admin-shell] .booking-row .cells .cell.weekend {
+  background: rgba(127, 127, 127, 0.04);
+}
+[data-theme="light"] [data-admin-shell] .booking-row .cells .cell.weekend {
+  background: rgba(122, 143, 107, 0.06);
+}
+[data-admin-shell] .booking-row .cells .cell.is-empty {
+  cursor: cell;
+}
+[data-admin-shell] .booking-row .cells .cell.is-empty:hover {
+  background: rgba(79, 184, 196, 0.08);
+}
+[data-admin-shell] .booking-row .cells .cell.selecting {
+  background: rgba(79, 184, 196, 0.22);
+}
+[data-admin-shell] .booking-row .drag-ghost {
+  position: absolute;
+  top: -22px;
+  white-space: nowrap;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--bg-app);
+  border: 1px solid var(--primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  z-index: 6;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* The booking bars */
@@ -1135,6 +1164,7 @@ html:has([data-admin-shell]) {
     0 1px 2px rgba(0, 0, 0, 0.18);
   border: none;
   font-family: inherit;
+  z-index: 2;
 }
 [data-admin-shell] .booking:hover {
   transform: translateY(-1px);
@@ -3730,4 +3760,672 @@ html:has([data-admin-shell]) {
   [data-admin-shell] .branding-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ==========================================================================
+   DASHBOARD — /admin/dashboard (Vue d'ensemble)
+   All rules scoped to [data-admin-shell] so the public site stays untouched.
+   ========================================================================== */
+
+/* KPI row — 4 columns, like the maquette */
+[data-admin-shell] .dashboard-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 1100px) {
+  [data-admin-shell] .dashboard-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  [data-admin-shell] .dashboard-kpi-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+[data-admin-shell] .dashboard-kpi {
+  position: relative;
+  padding: 16px 16px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+[data-admin-shell] .dashboard-kpi::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(79, 184, 196, 0.05) 0%,
+    transparent 55%
+  );
+  pointer-events: none;
+}
+[data-admin-shell] .dashboard-kpi > * {
+  position: relative;
+}
+[data-admin-shell] .dashboard-kpi-icon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(79, 184, 196, 0.12);
+  color: var(--primary);
+}
+[data-admin-shell] .dashboard-kpi-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+[data-admin-shell] .dashboard-kpi-value {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1.05;
+  margin-top: 4px;
+  letter-spacing: -0.01em;
+}
+[data-admin-shell] .dashboard-kpi-unit {
+  font-size: 1rem;
+  font-family: var(--font);
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 2px;
+}
+[data-admin-shell] .dashboard-kpi-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+[data-admin-shell] .dashboard-kpi-warning .dashboard-kpi-value {
+  color: var(--pay-unpaid);
+}
+[data-admin-shell] .dashboard-kpi-warning .dashboard-kpi-icon {
+  background: var(--pay-unpaid-bg);
+  color: var(--pay-unpaid);
+}
+
+/* Two-column grids (arrivals/departures, week/activity) */
+[data-admin-shell] .dashboard-grid-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 1100px) {
+  [data-admin-shell] .dashboard-grid-two {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Generic dashboard panel (replaces ad-hoc .panel from maquette) */
+[data-admin-shell] .dashboard-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+[data-admin-shell] .dashboard-panel-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+[data-admin-shell] .dashboard-panel-head h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+[data-admin-shell] .dashboard-panel-head h3 svg {
+  color: var(--primary);
+}
+[data-admin-shell] .dashboard-panel-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+[data-admin-shell] .dashboard-panel-link {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  transition: all 0.15s ease;
+}
+[data-admin-shell] .dashboard-panel-link:hover {
+  background: var(--bg-surface-2);
+  color: var(--text);
+}
+
+[data-admin-shell] .dashboard-empty {
+  padding: 36px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 0.88rem;
+}
+[data-admin-shell] .dashboard-empty svg {
+  color: var(--success);
+}
+
+/* Arrival / departure list rows */
+[data-admin-shell] .dashboard-arrival-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+[data-admin-shell] .dashboard-arrival {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+[data-admin-shell] .dashboard-arrival:last-child {
+  border-bottom: none;
+}
+[data-admin-shell] .dashboard-arrival-link {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px 12px 18px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+}
+[data-admin-shell] .dashboard-arrival-link:hover {
+  background: var(--bg-surface-2);
+}
+[data-admin-shell] .dashboard-arrival-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  background: var(--bg-surface-3);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+[data-admin-shell] .dashboard-arrival-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+[data-admin-shell] .dashboard-arrival-body {
+  min-width: 0;
+}
+[data-admin-shell] .dashboard-arrival-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+[data-admin-shell] .dashboard-arrival-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+[data-admin-shell] .dashboard-arrival-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+[data-admin-shell] .dashboard-arrival-side {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+[data-admin-shell] .dashboard-arrival-time {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+[data-admin-shell] .dashboard-pay-pill {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+[data-admin-shell] .dashboard-pay-pill.pay-paid {
+  background: var(--pay-paid-bg);
+  color: var(--pay-paid);
+  border-color: transparent;
+}
+[data-admin-shell] .dashboard-pay-pill.pay-deposit {
+  background: var(--pay-deposit-bg);
+  color: var(--pay-deposit);
+  border-color: transparent;
+}
+[data-admin-shell] .dashboard-pay-pill.pay-unpaid {
+  background: var(--pay-unpaid-bg);
+  color: var(--pay-unpaid);
+  border-color: transparent;
+}
+[data-admin-shell] .dashboard-pay-pill.pay-refunded {
+  background: var(--pay-refunded-bg);
+  color: var(--pay-refunded);
+  border-color: transparent;
+}
+
+[data-admin-shell] .dashboard-arrival-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding-right: 14px;
+  flex-shrink: 0;
+}
+[data-admin-shell] .dashboard-arrival-action {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--text-muted);
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  transition: all 0.15s ease;
+}
+[data-admin-shell] .dashboard-arrival-action:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+[data-admin-shell] .dashboard-arrival-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-surface-3);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* Week strip */
+[data-admin-shell] .dashboard-week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  padding: 16px 18px 18px;
+}
+[data-admin-shell] .dashboard-week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px 10px;
+  border-radius: var(--radius);
+  background: var(--bg-surface-2);
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+[data-admin-shell] .dashboard-week-day:hover {
+  background: var(--bg-surface-3);
+}
+[data-admin-shell] .dashboard-week-day.is-today {
+  background: rgba(79, 184, 196, 0.1);
+  border-color: var(--primary);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-week-day.is-today {
+  background: rgba(14, 90, 107, 0.08);
+}
+[data-admin-shell] .dashboard-week-bar-track {
+  height: 80px;
+  width: 18px;
+  background: var(--bg-surface-3);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+[data-admin-shell] .dashboard-week-bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, var(--primary), var(--primary-deep));
+  border-radius: 4px;
+  transition: height 0.3s ease;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-week-bar-fill {
+  background: linear-gradient(180deg, var(--primary-2), var(--primary));
+}
+[data-admin-shell] .dashboard-week-pct {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+[data-admin-shell] .dashboard-week-day.is-today .dashboard-week-pct {
+  color: var(--primary);
+}
+[data-admin-shell] .dashboard-week-dow {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+[data-admin-shell] .dashboard-week-dnum {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Activity feed */
+[data-admin-shell] .dashboard-activity-feed {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+}
+[data-admin-shell] .dashboard-activity-row {
+  border-bottom: 1px solid var(--border);
+}
+[data-admin-shell] .dashboard-activity-row:last-child {
+  border-bottom: none;
+}
+[data-admin-shell] .dashboard-activity-link {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 18px;
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+[data-admin-shell] .dashboard-activity-link:not(.is-static):hover {
+  background: var(--bg-surface-2);
+}
+[data-admin-shell] .dashboard-activity-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+[data-admin-shell] .dashboard-activity-body {
+  min-width: 0;
+  flex: 1;
+}
+[data-admin-shell] .dashboard-activity-title {
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+[data-admin-shell] .dashboard-activity-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+[data-admin-shell] .dashboard-activity-sub {
+  font-family: var(--font-mono);
+  color: var(--primary);
+}
+
+/* Quick links grid */
+[data-admin-shell] .dashboard-quick-links {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+@media (max-width: 1100px) {
+  [data-admin-shell] .dashboard-quick-links {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  [data-admin-shell] .dashboard-quick-links {
+    grid-template-columns: 1fr;
+  }
+}
+[data-admin-shell] .dashboard-quick-link {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: inherit;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+[data-admin-shell] .dashboard-quick-link:hover {
+  border-color: var(--primary);
+  background: var(--bg-surface-2);
+  transform: translateY(-1px);
+}
+[data-admin-shell] .dashboard-quick-link svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+[data-admin-shell] .dashboard-quick-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+[data-admin-shell] .dashboard-quick-sub {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* ==========================================================================
+   LIGHT THEME POLISH
+   Refines admin light-mode surfaces based on example-light.html — warmer
+   sand backgrounds, softer shadows, deeper teal on hovers/actives. Only
+   touches selectors under [data-theme="light"] — dark mode is untouched.
+   ========================================================================== */
+
+[data-theme="light"] [data-admin-shell] {
+  /* Subtle app-level warmth: layered sand instead of flat #f7f4ee */
+  background:
+    radial-gradient(
+      1200px 600px at 0% -10%,
+      rgba(14, 90, 107, 0.05),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 100% 0%,
+      rgba(201, 146, 58, 0.05),
+      transparent 55%
+    ),
+    var(--bg-app);
+  background-attachment: fixed;
+}
+
+/* Sidebar — slightly warmer surface, soft inner highlight */
+[data-theme="light"] [data-admin-shell] .sidebar {
+  background: linear-gradient(180deg, #fffdf8, var(--bg-surface));
+  border-right-color: var(--border);
+  box-shadow: 1px 0 0 rgba(207, 196, 174, 0.4);
+}
+[data-theme="light"] [data-admin-shell] .nav-item:hover {
+  background: rgba(14, 90, 107, 0.06);
+  color: var(--primary-deep);
+}
+[data-theme="light"] [data-admin-shell] .nav-item.active {
+  background: rgba(14, 90, 107, 0.1);
+  color: var(--primary-deep);
+  font-weight: 600;
+}
+[data-theme="light"] [data-admin-shell] .nav-item.active svg {
+  color: var(--primary-deep);
+}
+[data-theme="light"] [data-admin-shell] .nav-item.active .badge {
+  background: var(--primary-deep);
+  color: #ffffff;
+}
+[data-theme="light"] [data-admin-shell] .sidebar-bottom {
+  border-top-color: var(--border);
+}
+[data-theme="light"] [data-admin-shell] .user-card:hover {
+  background: rgba(14, 90, 107, 0.06);
+}
+
+/* Topbar — softer separator, warm focus */
+[data-theme="light"] [data-admin-shell] .topbar {
+  background: rgba(255, 253, 248, 0.92);
+  backdrop-filter: saturate(140%) blur(8px);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+  border-bottom-color: var(--border);
+  box-shadow: 0 1px 0 rgba(207, 196, 174, 0.35);
+}
+[data-theme="light"] [data-admin-shell] .search-bar {
+  background: #ffffff;
+}
+[data-theme="light"] [data-admin-shell] .search-bar:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 90, 107, 0.1);
+}
+[data-theme="light"] [data-admin-shell] .property-pill {
+  background: #ffffff;
+}
+[data-theme="light"] [data-admin-shell] .property-pill:hover {
+  background: var(--bg-surface-2);
+}
+[data-theme="light"] [data-admin-shell] .icon-btn:hover {
+  background: rgba(14, 90, 107, 0.07);
+  color: var(--primary-deep);
+}
+
+/* Page head — display font has slightly warmer color */
+[data-theme="light"] [data-admin-shell] .page-head h1 {
+  color: var(--primary-deep);
+}
+
+/* Cards — softer warm shadow, slightly raised */
+[data-theme="light"] [data-admin-shell] .card-admin,
+[data-theme="light"] [data-admin-shell] .kpi-card,
+[data-theme="light"] [data-admin-shell] .channel-card,
+[data-theme="light"] [data-admin-shell] .cal-wrapper,
+[data-theme="light"] [data-admin-shell] .dashboard-panel,
+[data-theme="light"] [data-admin-shell] .dashboard-kpi,
+[data-theme="light"] [data-admin-shell] .dashboard-quick-link {
+  box-shadow:
+    0 1px 0 rgba(207, 196, 174, 0.35),
+    0 8px 24px -16px rgba(14, 90, 107, 0.12);
+}
+
+/* Primary button — deep teal stays vivid against sand */
+[data-theme="light"] [data-admin-shell] .btn-admin-primary {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.15) inset,
+    0 1px 2px rgba(14, 90, 107, 0.25);
+}
+[data-theme="light"] [data-admin-shell] .btn-admin-primary:hover {
+  background: var(--primary-deep);
+  color: #ffffff;
+}
+[data-theme="light"] [data-admin-shell] .btn-admin-secondary {
+  background: #ffffff;
+}
+[data-theme="light"] [data-admin-shell] .btn-admin-secondary:hover {
+  background: var(--bg-surface-2);
+}
+
+/* Table — warm active row, subtle zebra */
+[data-theme="light"] [data-admin-shell] .table-admin tbody tr:hover,
+[data-theme="light"] [data-admin-shell] .table-compact tbody tr:hover {
+  background: rgba(14, 90, 107, 0.04);
+}
+[data-theme="light"] [data-admin-shell] .table-admin th,
+[data-theme="light"] [data-admin-shell] .table-compact th {
+  background: var(--bg-surface-2);
+}
+
+/* KPI card — deep teal numerals */
+[data-theme="light"] [data-admin-shell] .kpi-value,
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-value {
+  color: var(--primary-deep);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-kpi::after {
+  background: linear-gradient(
+    135deg,
+    rgba(14, 90, 107, 0.05) 0%,
+    transparent 55%
+  );
+}
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-icon {
+  background: rgba(14, 90, 107, 0.08);
+  color: var(--primary-deep);
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-warning
+  .dashboard-kpi-icon {
+  background: var(--pay-unpaid-bg);
+  color: var(--pay-unpaid);
+}
+
+/* Quick link hover — deep teal border */
+[data-theme="light"] [data-admin-shell] .dashboard-quick-link:hover {
+  border-color: var(--primary-deep);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-arrival-link:hover {
+  background: rgba(14, 90, 107, 0.04);
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-activity-link:not(.is-static):hover {
+  background: rgba(14, 90, 107, 0.04);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-arrival-action {
+  background: #ffffff;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-arrival-action:hover {
+  border-color: var(--primary-deep);
+  color: var(--primary-deep);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-panel-link:hover {
+  background: rgba(14, 90, 107, 0.06);
+  color: var(--primary-deep);
 }

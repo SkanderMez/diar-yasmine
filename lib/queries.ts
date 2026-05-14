@@ -1,10 +1,12 @@
 import type {
+  AuditLog as AuditLogModel,
   ChannelSyncStatus,
   ChannelType,
   Prisma,
   PropertyStatus,
   PropertyType,
   ReservationSource,
+  ReservationStatus,
 } from "@prisma/client";
 import { prisma } from "./prisma";
 import { findUnavailablePropertyIds } from "./availability";
@@ -2460,5 +2462,345 @@ export async function getKpiSparklines(
     ),
     adr: all.map((m) => m.adr),
     revpar: all.map((m) => m.revpar),
+  };
+}
+
+// =============================================================================
+// ADMIN — /admin/dashboard (Vue d'ensemble)
+// =============================================================================
+
+export interface DashboardArrival {
+  id: string;
+  code: string;
+  guestFirstName: string;
+  guestLastName: string;
+  guestPhone: string;
+  propertyId: string;
+  propertyName: string;
+  propertyType: PropertyType;
+  propertyPhotoUrl: string | null;
+  checkIn: Date;
+  checkOut: Date;
+  nights: number;
+  adults: number;
+  children: number;
+  total: number;
+  paidAmount: number;
+  status: ReservationStatus;
+  source: ReservationSource;
+}
+
+export type DashboardDeparture = DashboardArrival;
+
+export interface DashboardKpis {
+  /** Stays whose checkIn falls today (Africa/Tunis wall day). */
+  checkinsToday: number;
+  /** Stays whose checkOut falls today. */
+  checkoutsToday: number;
+  /**
+   * Current occupancy at midnight today as `occupied / totalActiveProperties`.
+   * 0..100, rounded to nearest integer.
+   */
+  occupancyPct: number;
+  /**
+   * Reservations that still owe a balance to the property (paidAmount < total)
+   * and are not cancelled/no-show/checked-out.
+   */
+  pendingPayments: number;
+}
+
+export interface DashboardWeekDay {
+  /** UTC instant for the day's midnight in Africa/Tunis. */
+  date: Date;
+  /** 0..100 — share of active properties occupied that night. */
+  occupancyPct: number;
+  /** Raw reservation count overlapping that night. */
+  occupied: number;
+}
+
+export interface DashboardActivityEntry {
+  id: string;
+  action: string;
+  entity: string;
+  entityId: string;
+  timestamp: Date;
+  userName: string | null;
+  /** Pre-formatted, human-friendly label for the row. */
+  label: string;
+  /** Optional second line (e.g. reservation code or guest). */
+  sublabel: string | null;
+  /** Optional deep-link href (e.g. /admin/reservations/[code]). */
+  href: string | null;
+}
+
+export interface DashboardData {
+  todayStart: Date;
+  todayEnd: Date;
+  kpis: DashboardKpis;
+  arrivals: DashboardArrival[];
+  departures: DashboardDeparture[];
+  week: DashboardWeekDay[];
+  activity: DashboardActivityEntry[];
+}
+
+type AuditLogWithUser = Pick<
+  AuditLogModel,
+  "id" | "action" | "entity" | "entityId" | "timestamp"
+> & {
+  user: { name: string | null; email: string | null } | null;
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  "reservation.created": "Nouvelle réservation",
+  "reservation.cancelled": "Réservation annulée",
+  "reservation.status_changed": "Statut modifié",
+  "payment.received": "Paiement encaissé",
+  "payment.refunded": "Paiement remboursé",
+  "guest.created": "Nouveau client",
+  "guest.merged": "Clients fusionnés",
+  "property.created": "Unité ajoutée",
+  "property.updated": "Unité mise à jour",
+  "property.soft_deleted": "Unité retirée",
+  "property.photo_deleted": "Photo supprimée",
+  "amenity.created": "Équipement ajouté",
+  "amenity.updated": "Équipement mis à jour",
+  "amenity.filterable_toggled": "Équipement (filtre) basculé",
+  "amenity.deleted": "Équipement supprimé",
+  "season.multiplier_updated": "Saison mise à jour",
+  "pricing.supplements_updated": "Suppléments mis à jour",
+  "pricing.min_stay_updated": "Séjour minimum mis à jour",
+  "pricing.published": "Tarifs publiés",
+  "settings.taxes_currency_updated": "Paramètres mis à jour",
+};
+
+function humanizeAction(action: string): string {
+  return (
+    ACTION_LABELS[action] ??
+    action
+      .replace(/[_.]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .trim()
+  );
+}
+
+/**
+ * All-in-one dashboard payload. One `Promise.all` so the page is a single
+ * server round-trip. Used by /admin/dashboard.
+ */
+export async function getDashboardData(): Promise<DashboardData> {
+  const { start: todayStart, end: todayEnd } = todayBoundsUtc();
+  const weekEnd = addDays(todayStart, 7);
+
+  const [
+    totalProperties,
+    todayArrivalsRows,
+    todayDeparturesRows,
+    currentlyOccupied,
+    weekReservations,
+    pendingPaymentRows,
+    auditRows,
+    reservationCodeMap,
+  ] = await Promise.all([
+    countActiveProperties(),
+    prisma.reservation.findMany({
+      where: {
+        deletedAt: null,
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        checkIn: { gte: todayStart, lt: todayEnd },
+      },
+      select: dashboardReservationSelect,
+      orderBy: [{ checkIn: "asc" }],
+    }),
+    prisma.reservation.findMany({
+      where: {
+        deletedAt: null,
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        checkOut: { gte: todayStart, lt: todayEnd },
+      },
+      select: dashboardReservationSelect,
+      orderBy: [{ checkOut: "asc" }],
+    }),
+    prisma.reservation.count({
+      where: {
+        deletedAt: null,
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        checkIn: { lte: todayStart },
+        checkOut: { gt: todayStart },
+      },
+    }),
+    prisma.reservation.findMany({
+      where: {
+        deletedAt: null,
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        checkIn: { lt: weekEnd },
+        checkOut: { gt: todayStart },
+      },
+      select: { checkIn: true, checkOut: true },
+    }),
+    // Pending payments: in-memory filter on paid < total because Prisma can't
+    // express column-vs-column. 21 active units → small candidate set.
+    prisma.reservation.findMany({
+      where: {
+        deletedAt: null,
+        status: { notIn: ["CANCELLED", "NO_SHOW", "CHECKED_OUT"] },
+      },
+      select: { id: true, total: true, paidAmount: true },
+    }),
+    prisma.auditLog.findMany({
+      orderBy: { timestamp: "desc" },
+      take: 30,
+      select: {
+        id: true,
+        action: true,
+        entity: true,
+        entityId: true,
+        timestamp: true,
+        user: { select: { name: true, email: true } },
+      },
+    }),
+    // Pre-fetch every reservation code referenced by the last 30 audit rows
+    // so we can deep-link the activity feed.
+    prisma.reservation.findMany({
+      where: { deletedAt: null },
+      select: { id: true, code: true },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    }),
+  ]);
+
+  const pendingPaymentsExact = pendingPaymentRows.filter(
+    (r) => r.paidAmount < r.total,
+  ).length;
+
+  // Week occupancy: count distinct stays overlapping each [day, day+1).
+  const week: DashboardWeekDay[] = [];
+  for (let i = 0; i < 7; i++) {
+    const dayStart = addDays(todayStart, i);
+    const dayEnd = addDays(dayStart, 1);
+    let occupied = 0;
+    for (const r of weekReservations) {
+      if (r.checkIn < dayEnd && r.checkOut > dayStart) occupied++;
+    }
+    const occupancyPct =
+      totalProperties > 0 ? Math.round((occupied / totalProperties) * 100) : 0;
+    week.push({ date: dayStart, occupancyPct, occupied });
+  }
+
+  // Today's occupancy KPI (same definition as week[0]).
+  const occupancyPct =
+    totalProperties > 0
+      ? Math.round((currentlyOccupied / totalProperties) * 100)
+      : 0;
+
+  // Activity feed
+  const codeById = new Map(reservationCodeMap.map((r) => [r.id, r.code]));
+  const activity: DashboardActivityEntry[] = auditRows
+    .slice(0, 10)
+    .map((row: AuditLogWithUser) => {
+      const userName = row.user?.name ?? row.user?.email ?? null;
+      const label = humanizeAction(row.action);
+      let sublabel: string | null = null;
+      let href: string | null = null;
+      if (row.entity === "Reservation") {
+        const code = codeById.get(row.entityId);
+        if (code) {
+          sublabel = `#${code}`;
+          href = `/admin/reservations/${code}`;
+        }
+      } else if (row.entity === "Payment") {
+        sublabel = "Caisse";
+        href = `/admin/payments`;
+      } else if (row.entity === "Property") {
+        sublabel = "Inventaire";
+        href = `/admin/properties`;
+      } else if (row.entity === "Guest") {
+        sublabel = "Client";
+        href = `/admin/clients`;
+      } else if (row.entity === "Setting") {
+        sublabel = "Paramètres";
+        href = `/admin/settings`;
+      }
+      return {
+        id: row.id,
+        action: row.action,
+        entity: row.entity,
+        entityId: row.entityId,
+        timestamp: row.timestamp,
+        userName,
+        label,
+        sublabel,
+        href,
+      };
+    });
+
+  return {
+    todayStart,
+    todayEnd,
+    kpis: {
+      checkinsToday: todayArrivalsRows.length,
+      checkoutsToday: todayDeparturesRows.length,
+      occupancyPct,
+      pendingPayments: pendingPaymentsExact,
+    },
+    arrivals: todayArrivalsRows.map(mapDashboardReservation),
+    departures: todayDeparturesRows.map(mapDashboardReservation),
+    week,
+    activity,
+  };
+}
+
+const dashboardReservationSelect = {
+  id: true,
+  code: true,
+  checkIn: true,
+  checkOut: true,
+  nights: true,
+  adults: true,
+  children: true,
+  total: true,
+  paidAmount: true,
+  status: true,
+  source: true,
+  guest: {
+    select: { firstName: true, lastName: true, phone: true },
+  },
+  property: {
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      photos: {
+        orderBy: { order: "asc" },
+        take: 1,
+        select: { url: true },
+      },
+    },
+  },
+} satisfies Prisma.ReservationSelect;
+
+type DashboardReservationRow = Prisma.ReservationGetPayload<{
+  select: typeof dashboardReservationSelect;
+}>;
+
+function mapDashboardReservation(r: DashboardReservationRow): DashboardArrival {
+  return {
+    id: r.id,
+    code: r.code,
+    guestFirstName: r.guest.firstName,
+    guestLastName: r.guest.lastName,
+    guestPhone: r.guest.phone,
+    propertyId: r.property.id,
+    propertyName: r.property.name,
+    propertyType: r.property.type,
+    propertyPhotoUrl: r.property.photos[0]?.url ?? null,
+    checkIn: r.checkIn,
+    checkOut: r.checkOut,
+    nights: r.nights,
+    adults: r.adults,
+    children: r.children,
+    total: r.total,
+    paidAmount: r.paidAmount,
+    status: r.status,
+    source: r.source,
   };
 }
