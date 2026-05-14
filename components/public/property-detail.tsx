@@ -1,346 +1,484 @@
-import * as LucideIcons from "lucide-react";
 import {
-  ArrowLeft,
   Bath,
   Bed,
-  Check,
+  ChevronRight,
   Clock,
   MapPin,
   Maximize,
   ShieldCheck,
   Sparkles,
   Star,
-  Users,
-  Waves,
+  Zap,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import type { PublicPropertyDetail } from "@/lib/queries";
-import { PropertyGallery } from "./property-gallery";
-import { BookingWidget } from "./booking-widget";
+import type { PublicPropertyCard, PublicPropertyDetail } from "@/lib/queries";
+import { ListingCard } from "./listings/listing-card";
 import { PropertyJsonLd } from "./json-ld";
+import { PropertyGalleryMagazine } from "./property/property-gallery-magazine";
+import { PropertyTabNav } from "./property/property-tab-nav";
+import { PropertySpecsGrid } from "./property/property-specs-grid";
+import { PropertyStoryCallout } from "./property/property-story-callout";
+import { PropertyAmenitiesGrid } from "./property/property-amenities-grid";
+import { PropertyMiniCalendar } from "./property/property-mini-calendar";
+import { PropertyReviewsSummary } from "./property/property-reviews-summary";
+import { PropertyRules } from "./property/property-rules";
+import { PropertyBookingSticky } from "./property/property-booking-sticky";
 
 interface PropertyDetailProps {
   property: PublicPropertyDetail;
   taxRate: number;
+  similarProperties: PublicPropertyCard[];
 }
 
 /**
- * Airbnb/Booking-style property detail page. Photos top, sticky booking
- * widget on the right, rich content on the left (overview, description,
- * amenities, map, host rules).
+ * Reusable seed for the demo content blocks (reviews, criteria). Keeps
+ * the layout pixel-matched to the maquette while we wait for the real
+ * reviews data model.
  */
-export function PropertyDetail({ property, taxRate }: PropertyDetailProps) {
+const DEMO_REVIEWS = [
+  {
+    author: "Sarah K.",
+    initials: "SK",
+    date: "Juillet 2025 · Séjour de 7 nuits",
+    rating: 5,
+    body: "\"Tout est dit dans le nom. On a l'impression de planer pendant 7 jours. La piscine à débordement face à la mer est exactement ce qu'on voyait sur les photos — peut-être en mieux.\"",
+    avatarTone: "primary" as const,
+  },
+  {
+    author: "Mohamed A.",
+    initials: "MA",
+    date: "Septembre 2025 · Séjour de 4 nuits",
+    rating: 5,
+    body: "\"Maison impeccable, équipe ultra-réactive. La cheminée allumée au coucher du soleil avec le bruit des vagues — un souvenir qu'on n'oubliera pas.\"",
+    avatarTone: "bougainvillier" as const,
+  },
+  {
+    author: "Léa B.",
+    initials: "LB",
+    date: "Avril 2025 · Séjour de 5 nuits",
+    rating: 5,
+    body: '"Le détail nous a frappés : les serviettes en lin lavé, les peignoirs en coton turc, le panier de bienvenue avec dattes et amandes locales. Cette maison sait recevoir."',
+    avatarTone: "olive" as const,
+  },
+  {
+    author: "Yacine T.",
+    initials: "YT",
+    date: "Mai 2025 · Séjour de 3 nuits",
+    rating: 4.5,
+    body: '"Court séjour mais quel impact. Le padel à 5 min, la mer à 2 pas. Tout est aligné. Reviendrons en famille."',
+    avatarTone: "primary" as const,
+  },
+];
+
+const DEMO_CRITERIA = [
+  { label: "Propreté", value: 4.95 },
+  { label: "Confort", value: 4.91 },
+  { label: "Précision", value: 4.93 },
+  { label: "Communication", value: 4.97 },
+  { label: "Emplacement", value: 4.88 },
+  { label: "Rapport qualité-prix", value: 4.85 },
+];
+
+const TAB_ITEMS = [
+  { id: "description", label: "Description" },
+  { id: "equipements", label: "Équipements" },
+  { id: "disponibilites", label: "Disponibilités" },
+  { id: "localisation", label: "Localisation" },
+  { id: "avis", label: "Avis" },
+  { id: "regles", label: "Règles" },
+];
+
+/**
+ * Editorial property detail page — maquette `albatros.html`. Composes
+ * the magazine gallery, sticky tab nav, scroll-spy sections (description,
+ * equipements, disponibilites, localisation, avis, regles) and a sticky
+ * booking widget on the right.
+ */
+export function PropertyDetail({
+  property,
+  taxRate,
+  similarProperties,
+}: PropertyDetailProps) {
   const photos = property.photos.map((p) => ({ url: p.url, alt: p.alt }));
   const listingHref = property.type === "CHALET" ? "/chalets" : "/bungalows";
-  const listingLabel = property.type === "CHALET" ? "Chalets" : "Bungalows";
-  const subtitle =
-    property.type === "CHALET" ? "Chalet bord de mer" : "Bungalow jardin";
+  const listingLabel =
+    property.type === "CHALET" ? "Les Chalets" : "Les Bungalows";
+  const typeLabel = property.type === "CHALET" ? "Chalet" : "Bungalow";
+  const scriptLabel =
+    property.type === "CHALET"
+      ? "Chalet pieds dans l'eau"
+      : "Bungalow au jardin";
 
-  const stats = [
+  const specs = [
     {
-      icon: <Users className="size-5" />,
-      label: `${property.capacity} voyageurs`,
+      icon: <Maximize className="size-6" strokeWidth={1.5} />,
+      value: property.sizeM2 ? `${property.sizeM2} m²` : "—",
+      label: "Surface",
     },
     {
-      icon: <Bed className="size-5" />,
-      label: `${property.bedrooms} chambre${property.bedrooms > 1 ? "s" : ""}`,
+      icon: <Bed className="size-6" strokeWidth={1.5} />,
+      value: String(property.bedrooms),
+      label: property.bedrooms > 1 ? "Chambres" : "Chambre",
     },
     {
-      icon: <Bath className="size-5" />,
-      label: `${property.bathrooms} salle${property.bathrooms > 1 ? "s" : ""} de bain`,
+      icon: <Sparkles className="size-6" strokeWidth={1.5} />,
+      value: String(property.capacity),
+      label: "Voyageurs",
     },
-    ...(property.sizeM2
-      ? [
-          {
-            icon: <Maximize className="size-5" />,
-            label: `${property.sizeM2} m²`,
-          },
-        ]
-      : []),
+    {
+      icon: <Bath className="size-6" strokeWidth={1.5} />,
+      value: String(property.bathrooms),
+      label: property.bathrooms > 1 ? "Salles de bain" : "Salle de bain",
+    },
   ];
 
-  const highlights = [
-    property.beachfront && {
-      icon: <Waves className="size-5" />,
-      title: "Pieds dans l'eau",
-      body: "Sortie directe sur la plage, à moins de 30 secondes de marche.",
-    },
-    property.hasPrivatePool && {
-      icon: <Sparkles className="size-5" />,
-      title: "Piscine privée",
-      body: "Votre propre piscine, à vous seul, entretenue chaque matin.",
-    },
-    property.seaView &&
-      !property.beachfront && {
-        icon: <MapPin className="size-5" />,
-        title: "Vue mer",
-        body: "Terrasse ouverte sur l'horizon méditerranéen.",
-      },
-  ].filter((x): x is Exclude<typeof x, false | undefined> => Boolean(x));
+  /* Build the amenities list — real ones from DB, with three "not
+   * included" filler examples so the grid feels like the maquette. */
+  const amenityItems = [
+    ...property.amenities.map((pa) => ({
+      label: pa.amenity.labelFr,
+      included: true as const,
+    })),
+    { label: "Animaux acceptés", included: false as const },
+    { label: "Parking privé", included: false as const },
+    { label: "Service de chef", included: false as const },
+  ];
 
   return (
     <main className="flex-1 bg-ivory pt-24 text-foreground">
       <PropertyJsonLd property={property} />
 
-      <div className="container-x">
-        {/* Breadcrumb */}
-        <nav className="mb-4 text-sm">
-          <Link
-            href={listingHref}
-            className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="size-3.5" />
-            Retour aux {listingLabel}
+      {/* Title block */}
+      <section className="container-x pt-8 pb-6">
+        <nav className="mb-3 flex items-center gap-2 text-[0.85rem] text-muted-foreground">
+          <Link href="/" className="hover:text-primary">
+            Accueil
           </Link>
+          <ChevronRight className="size-3.5" />
+          <Link href={listingHref} className="hover:text-primary">
+            {listingLabel}
+          </Link>
+          <ChevronRight className="size-3.5" />
+          <span className="text-charcoal">{property.name}</span>
         </nav>
 
-        {/* Title row */}
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="heading-display text-4xl text-foreground sm:text-5xl">
-              {property.name}
-            </h1>
-            <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground/75">
-              <span className="inline-flex items-center gap-1">
-                <Star className="size-3.5 fill-clay text-clay" />
-                <strong className="font-semibold text-foreground">4.9</strong>
-                <span className="text-muted-foreground">· 24 séjours</span>
-              </span>
-              <span className="text-muted-foreground">·</span>
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="size-3.5" />
-                Tazarka, Cap Bon, Tunisie
-              </span>
-            </p>
-          </div>
+        <p className="mb-2 font-script text-2xl text-primary">{scriptLabel}</p>
+        <h1
+          className="heading-display text-5xl text-charcoal sm:text-6xl"
+          style={{ fontWeight: 300 }}
+        >
+          <em className="heading-em" style={{ fontStyle: "italic" }}>
+            {property.name}
+          </em>
+        </h1>
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.95rem] text-charcoal-soft">
+          <span className="inline-flex items-center gap-1.5">
+            <Star
+              className="size-4 text-gold"
+              fill="currentColor"
+              strokeWidth={0}
+            />
+            <strong className="font-semibold text-charcoal">4.92</strong>
+            <a href="#avis" className="text-charcoal underline">
+              127 avis
+            </a>
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className="inline-flex items-center gap-1.5">
+            <Zap className="size-4" />
+            Coup de cœur
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className="inline-flex items-center gap-1.5">
+            <MapPin className="size-4" />
+            Tazarka Plage, Cap Bon
+          </span>
         </div>
+      </section>
 
-        {/* Photo gallery */}
-        <PropertyGallery photos={photos} propertyName={property.name} />
+      {/* Photo gallery */}
+      <section className="container-x">
+        <PropertyGalleryMagazine photos={photos} propertyName={property.name} />
+      </section>
 
-        {/* Content grid */}
-        <div className="mt-12 grid gap-12 pb-24 lg:grid-cols-[1fr_400px] lg:gap-16">
-          <div className="space-y-12">
-            {/* Stats strip */}
-            <section>
-              <div className="flex items-baseline justify-between">
-                <div>
-                  <h2 className="font-heading text-2xl text-foreground">
-                    {subtitle}
-                  </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Hébergement entier · réception 7j/7
-                  </p>
-                </div>
+      {/* Sticky tab nav */}
+      <PropertyTabNav items={TAB_ITEMS} />
+
+      {/* Main grid */}
+      <div className="container-x">
+        <div
+          className="grid gap-12 py-12 lg:grid-cols-[1.6fr_1fr]"
+          style={{ alignItems: "start" }}
+        >
+          {/* LEFT column */}
+          <div>
+            {/* Description */}
+            <section
+              id="description"
+              className="border-b border-line-soft py-8"
+              style={{ scrollMarginTop: "140px" }}
+            >
+              <h2 className="font-heading text-[1.75rem] text-charcoal">
+                Le {typeLabel.toLowerCase()}{" "}
+                <em className="heading-em" style={{ fontStyle: "italic" }}>
+                  {property.name}
+                </em>
+              </h2>
+              <p className="mb-6 mt-2 text-[1.05rem] text-charcoal-soft">
+                {typeLabel} · {property.capacity} voyageurs ·{" "}
+                {property.bedrooms} chambre{property.bedrooms > 1 ? "s" : ""} ·{" "}
+                {property.bathrooms} SDB
+              </p>
+
+              <PropertySpecsGrid items={specs} />
+
+              <div className="mt-6 space-y-4 whitespace-pre-line text-charcoal-soft">
+                {property.descriptionFr}
               </div>
-              <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {stats.map((s, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5"
-                  >
-                    <span className="text-primary">{s.icon}</span>
-                    <span className="text-sm font-medium text-foreground">
-                      {s.label}
-                    </span>
-                  </li>
-                ))}
-              </ul>
             </section>
 
-            {/* Highlights */}
-            {highlights.length > 0 && (
-              <section className="space-y-5">
-                <h2 className="font-heading text-2xl text-foreground">
-                  Ce que cet hébergement a d&apos;unique
-                </h2>
-                <ul className="grid gap-3 sm:grid-cols-3">
-                  {highlights.map((h) => (
-                    <li
-                      key={h.title}
-                      className="rounded-2xl border border-border bg-card p-5"
-                    >
-                      <span className="inline-flex size-10 items-center justify-center rounded-full bg-clay/10 text-clay">
-                        {h.icon}
-                      </span>
-                      <h3 className="mt-3 font-heading text-lg text-foreground">
-                        {h.title}
-                      </h3>
-                      <p className="mt-1 text-sm text-foreground/70">
-                        {h.body}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+            {/* Story callout */}
+            <div className="my-8">
+              <PropertyStoryCallout
+                title={`${property.name} — un refuge bord de mer`}
+                body="Pensé comme un cocon où le temps ralentit. Bardage bois clair, lumière douce, terrasse face à la mer : ici, le seul effort est celui de respirer."
+              />
+            </div>
 
-            {/* Description */}
-            <section className="space-y-4 border-t border-border pt-10">
-              <h2 className="font-heading text-2xl text-foreground">
-                À propos de ce lieu
+            {/* Amenities */}
+            <section
+              id="equipements"
+              className="border-b border-line-soft py-8"
+              style={{ scrollMarginTop: "140px" }}
+            >
+              <h2 className="font-heading text-[1.75rem] text-charcoal">
+                Ce que propose{" "}
+                <em className="heading-em" style={{ fontStyle: "italic" }}>
+                  cet hébergement
+                </em>
               </h2>
-              <p className="whitespace-pre-line text-base leading-relaxed text-foreground/80">
-                {property.descriptionFr}
+              <p className="mb-6 mt-2 text-[1.05rem] text-charcoal-soft">
+                Tout est pensé pour que vous n&apos;ayez rien à penser.
+              </p>
+              <PropertyAmenitiesGrid items={amenityItems} />
+            </section>
+
+            {/* Availability */}
+            <section
+              id="disponibilites"
+              className="border-b border-line-soft py-8"
+              style={{ scrollMarginTop: "140px" }}
+            >
+              <h2 className="font-heading text-[1.75rem] text-charcoal">
+                Disponibilités
+              </h2>
+              <p className="mb-6 mt-2 text-[1.05rem] text-charcoal-soft">
+                Sélectionnez vos dates pour voir le tarif exact.
+              </p>
+              <PropertyMiniCalendar />
+              <p className="mt-6 text-sm text-muted-foreground">
+                Min. {property.minStay} nuit{property.minStay > 1 ? "s" : ""} ·
+                Annulation gratuite jusqu&apos;à 7 jours avant l&apos;arrivée.
               </p>
             </section>
 
-            {/* Amenities */}
-            {property.amenities.length > 0 && (
-              <section className="space-y-5 border-t border-border pt-10">
-                <h2 className="font-heading text-2xl text-foreground">
-                  Ce que propose ce logement
-                </h2>
-                <ul className="grid gap-3 sm:grid-cols-2">
-                  {property.amenities.map((pa) => (
-                    <AmenityRow
-                      key={pa.amenity.slug}
-                      label={pa.amenity.labelFr}
-                      iconName={pa.amenity.icon ?? undefined}
-                    />
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            {/* Map */}
-            <section className="space-y-5 border-t border-border pt-10">
-              <div>
-                <h2 className="font-heading text-2xl text-foreground">
-                  Où vous serez
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Tazarka, Cap Bon — Tunisie
-                </p>
-              </div>
-              <div className="overflow-hidden rounded-3xl border border-border">
-                <iframe
-                  title={`Localisation de ${property.name}`}
-                  src="https://www.openstreetmap.org/export/embed.html?bbox=10.78%2C36.56%2C10.85%2C36.62&layer=mapnik&marker=36.5918%2C10.8157"
-                  className="h-[400px] w-full border-0"
-                  loading="lazy"
+            {/* Location */}
+            <section
+              id="localisation"
+              className="border-b border-line-soft py-8"
+              style={{ scrollMarginTop: "140px" }}
+            >
+              <h2 className="font-heading text-[1.75rem] text-charcoal">
+                Où vous serez
+              </h2>
+              <p className="mb-6 mt-2 text-[1.05rem] text-charcoal-soft">
+                Tazarka Plage, sur la côte est du Cap Bon. À 80 km de
+                Tunis-Carthage, à 45 km de Hammamet.
+              </p>
+              <div
+                className="relative h-[320px] overflow-hidden rounded-2xl"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #b8d8d4 0%, #4FB8C4 50%, #0E5A6B 100%)",
+                }}
+              >
+                <svg
+                  aria-hidden
+                  className="absolute inset-0 h-full w-full"
+                  viewBox="0 0 600 320"
+                  preserveAspectRatio="none"
+                >
+                  <path
+                    d="M 0 250 Q 100 230 200 240 T 400 220 T 600 210 L 600 320 L 0 320 Z"
+                    fill="rgba(14,90,107,0.25)"
+                  />
+                  <path
+                    d="M 0 200 Q 80 190 160 200 T 320 185 T 480 175 T 600 165"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth={1}
+                    strokeDasharray="4,6"
+                  />
+                </svg>
+                <div
+                  className="absolute size-6 rounded-full border-4 border-white"
+                  style={{
+                    top: "45%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    background: "var(--color-bougainvillier)",
+                    boxShadow: "0 0 0 12px rgba(196,78,122,0.25)",
+                  }}
                 />
+                <div
+                  className="absolute -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-primary shadow-md"
+                  style={{ top: "calc(45% - 38px)", left: "50%" }}
+                >
+                  {property.name}
+                </div>
               </div>
-              <ul className="grid gap-3 sm:grid-cols-3">
-                <Spot label="Aéroport Tunis-Carthage" value="1 h 10" />
-                <Spot label="Hammamet" value="30 min" />
-                <Spot label="Plage la plus proche" value="30 sec" />
+              <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <Spot value="2 m" label="Plage" />
+                <Spot value="200 m" label="Padel" />
+                <Spot value="2 km" label="Centre village" />
+                <Spot value="80 km" label="Aéroport" />
               </ul>
             </section>
 
-            {/* Things to know */}
-            <section className="space-y-5 border-t border-border pt-10">
-              <h2 className="font-heading text-2xl text-foreground">
+            {/* Reviews */}
+            <section
+              id="avis"
+              className="border-b border-line-soft py-8"
+              style={{ scrollMarginTop: "140px" }}
+            >
+              <h2 className="flex items-center gap-2 font-heading text-[1.75rem] text-charcoal">
+                <Star
+                  className="size-5 text-gold"
+                  fill="currentColor"
+                  strokeWidth={0}
+                />
+                4.92 ·{" "}
+                <em className="heading-em" style={{ fontStyle: "italic" }}>
+                  127 avis
+                </em>
+              </h2>
+              <div className="mt-6">
+                <PropertyReviewsSummary
+                  overallRating={4.92}
+                  totalReviews={127}
+                  criteria={DEMO_CRITERIA}
+                  reviews={DEMO_REVIEWS}
+                />
+              </div>
+              <div className="mt-6">
+                <button
+                  type="button"
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Voir les 127 avis →
+                </button>
+              </div>
+            </section>
+
+            {/* Rules */}
+            <section
+              id="regles"
+              className="py-8"
+              style={{ scrollMarginTop: "140px" }}
+            >
+              <h2 className="font-heading text-[1.75rem] text-charcoal">
                 À savoir
               </h2>
-              <div className="grid gap-6 sm:grid-cols-3">
-                <RuleBlock
-                  icon={<Clock className="size-5" />}
-                  title="Règlement intérieur"
-                  items={[
-                    "Arrivée : 15h – 22h",
-                    "Départ : avant 11h",
-                    "Animaux acceptés sur demande",
-                    "Pas de fêtes sonores",
-                  ]}
-                />
-                <RuleBlock
-                  icon={<ShieldCheck className="size-5" />}
-                  title="Annulation"
-                  items={[
-                    "Gratuite jusqu'à J-14",
-                    "50 % entre J-14 et J-7",
-                    "Non remboursable J-7 → arrivée",
-                  ]}
-                />
-                <RuleBlock
-                  icon={<Sparkles className="size-5" />}
-                  title="Inclus"
-                  items={[
-                    "Ménage final",
-                    "Linge de lit et serviettes",
-                    "Wi-Fi haut débit",
-                    "Climatisation",
+              <div className="mt-6">
+                <PropertyRules
+                  sections={[
+                    {
+                      title: "Règlement intérieur",
+                      icon: <Clock className="size-4" />,
+                      items: [
+                        "Arrivée : 15h – 22h",
+                        "Départ avant 11h",
+                        "Non-fumeur",
+                        "Animaux sur demande",
+                        "Fêtes interdites",
+                      ],
+                    },
+                    {
+                      title: "Sécurité",
+                      icon: <ShieldCheck className="size-4" />,
+                      items: [
+                        "Détecteur de fumée",
+                        "Extincteur",
+                        "Trousse de premier secours",
+                        "Serrure renforcée",
+                      ],
+                    },
+                    {
+                      title: "Annulation",
+                      icon: <Sparkles className="size-4" />,
+                      items: [
+                        "Gratuite jusqu'à J-14",
+                        "50 % entre J-14 et J-7",
+                        "Non remboursable J-7 → arrivée",
+                      ],
+                    },
                   ]}
                 />
               </div>
             </section>
           </div>
 
-          {/* Booking widget */}
-          <BookingWidget
-            propertyId={property.id}
-            propertySlug={property.slug}
-            basePrice={property.basePrice}
-            cleaningFee={property.cleaningFee}
-            capacity={property.capacity}
-            taxRate={taxRate}
-          />
+          {/* RIGHT column — sticky booking */}
+          <aside>
+            <PropertyBookingSticky
+              propertyId={property.id}
+              propertySlug={property.slug}
+              basePrice={property.basePrice}
+              cleaningFee={property.cleaningFee}
+              capacity={property.capacity}
+              taxRate={taxRate}
+              rating={{ score: 4.92, count: 127 }}
+            />
+          </aside>
         </div>
       </div>
+
+      {/* Similar properties */}
+      {similarProperties.length > 0 && (
+        <section className="bg-sand">
+          <div className="container-x section-y">
+            <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
+              <div className="max-w-[680px]">
+                <p className="eyebrow">Vous aimerez aussi</p>
+                <h2 className="heading-display mt-3 text-4xl text-charcoal sm:text-5xl">
+                  Hébergements similaires
+                </h2>
+              </div>
+              <Link
+                href={listingHref}
+                className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Voir tout →
+              </Link>
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
+              {similarProperties.map((p) => (
+                <ListingCard key={p.id} property={p} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </main>
-  );
-}
-
-function AmenityRow({ label, iconName }: { label: string; iconName?: string }) {
-  /* Look up the lucide icon dynamically — falls back to a generic check if
-   * the stored icon name doesn't match a known component. */
-  const Icon =
-    iconName && iconName in LucideIcons
-      ? (
-          LucideIcons as unknown as Record<
-            string,
-            React.ComponentType<{ className?: string }>
-          >
-        )[iconName]
-      : Check;
-
-  return (
-    <li className="flex items-center gap-3 py-2">
-      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-bone text-foreground">
-        {Icon ? <Icon className="size-4" /> : <Check className="size-4" />}
-      </span>
-      <span className="text-sm text-foreground">{label}</span>
-    </li>
   );
 }
 
 function Spot({ label, value }: { label: string; value: string }) {
   return (
-    <li className="rounded-2xl border border-border bg-card p-4">
-      <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-1 font-heading text-xl text-foreground">{value}</p>
+    <li className="rounded-md bg-sand p-4">
+      <div className="font-heading text-2xl text-primary">{value}</div>
+      <div className="text-sm text-muted-foreground">{label}</div>
     </li>
-  );
-}
-
-function RuleBlock({
-  icon,
-  title,
-  items,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  items: string[];
-}) {
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 text-foreground">
-        <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-          {icon}
-        </span>
-        <h3 className="font-heading text-lg">{title}</h3>
-      </div>
-      <ul className="space-y-1.5 text-sm text-foreground/75">
-        {items.map((item) => (
-          <li key={item} className="flex items-start gap-2">
-            <Check className="mt-0.5 size-3.5 shrink-0 text-clay" />
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }

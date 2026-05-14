@@ -16,28 +16,28 @@ interface Photo {
   alt: string | null;
 }
 
-interface PropertyGalleryProps {
+interface PropertyGalleryMagazineProps {
   photos: Photo[];
   propertyName: string;
 }
 
 /**
- * Airbnb-style photo arrangement: one large image left (50%) + four
- * smaller images right (2×2). A "Toutes les photos" button bottom-right
- * opens the full-grid modal; clicking any photo opens the lightbox at
- * that index. Mobile collapses to a single hero with the same button.
+ * Maquette `.photo-gallery` — magazine layout: one big photo on the left
+ * spanning 2 rows, then 2x2 small photos on the right. Click anywhere to
+ * open the lightbox at that index. Bottom-right "Voir les N photos" pill
+ * opens a grid modal; top-right share/save chips.
  */
-export function PropertyGallery({
+export function PropertyGalleryMagazine({
   photos,
   propertyName,
-}: PropertyGalleryProps) {
+}: PropertyGalleryMagazineProps) {
   const [open, setOpen] = useState<
     { mode: "lightbox"; idx: number } | { mode: "grid" } | null
   >(null);
 
   if (photos.length === 0) {
     return (
-      <div className="flex aspect-[16/9] items-center justify-center rounded-3xl bg-bone text-sm text-muted-foreground">
+      <div className="flex aspect-[16/9] items-center justify-center rounded-3xl bg-sand text-sm text-muted-foreground">
         Photos à venir
       </div>
     );
@@ -49,12 +49,13 @@ export function PropertyGallery({
   return (
     <>
       <div className="relative">
-        <div className="grid h-[60vh] max-h-[560px] min-h-[360px] grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-3xl">
-          {/* Hero — 2 cols × 2 rows */}
+        <div className="grid h-[420px] grid-cols-2 grid-rows-2 gap-2 overflow-hidden rounded-3xl sm:h-[500px] sm:grid-cols-[2fr_1fr_1fr] md:h-[540px]">
+          {/* Hero — spans 2 rows on the leftmost column */}
           <button
             type="button"
             onClick={() => setOpen({ mode: "lightbox", idx: 0 })}
-            className="relative col-span-4 row-span-2 overflow-hidden bg-bone sm:col-span-2"
+            className="group relative col-span-2 row-span-2 overflow-hidden bg-sand sm:col-span-1"
+            aria-label={hero.alt ?? `${propertyName} — photo 1`}
           >
             <Image
               src={hero.url}
@@ -62,49 +63,54 @@ export function PropertyGallery({
               fill
               sizes="(max-width: 640px) 100vw, 50vw"
               priority
-              className="object-cover transition-transform duration-500 hover:scale-[1.02]"
+              className="object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.04]"
             />
+            <span className="absolute inset-0 bg-primary/0 transition-colors duration-200 group-hover:bg-primary/10" />
           </button>
-          {/* Tiles */}
+
+          {/* Tiles — 2x2 on desktop, hidden on mobile to keep magazine feel */}
           {tiles.map((p, i) => (
             <button
               key={p.url}
               type="button"
               onClick={() => setOpen({ mode: "lightbox", idx: i + 1 })}
-              className="relative hidden overflow-hidden bg-bone sm:block"
+              className="group relative hidden overflow-hidden bg-sand sm:block"
+              aria-label={p.alt ?? `${propertyName} — photo ${i + 2}`}
             >
               <Image
                 src={p.url}
                 alt={p.alt ?? `${propertyName} — photo ${i + 2}`}
                 fill
                 sizes="25vw"
-                className="object-cover transition-transform duration-500 hover:scale-[1.04]"
+                className="object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.04]"
               />
+              <span className="absolute inset-0 bg-primary/0 transition-colors duration-200 group-hover:bg-primary/10" />
             </button>
           ))}
-          {/* Fill empty tiles if photos < 5 with sand placeholders */}
+          {/* Empty placeholders — keep grid even if fewer than 4 tile photos */}
           {Array.from({ length: Math.max(0, 4 - tiles.length) }).map((_, i) => (
             <div
               key={`empty-${i}`}
-              className="hidden bg-bone sm:block"
+              className="hidden bg-sand sm:block"
               aria-hidden
             />
           ))}
         </div>
 
-        {/* Floating controls */}
-        <div className="absolute right-4 top-4 flex gap-2">
+        {/* Top-right action chips */}
+        <div className="absolute right-4 top-4 z-10 flex gap-2">
           <PillButton icon={<Share2 className="size-3.5" />} label="Partager" />
           <PillButton
             icon={<Heart className="size-3.5" />}
-            label="Sauvegarder"
+            label="Enregistrer"
           />
         </div>
 
+        {/* Bottom-right show-all button */}
         <button
           type="button"
           onClick={() => setOpen({ mode: "grid" })}
-          className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full border border-charcoal/15 bg-white px-4 py-2 text-sm font-medium text-foreground shadow-md transition-all hover:shadow-lg"
+          className="absolute bottom-5 right-5 z-10 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-charcoal shadow-md transition-all hover:bg-charcoal hover:text-ivory hover:shadow-lg"
         >
           <Grid3X3 className="size-4" />
           Voir les {photos.length} photos
@@ -135,7 +141,7 @@ function PillButton({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur transition-all hover:bg-white hover:shadow"
+      className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-charcoal shadow-sm backdrop-blur transition-all hover:bg-white hover:shadow"
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>
@@ -169,16 +175,16 @@ function GridModal({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-ivory">
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-ivory/95 px-6 py-4 backdrop-blur">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line-soft bg-ivory/95 px-6 py-4 backdrop-blur">
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-bone"
+          className="inline-flex size-10 items-center justify-center rounded-full text-charcoal transition-colors hover:bg-sand"
           aria-label="Fermer"
         >
           <X className="size-5" />
         </button>
-        <h2 className="font-heading text-lg text-foreground">{propertyName}</h2>
+        <h2 className="font-heading text-lg text-charcoal">{propertyName}</h2>
         <div className="size-10" />
       </div>
       <div className="container-x py-10">
@@ -188,14 +194,14 @@ function GridModal({
               key={p.url}
               type="button"
               onClick={() => onPick(i)}
-              className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-bone"
+              className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-sand"
             >
               <Image
                 src={p.url}
                 alt={p.alt ?? `${propertyName} — photo ${i + 1}`}
                 fill
                 sizes="(max-width: 640px) 100vw, 50vw"
-                className="object-cover transition-transform duration-500 hover:scale-[1.03]"
+                className="object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.03]"
               />
             </button>
           ))}

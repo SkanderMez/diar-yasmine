@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { findPublicProperty } from "@/lib/queries";
+import { findPublicProperty, listPublicProperties } from "@/lib/queries";
 import { getSetting } from "@/lib/settings";
 import { PropertyDetail } from "@/components/public/property-detail";
 
@@ -27,11 +27,22 @@ export default async function BungalowDetailPage({
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
-  const [property, taxRate] = await Promise.all([
+  const [property, taxRate, allBungalows] = await Promise.all([
     findPublicProperty(slug),
     getSetting("tax.rate"),
+    listPublicProperties("BUNGALOW"),
   ]);
   if (!property || property.type !== "BUNGALOW") notFound();
 
-  return <PropertyDetail property={property} taxRate={taxRate} />;
+  const similarProperties = allBungalows
+    .filter((p) => p.id !== property.id)
+    .slice(0, 3);
+
+  return (
+    <PropertyDetail
+      property={property}
+      taxRate={taxRate}
+      similarProperties={similarProperties}
+    />
+  );
 }
