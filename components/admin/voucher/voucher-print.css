@@ -1,0 +1,33 @@
+@media print {
+  /* Hide the entire admin shell */
+  [data-admin-shell] > * {
+    display: none !important;
+  }
+  /* Hide the toolbar */
+  .voucher-toolbar {
+    display: none !important;
+  }
+  /* Strip the page background + watermark wrapper styling so the paper prints clean */
+  .voucher-page-wrap {
+    padding: 0 !important;
+    background: white !important;
+    min-height: 0 !important;
+  }
+  .voucher-page {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+  /* Show the voucher paper itself */
+  .voucher-page-wrap,
+  .voucher-page,
+  .voucher-content {
+    display: block !important;
+  }
+  /* Ask the browser for color-accurate printing of gradients/highlights */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

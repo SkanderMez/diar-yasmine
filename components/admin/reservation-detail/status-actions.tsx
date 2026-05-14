@@ -6,6 +6,7 @@ import {
   Check,
   DoorOpen,
   FileDown,
+  FileText,
   LogIn,
   LogOut,
   UserX,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import type { ReservationStatus } from "@prisma/client";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { cancelReservation, updateReservationStatus } from "@/lib/reservations";
 
 /**
@@ -91,7 +93,8 @@ export function StatusActions({
   if (next.length === 0) {
     return (
       <div className="flex flex-wrap gap-2">
-        <VoucherButton code={code} />
+        <VoucherPreviewButton code={code} />
+        <VoucherPdfButton code={code} />
         <p className="basis-full text-xs text-muted-foreground">
           Cette réservation est dans un état terminal. Aucune action de
           transition disponible.
@@ -119,12 +122,24 @@ export function StatusActions({
           {LABELS[s]}
         </Button>
       ))}
-      <VoucherButton code={code} />
+      <VoucherPreviewButton code={code} />
+      <VoucherPdfButton code={code} />
     </div>
   );
 }
 
-function VoucherButton({ code }: { code: string }) {
+function VoucherPreviewButton({ code }: { code: string }) {
+  return (
+    <Button asChild variant="default" size="sm" className="gap-2">
+      <Link href={`/admin/reservations/${code}/voucher`}>
+        <FileText className="size-4" />
+        Voucher
+      </Link>
+    </Button>
+  );
+}
+
+function VoucherPdfButton({ code }: { code: string }) {
   return (
     <Button asChild variant="ghost" size="sm" className="gap-2">
       <a
