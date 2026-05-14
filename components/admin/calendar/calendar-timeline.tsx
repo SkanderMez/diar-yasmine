@@ -339,11 +339,13 @@ export function CalendarTimeline({
                       onPointerUp={(e) => finishDrag(e, property.id)}
                       onPointerCancel={handlePointerCancel}
                     >
-                      {/* Cell layer — weekend stripes, hover hints, drag selection */}
+                      {/* Cell layer — weekend stripes, hover hints, drag selection,
+                       *  and a soft "today" tint on the today column when empty. */}
                       <div className="cells" style={gridStyle} aria-hidden>
                         {days.map((d, i) => {
                           const cellCls = ["cell"];
                           if (isWeekend(d)) cellCls.push("weekend");
+                          if (todayIndex === i) cellCls.push("today");
                           const occupiedHere = occupied?.has(i) ?? false;
                           if (!occupiedHere) cellCls.push("is-empty");
                           if (
@@ -438,13 +440,12 @@ export function CalendarTimeline({
               </div>
             ))}
 
-            {todayIndex !== null ? (
-              <div
-                className="today-line"
-                style={{ left: `calc(${((todayIndex + 0.5) / n) * 100}%)` }}
-                aria-hidden
-              />
-            ) : null}
+            {/* The today-line previously ran vertically through every row.
+             *  It looked good in empty calendars but cut visually through
+             *  any booking that crossed today. We dropped it; the day cells
+             *  in .cells get a soft `today` tint instead (only visible where
+             *  no booking covers the cell), and the AUJ badge in the header
+             *  marks the column. */}
           </div>
         </div>
       </div>

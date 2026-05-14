@@ -1113,6 +1113,15 @@ html:has([data-admin-shell]) {
 [data-theme="light"] [data-admin-shell] .booking-row .cells .cell.weekend {
   background: rgba(122, 143, 107, 0.06);
 }
+/* Subtle today-column tint that only shows in empty cells (any booking
+ * bar drawn over it covers the tint with its own background). Avoids the
+ * old vertical "today line" cutting through booking bars. */
+[data-admin-shell] .booking-row .cells .cell.today {
+  background: rgba(79, 184, 196, 0.12);
+}
+[data-theme="light"] [data-admin-shell] .booking-row .cells .cell.today {
+  background: rgba(14, 90, 107, 0.08);
+}
 [data-admin-shell] .booking-row .cells .cell.is-empty {
   cursor: cell;
 }
@@ -1283,19 +1292,11 @@ html:has([data-admin-shell]) {
   background: rgba(229, 185, 104, 0.15);
 }
 
-/* Today line — vertical marker that runs through the booking rows.
-   The "AUJ" label lives in the sticky header instead (.today-badge)
-   so it stays anchored to the day-number row when the page scrolls. */
-[data-admin-shell] .today-line {
-  position: absolute;
-  /* Start just under the 48px-tall header row */
-  top: 48px;
-  bottom: 0;
-  width: 2px;
-  background: var(--primary);
-  z-index: 1;
-  pointer-events: none;
-}
+/* Today column is highlighted with a soft tint on the empty cells
+   (.booking-row .cells .cell.today); see above. The "AUJ" badge in the
+   sticky header marks the column at the top. We dropped the explicit
+   vertical line — it cut visually through any booking that crossed
+   today even with z-index ordering. */
 
 /* "AUJ" badge — sits inside .cal-header-row over the today column.
    Positioned via inline `left` from the timeline component. */
