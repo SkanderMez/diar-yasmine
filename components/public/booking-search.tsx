@@ -1,59 +1,94 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Minus, Plus, Search, Users } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Home,
+  Minus,
+  Plus,
+  Search,
+  Users,
+  Waves,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { DateRangePicker } from "./date-range-picker";
 
+type TypeKey = "all" | "chalets" | "bungalows";
+
+interface TypeOption {
+  value: TypeKey;
+  label: string;
+  hint: string;
+  icon: React.ReactNode;
+}
+
+const TYPE_OPTIONS: TypeOption[] = [
+  {
+    value: "all",
+    label: "Tous les hébergements",
+    hint: "Chalets + bungalows",
+    icon: <Home className="size-4" />,
+  },
+  {
+    value: "chalets",
+    label: "Les Chalets",
+    hint: "Pieds dans l'eau",
+    icon: <Waves className="size-4" />,
+  },
+  {
+    value: "bungalows",
+    label: "Les Bungalows",
+    hint: "Au cœur du jardin",
+    icon: <Home className="size-4" />,
+  },
+];
+
 /**
- * Hero booking widget — pixel match of the maquette `.booking-widget`.
+ * Hero booking widget — matches the maquette `.booking-widget`.
  *
- * Layout: white pill, 4 segments separated by vertical dividers, primary
- * search CTA on the right. The date range picker opens a custom popover.
- * Guests popover holds an adults + children counter pair.
+ * Layout: white pill, 4 segments separated by hairline dividers, primary
+ * search CTA on the right. The Hébergement select is a custom popover
+ * (modern look + supports icons + hints). The date range picker opens a
+ * portaled modal calendar; the guests popover is also portaled so it
+ * floats above any section below the hero.
  */
 export function BookingSearch() {
   const router = useRouter();
-  const [type, setType] = useState<"all" | "chalets" | "bungalows">("all");
+  const [type, setType] = useState<TypeKey>("all");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const [guestsOpen, setGuestsOpen] = useState(false);
+  // Renamed from `children` to avoid colliding with React's reserved
+  // children prop in the popover component below.
+  const [childrenCount, setChildrenCount] = useState(0);
 
   function submit() {
     const params = new URLSearchParams();
     if (checkIn) params.set("checkIn", checkIn);
     if (checkOut) params.set("checkOut", checkOut);
-    const total = adults + children;
+    const total = adults + childrenCount;
     if (total > 1) params.set("guests", String(total));
     const qs = params.toString();
-    // "all" routes to the unified search page; the per-type routes
-    // (chalets/bungalows) keep the same sidebar layout.
     const destination = type === "all" ? "/search" : `/${type}`;
     router.push(`${destination}${qs ? `?${qs}` : ""}`);
   }
 
   const guestsLabel =
-    children > 0
-      ? `${adults} adulte${adults > 1 ? "s" : ""}, ${children} enfant${children > 1 ? "s" : ""}`
+    childrenCount > 0
+      ? `${adults} adulte${adults > 1 ? "s" : ""}, ${childrenCount} enfant${childrenCount > 1 ? "s" : ""}`
       : `${adults} adulte${adults > 1 ? "s" : ""}`;
+
+  const activeType =
+    TYPE_OPTIONS.find((o) => o.value === type) ?? TYPE_OPTIONS[0]!;
 
   return (
     <div className="rounded-2xl bg-white p-1.5 shadow-2xl">
       <div className="grid grid-cols-1 items-stretch gap-0.5 sm:grid-cols-[1.4fr_minmax(0,2fr)_1fr_auto]">
-        {/* Hébergement */}
-        <Field label="Hébergement">
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as typeof type)}
-            className="w-full appearance-none bg-transparent text-[15px] font-medium text-charcoal outline-none"
-          >
-            <option value="all">Tous les hébergements</option>
-            <option value="chalets">Les Chalets</option>
-            <option value="bungalows">Les Bungalows</option>
-          </select>
-        </Field>
+        {/* Hébergement — custom popover select */}
+        <TypeSelect value={type} activeOption={activeType} onChange={setType} />
 
         {/* Dates */}
         <div className="px-1">
@@ -67,48 +102,14 @@ export function BookingSearch() {
           />
         </div>
 
-        {/* Voyageurs */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setGuestsOpen((v) => !v)}
-            className="block w-full rounded-xl px-4 py-3 text-left transition-colors hover:bg-sand"
-          >
-            <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              <Users className="mr-1 inline size-3" /> Voyageurs
-            </span>
-            <span className="mt-0.5 block text-[15px] font-medium text-charcoal">
-              {guestsLabel}
-            </span>
-          </button>
-          {guestsOpen && (
-            <div className="absolute right-0 top-full z-20 mt-2 w-72 space-y-3 rounded-2xl border border-line-soft bg-white p-5 shadow-xl">
-              <Counter
-                label="Adultes"
-                hint="13 ans et +"
-                value={adults}
-                min={1}
-                max={20}
-                onChange={setAdults}
-              />
-              <Counter
-                label="Enfants"
-                hint="2 à 12 ans"
-                value={children}
-                min={0}
-                max={10}
-                onChange={setChildren}
-              />
-              <button
-                type="button"
-                onClick={() => setGuestsOpen(false)}
-                className="ml-auto block text-xs font-medium text-primary underline-offset-4 hover:underline"
-              >
-                Fermer
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Voyageurs — portaled centered popover */}
+        <GuestsPopover
+          adults={adults}
+          childrenCount={childrenCount}
+          onAdultsChange={setAdults}
+          onChildrenChange={setChildrenCount}
+          summary={guestsLabel}
+        />
 
         {/* Search CTA */}
         <button
@@ -124,20 +125,230 @@ export function BookingSearch() {
   );
 }
 
-function Field({
-  label,
-  children,
+/* ============================================================
+ * Custom type select
+ * ========================================================== */
+
+function TypeSelect({
+  value,
+  activeOption,
+  onChange,
 }: {
-  label: string;
-  children: React.ReactNode;
+  value: TypeKey;
+  activeOption: TypeOption;
+  onChange: (v: TypeKey) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  function pick(next: TypeKey) {
+    onChange(next);
+    setOpen(false);
+  }
+
   return (
-    <label className="block cursor-pointer rounded-xl px-4 py-3 transition-colors hover:bg-sand">
-      <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-        {label}
-      </span>
-      <div className="mt-0.5">{children}</div>
-    </label>
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={cn(
+          "flex w-full cursor-pointer items-center justify-between rounded-xl px-4 py-3 text-left transition-colors hover:bg-sand",
+          open && "bg-sand",
+        )}
+      >
+        <div className="min-w-0 flex-1">
+          <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            Hébergement
+          </span>
+          <span className="mt-0.5 block truncate text-[15px] font-medium text-charcoal">
+            {activeOption.label}
+          </span>
+        </div>
+        <ChevronDown
+          className={cn(
+            "ml-2 size-4 shrink-0 text-muted-foreground transition-transform",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-line-soft bg-white shadow-xl"
+        >
+          {TYPE_OPTIONS.map((option) => {
+            const active = option.value === value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="option"
+                aria-selected={active}
+                onClick={() => pick(option.value)}
+                className={cn(
+                  "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-sand",
+                  active && "bg-sand/70",
+                )}
+              >
+                <span
+                  className={cn(
+                    "inline-flex size-9 shrink-0 items-center justify-center rounded-full",
+                    active ? "bg-primary text-ivory" : "bg-sand text-charcoal",
+                  )}
+                  aria-hidden
+                >
+                  {option.icon}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] font-medium text-charcoal">
+                    {option.label}
+                  </span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    {option.hint}
+                  </span>
+                </span>
+                {active && (
+                  <Check className="size-4 shrink-0 text-primary" aria-hidden />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+ * Guests popover (portal, centered modal pattern like the date picker)
+ * ========================================================== */
+
+function GuestsPopover({
+  adults,
+  childrenCount,
+  onAdultsChange,
+  onChildrenChange,
+  summary,
+}: {
+  adults: number;
+  childrenCount: number;
+  onAdultsChange: (v: number) => void;
+  onChildrenChange: (v: number) => void;
+  summary: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="block w-full rounded-xl px-4 py-3 text-left transition-colors hover:bg-sand"
+      >
+        <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <Users className="mr-1 inline size-3" /> Voyageurs
+        </span>
+        <span className="mt-0.5 block text-[15px] font-medium text-charcoal">
+          {summary}
+        </span>
+      </button>
+
+      {open &&
+        mounted &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+          >
+            <button
+              type="button"
+              aria-label="Fermer"
+              onClick={() => setOpen(false)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <div className="relative w-full max-w-sm rounded-3xl border border-line-soft bg-white p-6 shadow-2xl">
+              <div className="mb-5 flex items-center justify-between">
+                <h3 className="font-heading text-lg text-charcoal">
+                  Voyageurs
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-sand hover:text-charcoal"
+                >
+                  Fermer
+                </button>
+              </div>
+              <div className="space-y-4">
+                <Counter
+                  label="Adultes"
+                  hint="13 ans et +"
+                  value={adults}
+                  min={1}
+                  max={20}
+                  onChange={onAdultsChange}
+                />
+                <Counter
+                  label="Enfants"
+                  hint="2 à 12 ans"
+                  value={childrenCount}
+                  min={0}
+                  max={10}
+                  onChange={onChildrenChange}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="mt-6 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-ivory transition-colors hover:bg-bougainvillier"
+              >
+                Valider
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 
@@ -168,17 +379,17 @@ function Counter({
           onClick={() => onChange(Math.max(min, value - 1))}
           disabled={value <= min}
           aria-label="Moins"
-          className="inline-flex size-8 items-center justify-center rounded-full border border-line text-charcoal transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-30"
+          className="inline-flex size-9 items-center justify-center rounded-full border border-line text-charcoal transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-30"
         >
           <Minus className="size-3.5" />
         </button>
-        <span className="w-5 text-center text-sm font-medium">{value}</span>
+        <span className="w-6 text-center text-sm font-medium">{value}</span>
         <button
           type="button"
           onClick={() => onChange(Math.min(max, value + 1))}
           disabled={value >= max}
           aria-label="Plus"
-          className="inline-flex size-8 items-center justify-center rounded-full border border-line text-charcoal transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-30"
+          className="inline-flex size-9 items-center justify-center rounded-full border border-line text-charcoal transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-30"
         >
           <Plus className="size-3.5" />
         </button>

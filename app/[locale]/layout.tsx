@@ -93,6 +93,11 @@ export default async function LocaleLayout({
       lang={locale}
       dir={dir}
       className={`${fontClasses} h-full antialiased`}
+      // The admin shell runs a sync <script> at body start (see
+      // AdminShellBootstrap) that sets `data-theme` on the html element
+      // before React hydration. That's a legitimate mismatch — silence
+      // the warning here so it doesn't pollute the console.
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
