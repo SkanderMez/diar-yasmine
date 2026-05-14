@@ -97,13 +97,15 @@ const tndFormatterEn = new Intl.NumberFormat("en-US", {
  * Format a millimes amount as a localized TND string for display.
  *
  * Examples:
- *   formatTND(5_531_680) → "5 531,68 TND"  (fr)
- *   formatTND(5_531_680, { locale: "en" }) → "5,531.68 TND"  (en)
+ *   formatTND(5_531_680) → "5 531,68 TND"
+ *   formatTND(350_000)   → "350 TND"        (trailing ,00 stripped)
+ *   formatTND(2_330)     → "2,33 TND"
  *
- * Note: this rounds away the millimes precision (3 decimals → 2). The
+ * Trailing-zero stripping: when the decimal portion would render as
+ * `,00` (fr) or `.00` (en), we drop it for visual cleanliness. The
  * underlying DB value stays an Int in millimes; this is purely a
  * display concern. For audit-grade output (vouchers, invoices), use
- * `formatTNDPrecise` below.
+ * `formatTNDPrecise`.
  */
 export function formatTND(
   millimes: Millimes,
@@ -111,7 +113,10 @@ export function formatTND(
 ): string {
   assertMillimes(millimes);
   const formatter = opts.locale === "en" ? tndFormatterEn : tndFormatterFr;
-  return `${formatter.format(millimes / MILLIMES_PER_TND)} TND`;
+  let formatted = formatter.format(millimes / MILLIMES_PER_TND);
+  // Strip trailing ",00" or ".00" — keep "350" instead of "350,00".
+  formatted = formatted.replace(/[.,]00$/, "");
+  return `${formatted} TND`;
 }
 
 const tndPreciseFormatterFr = new Intl.NumberFormat("fr-FR", {

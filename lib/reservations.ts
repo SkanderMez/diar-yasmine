@@ -414,6 +414,59 @@ export async function updateReservationStatus(
 }
 
 /**
+ * Update the free-form internal notes on a reservation. Staff-only.
+ *
+ * Trims, normalises empty strings to null so the UI can render a clean
+ * placeholder, and writes an audit row in the same transaction.
+ */
+const updateReservationNotesSchema = z.object({
+  id: z.string().min(1),
+  internalNotes: z.string().max(2000).nullable(),
+});
+
+export async function updateReservationNotes(input: unknown) {
+  const parsed = updateReservationNotesSchema.parse(input);
+  const staff = await requireStaff();
+
+  const normalised =
+    parsed.internalNotes === null || parsed.internalNotes.trim() === ""
+      ? null
+      : parsed.internalNotes.trim();
+
+  const result = await prisma.$transaction(async (tx) => {
+    const before = await tx.reservation.findUnique({
+      where: { id: parsed.id },
+      select: { id: true, code: true, internalNotes: true },
+    });
+    if (!before) {
+      throw new ReservationError("Réservation introuvable", "NOT_FOUND", 404);
+    }
+    const updated = await tx.reservation.update({
+      where: { id: parsed.id },
+      data: { internalNotes: normalised },
+      select: { id: true, code: true, internalNotes: true },
+    });
+    await writeAudit(
+      {
+        userId: staff.id,
+        action: "reservation.notes_updated",
+        entity: "Reservation",
+        entityId: updated.id,
+        diff: {
+          before: { internalNotes: before.internalNotes },
+          after: { internalNotes: normalised },
+        },
+      },
+      tx,
+    );
+    return updated;
+  });
+
+  revalidatePath(`/[locale]/admin/reservations/${result.code}`);
+  return { id: result.id, internalNotes: result.internalNotes };
+}
+
+/**
  * Mark an existing payment as refunded (full refund only in Phase 4 — partial
  * lands in 4.5). Updates the reservation's paidAmount in the same tx and
  * writes an audit row.

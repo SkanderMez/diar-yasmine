@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { ArrowRight, BedDouble, Building2 } from "lucide-react";
 import { formatTND } from "@/lib/money";
+import { DateRangePicker } from "@/components/public/date-range-picker";
 import type { NewBookingProperty } from "./types";
 
 export interface Step1Values {
@@ -33,7 +34,6 @@ export function Step1Unit({
   onContinue,
   properties,
 }: Step1UnitProps) {
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const nights = useMemo(() => {
     if (!values.checkIn || !values.checkOut) return 0;
     try {
@@ -97,43 +97,28 @@ export function Step1Unit({
         ))}
       </div>
 
-      {/* Date inputs */}
+      {/* Date inputs — same DateRangePicker as the public site for
+       *  consistent UX across the app. The picker handles min-date
+       *  internally (no past dates allowed). */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr auto",
+          gridTemplateColumns: "1fr auto",
           gap: "12px",
           alignItems: "end",
           marginTop: "18px",
         }}
       >
-        <div className="field" style={{ margin: 0 }}>
-          <label htmlFor="nb-checkin">Arrivée</label>
-          <input
-            id="nb-checkin"
-            type="date"
-            className="input-admin"
-            min={today}
-            value={values.checkIn}
-            onChange={(e) =>
-              onChange({ ...values, checkIn: e.target.value, checkOut: "" })
-            }
-          />
-        </div>
-        <div className="field" style={{ margin: 0 }}>
-          <label htmlFor="nb-checkout">Départ</label>
-          <input
-            id="nb-checkout"
-            type="date"
-            className="input-admin"
-            min={values.checkIn || today}
-            value={values.checkOut}
-            onChange={(e) => onChange({ ...values, checkOut: e.target.value })}
-          />
-        </div>
+        <DateRangePicker
+          checkIn={values.checkIn}
+          checkOut={values.checkOut}
+          onChange={({ checkIn, checkOut }) =>
+            onChange({ ...values, checkIn, checkOut })
+          }
+        />
         <div
           style={{
-            padding: "9px 14px",
+            padding: "12px 16px",
             borderRadius: "var(--radius)",
             background: "var(--bg-surface-2)",
             border: "1px solid var(--border)",

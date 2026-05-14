@@ -1283,21 +1283,26 @@ html:has([data-admin-shell]) {
   background: rgba(229, 185, 104, 0.15);
 }
 
-/* Today line */
+/* Today line — vertical marker that runs through the booking rows.
+   The "AUJ" label lives in the sticky header instead (.today-badge)
+   so it stays anchored to the day-number row when the page scrolls. */
 [data-admin-shell] .today-line {
   position: absolute;
-  top: 0;
+  /* Start just under the 48px-tall header row */
+  top: 48px;
   bottom: 0;
   width: 2px;
   background: var(--primary);
-  z-index: 3;
+  z-index: 1;
   pointer-events: none;
 }
-[data-admin-shell] .today-line::before {
-  content: "AUJ";
+
+/* "AUJ" badge — sits inside .cal-header-row over the today column.
+   Positioned via inline `left` from the timeline component. */
+[data-admin-shell] .today-badge {
   position: absolute;
-  top: 6px;
-  left: -16px;
+  top: 4px;
+  transform: translateX(-50%);
   font-size: 0.55rem;
   font-weight: 700;
   color: var(--primary);
@@ -1305,6 +1310,9 @@ html:has([data-admin-shell]) {
   padding: 1px 4px;
   border-radius: 3px;
   border: 1px solid var(--primary);
+  pointer-events: none;
+  z-index: 12;
+  letter-spacing: 0.04em;
 }
 
 /* Legend */
@@ -4428,4 +4436,441 @@ html:has([data-admin-shell]) {
 [data-theme="light"] [data-admin-shell] .dashboard-panel-link:hover {
   background: rgba(14, 90, 107, 0.06);
   color: var(--primary-deep);
+}
+
+/* ==========================================================================
+   RESERVATION DETAIL — /admin/reservations/[code]
+   ========================================================================== */
+
+[data-admin-shell] .reservation-page-head {
+  align-items: flex-start;
+}
+[data-admin-shell] .reservation-page-head-title {
+  min-width: 0;
+  flex: 1;
+}
+[data-admin-shell] .reservation-page-head-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+[data-admin-shell] .reservation-code {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  line-height: 1.2;
+}
+[data-admin-shell] .reservation-page-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 60%;
+}
+[data-admin-shell] .reservation-actions-spinner {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  animation: reservation-pulse 1s ease-in-out infinite;
+}
+@keyframes reservation-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+[data-admin-shell] .reservation-detail-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  [data-admin-shell] .reservation-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+[data-admin-shell] .reservation-detail-main,
+[data-admin-shell] .reservation-detail-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* ---- Card scaffolding shared across the page ---- */
+[data-admin-shell] .reservation-card .card-header h3 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+[data-admin-shell] .reservation-card .card-header h3 svg {
+  color: var(--primary);
+}
+
+/* ---- Séjour card ---- */
+[data-admin-shell] .reservation-stay-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+[data-admin-shell] .reservation-stay-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 24px;
+}
+@media (max-width: 720px) {
+  [data-admin-shell] .reservation-stay-grid {
+    grid-template-columns: 1fr;
+  }
+}
+[data-admin-shell] .reservation-stay-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+[data-admin-shell] .reservation-stay-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+[data-admin-shell] .reservation-stay-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: var(--text);
+  font-weight: 500;
+}
+[data-admin-shell] .reservation-stay-emoji {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+[data-admin-shell] .reservation-stay-property {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-admin-shell] .reservation-stay-property-type {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+[data-admin-shell] .reservation-stay-dates {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+[data-admin-shell] .reservation-stay-nights {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  border-radius: 999px;
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+}
+[data-admin-shell] .reservation-stay-client {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+[data-admin-shell] .reservation-stay-client-name {
+  font-weight: 500;
+}
+[data-admin-shell] .reservation-stay-client-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+}
+[data-admin-shell] .reservation-stay-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-weight: 400;
+  transition: color 0.15s ease;
+}
+[data-admin-shell] .reservation-stay-link:hover {
+  color: var(--primary);
+}
+[data-admin-shell] .reservation-stay-requests {
+  border-top: 1px dashed var(--border);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+[data-admin-shell] .reservation-stay-requests p {
+  font-size: 0.88rem;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+/* ---- Tarif card ---- */
+[data-admin-shell] .reservation-tariff-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+[data-admin-shell] .reservation-tariff-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  font-size: 0.88rem;
+}
+[data-admin-shell] .reservation-tariff-row .label {
+  color: var(--text);
+}
+[data-admin-shell] .reservation-tariff-row .value {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text);
+}
+[data-admin-shell] .reservation-tariff-row-success .label,
+[data-admin-shell] .reservation-tariff-row-success .value {
+  color: var(--success);
+}
+[data-admin-shell] .reservation-tariff-row-muted .label,
+[data-admin-shell] .reservation-tariff-row-muted .value {
+  color: var(--text-muted);
+}
+[data-admin-shell] .reservation-tariff-total {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+[data-admin-shell] .reservation-tariff-total .label {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text);
+}
+[data-admin-shell] .reservation-tariff-total .value {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--primary);
+  letter-spacing: -0.01em;
+}
+[data-admin-shell] .reservation-tariff-balance {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--bg-surface-2);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+[data-admin-shell] .reservation-tariff-balance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.86rem;
+}
+[data-admin-shell] .reservation-tariff-balance-row .label {
+  color: var(--text-muted);
+}
+[data-admin-shell] .reservation-tariff-balance-row .value {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text);
+}
+[data-admin-shell] .reservation-tariff-balance-row-emphasis {
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+  margin-top: 2px;
+}
+[data-admin-shell] .reservation-tariff-balance-row-emphasis .label,
+[data-admin-shell] .reservation-tariff-balance-row-emphasis .value {
+  font-weight: 600;
+}
+[data-admin-shell] .reservation-tariff-balance-row-warning .value {
+  color: var(--warning);
+}
+[data-admin-shell] .reservation-tariff-balance-row-success .value {
+  color: var(--success);
+}
+
+/* ---- Paiements card ---- */
+[data-admin-shell] .reservation-payments-body {
+  padding: 0;
+}
+[data-admin-shell] .reservation-payments-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+[data-admin-shell] .reservation-payments-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+[data-admin-shell] .reservation-payments-row:last-child {
+  border-bottom: none;
+}
+[data-admin-shell] .reservation-payments-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+[data-admin-shell] .reservation-payments-tags {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+[data-admin-shell] .reservation-payment-method {
+  background: var(--bg-surface-2);
+  color: var(--text);
+}
+[data-admin-shell] .reservation-payments-meta {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+[data-admin-shell] .reservation-payments-amount {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+[data-admin-shell] .reservation-payments-empty {
+  padding: 28px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 0.88rem;
+}
+[data-admin-shell] .reservation-payments-empty svg {
+  color: var(--text-muted);
+}
+[data-admin-shell] .reservation-payments-empty p {
+  margin: 0;
+}
+
+/* ---- Notes card ---- */
+[data-admin-shell] .reservation-notes-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+[data-admin-shell] .reservation-notes-textarea {
+  resize: vertical;
+  min-height: 110px;
+  font-family: inherit;
+  line-height: 1.45;
+}
+[data-admin-shell] .reservation-notes-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+[data-admin-shell] .reservation-notes-counter {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+[data-admin-shell] .reservation-notes-actions {
+  display: flex;
+  gap: 8px;
+}
+[data-admin-shell] .reservation-notes-text {
+  font-size: 0.9rem;
+  color: var(--text);
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+[data-admin-shell] .reservation-notes-empty {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ---- Activité card ---- */
+[data-admin-shell] .reservation-activity-card .card-header {
+  align-items: center;
+}
+[data-admin-shell] .reservation-activity-meta-count {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+[data-admin-shell] .reservation-activity-body {
+  padding: 4px 0;
+}
+[data-admin-shell] .reservation-activity-empty {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+[data-admin-shell] .reservation-activity-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+[data-admin-shell] .reservation-activity-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+[data-admin-shell] .reservation-activity-row:last-child {
+  border-bottom: none;
+}
+[data-admin-shell] .reservation-activity-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+[data-admin-shell] .reservation-activity-content {
+  flex: 1;
+  min-width: 0;
+}
+[data-admin-shell] .reservation-activity-title {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+}
+[data-admin-shell] .reservation-activity-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
 }

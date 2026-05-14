@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 import {
   addMonths,
@@ -61,21 +62,28 @@ export function DateRangePicker({
   const [viewMonth, setViewMonth] = useState(() =>
     startOfMonth(checkIn ? parseISO(checkIn) : new Date()),
   );
+  const [mounted, setMounted] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+
+  // Portal target — only available client-side, so guard with mounted.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
-    }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
-    document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
+    // Lock body scroll while the modal is open so the page underneath
+    // doesn't shift around when we tap a calendar day.
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
     };
   }, [open]);
 
@@ -195,75 +203,112 @@ export function DateRangePicker({
         </button>
       </div>
 
-      {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-[min(40rem,calc(100vw-2rem))] origin-top-left rounded-3xl border border-border bg-card p-5 shadow-2xl">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-heading text-lg text-foreground">
-              {nights > 0 ? labels.nights(nights) : labels.pickDates}
-            </h3>
-            <div className="flex items-center gap-1">
-              {(inDate || outDate) && (
+      {open &&
+        mounted &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Backdrop */}
+            <button
+              type="button"
+              aria-label="Fermer le calendrier"
+              onClick={() => setOpen(false)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+
+            {/* Panel */}
+            <div className="relative w-full max-w-[min(40rem,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl border border-border bg-card p-5 shadow-2xl">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-heading text-lg text-foreground">
+                  {nights > 0 ? labels.nights(nights) : labels.pickDates}
+                </h3>
+                <div className="flex items-center gap-1">
+                  {(inDate || outDate) && (
+                    <button
+                      type="button"
+                      onClick={clear}
+                      className="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-bone hover:text-foreground"
+                    >
+                      {labels.clear}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-bone hover:text-foreground"
+                    aria-label="Fermer"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={clear}
-                  className="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-bone hover:text-foreground"
+                  onClick={() => setViewMonth(addMonths(viewMonth, -1))}
+                  disabled={isSameMonth(viewMonth, today)}
+                  className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-bone hover:text-foreground disabled:opacity-30"
+                  aria-label="Mois précédent"
                 >
-                  {labels.clear}
+                  <ChevronLeft className="size-4" />
                 </button>
+                <span className="text-xs text-muted-foreground">
+                  {format(viewMonth, "MMMM yyyy", { locale: fr })} ·{" "}
+                  {format(addMonths(viewMonth, 1), "MMMM yyyy", { locale: fr })}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setViewMonth(addMonths(viewMonth, 1))}
+                  className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-bone hover:text-foreground"
+                  aria-label="Mois suivant"
+                >
+                  <ChevronRight className="size-4" />
+                </button>
+              </div>
+
+              <div className="mt-4 grid gap-6 sm:grid-cols-2">
+                <MonthGrid
+                  month={viewMonth}
+                  inDate={inDate}
+                  outDate={outDate}
+                  today={today}
+                  onPick={pick}
+                />
+                <MonthGrid
+                  month={addMonths(viewMonth, 1)}
+                  inDate={inDate}
+                  outDate={outDate}
+                  today={today}
+                  onPick={pick}
+                />
+              </div>
+
+              {(inDate || outDate) && (
+                <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+                  <p className="text-xs text-muted-foreground">
+                    {inDate && outDate
+                      ? `${format(inDate, "d MMM", { locale: fr })} → ${format(outDate, "d MMM yyyy", { locale: fr })}`
+                      : inDate
+                        ? `Arrivée le ${format(inDate, "d MMM yyyy", { locale: fr })} · choisissez la date de départ`
+                        : ""}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-bougainvillier"
+                  >
+                    {nights > 0 ? "Valider" : "Fermer"}
+                  </button>
+                </div>
               )}
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-bone hover:text-foreground"
-                aria-label="Fermer"
-              >
-                <X className="size-4" />
-              </button>
             </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => setViewMonth(addMonths(viewMonth, -1))}
-              disabled={isSameMonth(viewMonth, today)}
-              className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-bone hover:text-foreground disabled:opacity-30"
-              aria-label="Mois précédent"
-            >
-              <ChevronLeft className="size-4" />
-            </button>
-            <span className="text-xs text-muted-foreground">
-              {format(viewMonth, "MMMM yyyy", { locale: fr })} ·{" "}
-              {format(addMonths(viewMonth, 1), "MMMM yyyy", { locale: fr })}
-            </span>
-            <button
-              type="button"
-              onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-              className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-bone hover:text-foreground"
-              aria-label="Mois suivant"
-            >
-              <ChevronRight className="size-4" />
-            </button>
-          </div>
-
-          <div className="mt-4 grid gap-6 sm:grid-cols-2">
-            <MonthGrid
-              month={viewMonth}
-              inDate={inDate}
-              outDate={outDate}
-              today={today}
-              onPick={pick}
-            />
-            <MonthGrid
-              month={addMonths(viewMonth, 1)}
-              inDate={inDate}
-              outDate={outDate}
-              today={today}
-              onPick={pick}
-            />
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

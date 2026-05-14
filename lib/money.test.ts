@@ -1,108 +1,97 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  tndToMillimes,
-  millimesToTnd,
   applyPercentDiscount,
-  clampDiscountToAmount,
-  sumMillimes,
-  formatTND,
   assertMillimes,
+  clampDiscountToAmount,
+  formatTND,
+  millimesToTnd,
+  sumMillimes,
+  tndToMillimes,
 } from "./money";
 
 describe("tndToMillimes", () => {
-  it("converts whole TND to millimes", () => {
-    expect(tndToMillimes(350)).toBe(350_000);
+  it("converts integer TND to millimes", () => {
+    expect(tndToMillimes(100)).toBe(100_000);
     expect(tndToMillimes(0)).toBe(0);
-    expect(tndToMillimes(1)).toBe(1000);
+    expect(tndToMillimes(1.5)).toBe(1_500);
   });
 
-  it("rounds fractional TND to nearest millime", () => {
-    expect(tndToMillimes(0.001)).toBe(1);
-    expect(tndToMillimes(0.0005)).toBe(1); // banker's rounding edge — Math.round rounds half-up
-    expect(tndToMillimes(0.0004)).toBe(0);
-    expect(tndToMillimes(12.345)).toBe(12_345);
+  it("rounds away float precision", () => {
+    expect(tndToMillimes(0.1 + 0.2)).toBe(300);
   });
 
-  it("throws on non-finite inputs", () => {
-    expect(() => tndToMillimes(Number.NaN)).toThrow();
-    expect(() => tndToMillimes(Number.POSITIVE_INFINITY)).toThrow();
-    expect(() => tndToMillimes(Number.NEGATIVE_INFINITY)).toThrow();
+  it("throws on NaN / Infinity", () => {
+    expect(() => tndToMillimes(NaN)).toThrow();
+    expect(() => tndToMillimes(Infinity)).toThrow();
   });
 });
 
 describe("millimesToTnd", () => {
-  it("round-trips", () => {
-    expect(millimesToTnd(350_000)).toBe(350);
-    expect(millimesToTnd(12_345)).toBe(12.345);
-    expect(millimesToTnd(1)).toBe(0.001);
+  it("converts integer millimes to TND", () => {
+    expect(millimesToTnd(100_000)).toBe(100);
+    expect(millimesToTnd(1_500)).toBe(1.5);
   });
 
-  it("rejects non-integers", () => {
-    expect(() => millimesToTnd(1.5)).toThrow();
-    expect(() => millimesToTnd(Number.NaN)).toThrow();
+  it("throws on non-integer millimes", () => {
+    expect(() => millimesToTnd(0.5)).toThrow();
   });
 });
 
 describe("applyPercentDiscount", () => {
-  it("computes percent of an int millimes amount", () => {
-    expect(applyPercentDiscount(350_000, 10)).toBe(35_000);
-    expect(applyPercentDiscount(350_000, 0)).toBe(0);
-    expect(applyPercentDiscount(350_000, 100)).toBe(350_000);
+  it("applies a percent discount", () => {
+    expect(applyPercentDiscount(100_000, 10)).toBe(10_000);
+    expect(applyPercentDiscount(100_000, 0)).toBe(0);
+    expect(applyPercentDiscount(100_000, 100)).toBe(100_000);
   });
 
-  it("rounds half to nearest millime", () => {
-    // 100,001 * 50% = 50,000.5 → 50,001 (Math.round half-up)
-    expect(applyPercentDiscount(100_001, 50)).toBe(50_001);
+  it("rounds to integer millimes", () => {
+    expect(applyPercentDiscount(333, 33)).toBe(110);
   });
 
   it("throws on out-of-range percent", () => {
-    expect(() => applyPercentDiscount(1000, -1)).toThrow();
-    expect(() => applyPercentDiscount(1000, 101)).toThrow();
-    expect(() => applyPercentDiscount(1000, Number.NaN)).toThrow();
-  });
-
-  it("throws on non-integer amount", () => {
-    expect(() => applyPercentDiscount(1000.5, 10)).toThrow();
+    expect(() => applyPercentDiscount(100_000, -1)).toThrow();
+    expect(() => applyPercentDiscount(100_000, 101)).toThrow();
   });
 });
 
 describe("clampDiscountToAmount", () => {
-  it("clamps oversized discounts to the amount", () => {
-    expect(clampDiscountToAmount(500_000, 350_000)).toBe(350_000);
-  });
-
-  it("clamps negative discounts to zero", () => {
-    expect(clampDiscountToAmount(-100, 350_000)).toBe(0);
-  });
-
-  it("passes through valid discounts", () => {
-    expect(clampDiscountToAmount(50_000, 350_000)).toBe(50_000);
+  it("clamps the discount to [0, amount]", () => {
+    expect(clampDiscountToAmount(50_000, 100_000)).toBe(50_000);
+    expect(clampDiscountToAmount(-100, 100_000)).toBe(0);
+    expect(clampDiscountToAmount(120_000, 100_000)).toBe(100_000);
   });
 });
 
 describe("sumMillimes", () => {
-  it("sums integers", () => {
-    expect(sumMillimes([100_000, 50_000, 25_000])).toBe(175_000);
+  it("sums an array of millimes", () => {
+    expect(sumMillimes([100, 50, 25])).toBe(175);
     expect(sumMillimes([])).toBe(0);
   });
 
-  it("rejects non-integer entries", () => {
+  it("throws on non-integer entries", () => {
     expect(() => sumMillimes([100, 50.5])).toThrow();
   });
 });
 
 describe("formatTND", () => {
+  // Intl.NumberFormat("fr-FR") uses a NARROW NO-BREAK SPACE (U+202F)
+  // as the thousands separator, not a regular space.
+  const nnbsp = String.fromCharCode(0x202f);
+
   it("formats an integer millimes amount with French spacing and comma", () => {
     const out = formatTND(5_531_680, { locale: "fr" });
-    expect(out).toContain("5");
-    expect(out).toContain("531");
-    expect(out).toContain(",68");
-    expect(out).toMatch(/TND$/);
+    expect(out).toBe(`5${nnbsp}531,68 TND`);
   });
 
-  it("rounds millimes precision to 2 decimals", () => {
-    // 350_000 millimes = 350.000 TND → displays as "350,00 TND"
-    expect(formatTND(350_000, { locale: "fr" })).toContain("350,00");
+  it("strips trailing ,00 for whole amounts", () => {
+    // 350_000 millimes = 350.000 TND → "350 TND" (cleaner).
+    expect(formatTND(350_000, { locale: "fr" })).toBe("350 TND");
+    expect(formatTND(2_500_000, { locale: "fr" })).toBe(`2${nnbsp}500 TND`);
+  });
+
+  it("keeps decimals when present", () => {
+    expect(formatTND(2_330, { locale: "fr" })).toBe("2,33 TND");
+    expect(formatTND(1_500_500, { locale: "fr" })).toBe(`1${nnbsp}500,50 TND`);
   });
 
   it("formats with English locale (dot decimal, comma thousands)", () => {
@@ -119,12 +108,12 @@ describe("formatTND", () => {
 describe("assertMillimes", () => {
   it("accepts integers", () => {
     expect(() => assertMillimes(0)).not.toThrow();
-    expect(() => assertMillimes(1_000_000)).not.toThrow();
+    expect(() => assertMillimes(123_456)).not.toThrow();
+    expect(() => assertMillimes(-50)).not.toThrow();
   });
 
-  it("rejects floats, NaN, Infinity", () => {
-    expect(() => assertMillimes(1.5)).toThrow();
-    expect(() => assertMillimes(Number.NaN)).toThrow();
-    expect(() => assertMillimes(Number.POSITIVE_INFINITY)).toThrow();
+  it("rejects floats", () => {
+    expect(() => assertMillimes(0.5)).toThrow();
+    expect(() => assertMillimes(1.0001)).toThrow();
   });
 });

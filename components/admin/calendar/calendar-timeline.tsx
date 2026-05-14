@@ -293,6 +293,15 @@ export function CalendarTimeline({
                   </div>
                 );
               })}
+              {todayIndex !== null ? (
+                <span
+                  className="today-badge"
+                  style={{ left: `calc(${((todayIndex + 0.5) / n) * 100}%)` }}
+                  aria-hidden
+                >
+                  AUJ
+                </span>
+              ) : null}
             </div>
 
             {groups.map((group) => (

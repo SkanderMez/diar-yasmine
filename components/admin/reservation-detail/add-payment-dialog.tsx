@@ -85,10 +85,13 @@ export function AddPaymentDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="gap-2">
-          <Plus className="size-4" />
+        <button
+          type="button"
+          className="btn-admin btn-admin-primary btn-admin-sm"
+        >
+          <Plus className="size-3.5" aria-hidden />
           Ajouter paiement
-        </Button>
+        </button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
