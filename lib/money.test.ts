@@ -92,17 +92,23 @@ describe("sumMillimes", () => {
 });
 
 describe("formatTND", () => {
-  it("formats an integer millimes amount with currency in fr-TN", () => {
-    const out = formatTND(350_000, { locale: "fr" });
-    expect(out).toContain("350");
-    // Intl in fr-TN renders the TND currency as "DT" (Dinar Tunisien).
-    expect(out).toMatch(/DT|TND/);
+  it("formats an integer millimes amount with French spacing and comma", () => {
+    const out = formatTND(5_531_680, { locale: "fr" });
+    expect(out).toContain("5");
+    expect(out).toContain("531");
+    expect(out).toContain(",68");
+    expect(out).toMatch(/TND$/);
   });
 
-  it("formats with English locale", () => {
-    const out = formatTND(350_000, { locale: "en" });
-    expect(out).toContain("350");
-    expect(out).toContain("TND");
+  it("rounds millimes precision to 2 decimals", () => {
+    // 350_000 millimes = 350.000 TND → displays as "350,00 TND"
+    expect(formatTND(350_000, { locale: "fr" })).toContain("350,00");
+  });
+
+  it("formats with English locale (dot decimal, comma thousands)", () => {
+    const out = formatTND(5_531_680, { locale: "en" });
+    expect(out).toContain("5,531.68");
+    expect(out).toMatch(/TND$/);
   });
 
   it("rejects non-integers", () => {

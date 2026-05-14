@@ -18,6 +18,12 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      // Editorial pages use a few Unsplash placeholders for POIs and
+      // generic experience photos. Restrict to the canonical image host.
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
     ],
   },
 };

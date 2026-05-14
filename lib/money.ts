@@ -43,7 +43,9 @@ export function applyPercentDiscount(
 ): Millimes {
   assertMillimes(amount);
   if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
-    throw new RangeError(`applyPercentDiscount: percent ${percent} out of [0,100]`);
+    throw new RangeError(
+      `applyPercentDiscount: percent ${percent} out of [0,100]`,
+    );
   }
   return Math.round((amount * percent) / 100);
 }
@@ -69,23 +71,39 @@ export function sumMillimes(values: Millimes[]): Millimes {
   }, 0);
 }
 
-const tndFormatterFr = new Intl.NumberFormat("fr-TN", {
-  style: "currency",
-  currency: "TND",
-  minimumFractionDigits: 3,
-  maximumFractionDigits: 3,
+/**
+ * Display-side formatters.
+ *
+ * The maquette specifies prices like `5 531,68 TND` — French thousands
+ * separator (narrow no-break space), comma decimal, 2 decimal places,
+ * trailing TND symbol. We render this consistently across the app via
+ * `fr-FR` (which uses space + comma) with `style: "decimal"` plus a
+ * manual " TND" suffix, so we don't get the locale-specific currency
+ * placement quirks of `fr-TN`.
+ */
+const tndFormatterFr = new Intl.NumberFormat("fr-FR", {
+  style: "decimal",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 const tndFormatterEn = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "TND",
-  minimumFractionDigits: 3,
-  maximumFractionDigits: 3,
+  style: "decimal",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 /**
- * Format a millimes amount as a localized TND string.
- * Example: 350_000 → "350,000 TND" (fr-TN) / "TND 350.000" (en).
+ * Format a millimes amount as a localized TND string for display.
+ *
+ * Examples:
+ *   formatTND(5_531_680) → "5 531,68 TND"  (fr)
+ *   formatTND(5_531_680, { locale: "en" }) → "5,531.68 TND"  (en)
+ *
+ * Note: this rounds away the millimes precision (3 decimals → 2). The
+ * underlying DB value stays an Int in millimes; this is purely a
+ * display concern. For audit-grade output (vouchers, invoices), use
+ * `formatTNDPrecise` below.
  */
 export function formatTND(
   millimes: Millimes,
@@ -93,5 +111,21 @@ export function formatTND(
 ): string {
   assertMillimes(millimes);
   const formatter = opts.locale === "en" ? tndFormatterEn : tndFormatterFr;
-  return formatter.format(millimes / MILLIMES_PER_TND);
+  return `${formatter.format(millimes / MILLIMES_PER_TND)} TND`;
+}
+
+const tndPreciseFormatterFr = new Intl.NumberFormat("fr-FR", {
+  style: "decimal",
+  minimumFractionDigits: 3,
+  maximumFractionDigits: 3,
+});
+
+/**
+ * Full-precision millimes-aware formatter (3 decimal digits). Use on
+ * the voucher PDF and the admin reservation detail where the exact
+ * stored value must be visible.
+ */
+export function formatTNDPrecise(millimes: Millimes): string {
+  assertMillimes(millimes);
+  return `${tndPreciseFormatterFr.format(millimes / MILLIMES_PER_TND)} TND`;
 }

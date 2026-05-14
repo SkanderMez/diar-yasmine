@@ -11,9 +11,9 @@ import { WizardStepper, type WizardStep } from "./wizard-stepper";
 import { Step1Unit, type Step1Values } from "./step-1-unit";
 import { Step2Client, type Step2Values } from "./step-2-client";
 import { Step3Pricing } from "./step-3-pricing";
-import { Step4Payment } from "./step-4-payment";
+import { Step4Payment, type Step4Values } from "./step-4-payment";
 import { SummaryAside } from "./summary-aside";
-import { buildInitialLines } from "./pricing";
+import { buildInitialLines, computePricing } from "./pricing";
 import type { NewBookingProperty, PriceLine } from "./types";
 
 interface NewBookingClientProps {
@@ -105,6 +105,24 @@ export function NewBookingClient({
     "WALK_IN" | "PHONE" | "PARTNER" | "DIRECT_WEB" | "OTHER"
   >("WALK_IN");
 
+  const [step4, setStep4] = useState<Step4Values>({
+    mode: "DEFERRED",
+    method: "CARD",
+    internalNotes: "",
+  });
+
+  /* Computed pricing surfaced to step 4 so it can display the live total /
+   * acompte. Same computation Step 3's preview uses — kept in sync. */
+  const pricing = useMemo(() => {
+    if (!property || nights <= 0) return null;
+    return computePricing({
+      lines,
+      basePriceMillimes: property.basePrice,
+      nights,
+      guests: step2.adults + step2.children,
+    });
+  }, [lines, nights, property, step2.adults, step2.children]);
+
   const [pending, startTransition] = useTransition();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -178,6 +196,27 @@ export function NewBookingClient({
       }))
       .filter((e) => e.amount > 0);
 
+    /* Translate the step-4 mode into an immediate-payment payload.
+     * DEFERRED → no payment row; FULL → collect the grand total; ACOMPTE_30
+     * → collect 30% rounded to the nearest millime. Method maps 1:1 to
+     * Prisma's PaymentMethod enum. */
+    const methodMap = {
+      CARD: "CARD",
+      CASH: "CASH",
+      TRANSFER: "TRANSFER",
+    } as const;
+    const grandTotal = pricing?.total ?? 0;
+    const paymentAmount =
+      step4.mode === "FULL"
+        ? grandTotal
+        : step4.mode === "ACOMPTE_30"
+          ? Math.round(grandTotal * 0.3)
+          : 0;
+    const payment =
+      step4.mode === "DEFERRED" || paymentAmount <= 0
+        ? undefined
+        : { amount: paymentAmount, method: methodMap[step4.method] };
+
     startTransition(async () => {
       try {
         const result = await createReservation({
@@ -196,6 +235,8 @@ export function NewBookingClient({
           },
           discount,
           extras,
+          internalNotes: step4.internalNotes.trim() || undefined,
+          payment,
         });
         toast.success("Réservation créée", {
           description: `${result.code} — voucher prêt à générer`,
@@ -369,7 +410,12 @@ export function NewBookingClient({
           ) : null}
 
           {/* Step 4 */}
-          <Step4Payment active={activeStep === "payment"} />
+          <Step4Payment
+            active={activeStep === "payment"}
+            values={step4}
+            onChange={setStep4}
+            pricing={pricing}
+          />
 
           {submitError && (
             <div
