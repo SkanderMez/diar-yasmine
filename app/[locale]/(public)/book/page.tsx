@@ -3,16 +3,17 @@ import { setRequestLocale } from "next-intl/server";
 import { z } from "zod";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { PublicBookingForm } from "@/components/public/public-booking-form";
+import { FunnelClient } from "@/components/public/funnel/funnel-client";
 import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
 import { findConflicts } from "@/lib/availability";
-import { parseLocalDate } from "@/lib/date";
+import { parseLocalDate, nightsBetween } from "@/lib/date";
 
 export const metadata: Metadata = { title: "Réserver" };
 
 const querySchema = z.object({
   propertyId: z.string().min(1).optional(),
+  propertySlug: z.string().min(1).optional(),
   checkIn: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -23,8 +24,19 @@ const querySchema = z.object({
     .optional(),
   adults: z.coerce.number().int().min(1).max(20).optional(),
   children: z.coerce.number().int().min(0).max(20).optional(),
+  promo: z.string().max(60).optional(),
 });
 
+/**
+ * Public booking funnel — pixel-matches /diar yasmine assets/diar yasmine
+ * maquette/reservation.html. Step 1 (Hébergement & dates) is collected on
+ * the property page and arrives via search params; we render step 2 (guest
+ * info + stay details) here and tease step 3 (payment) as a dashed preview.
+ *
+ * Server work: validate the property / date range, preflight the EXCLUDE
+ * constraint, fetch a hero photo and the current tax rate, then hand
+ * everything to the client component that owns the form state.
+ */
 export default async function BookPage({
   params,
   searchParams,
@@ -37,20 +49,25 @@ export default async function BookPage({
   const sp = await searchParams;
   const parsed = querySchema.safeParse(sp);
 
-  if (
-    !parsed.success ||
-    !parsed.data.propertyId ||
-    !parsed.data.checkIn ||
-    !parsed.data.checkOut
-  ) {
+  if (!parsed.success) {
     return <MissingParamsView />;
   }
-  const q = parsed.data;
-  const adults = q.adults ?? 2;
-  const children = q.children ?? 0;
+  const {
+    propertyId,
+    checkIn,
+    checkOut,
+    adults: adultsRaw,
+    children: childrenRaw,
+    promo,
+  } = parsed.data;
+  if (!propertyId || !checkIn || !checkOut) {
+    return <MissingParamsView />;
+  }
+  const adults = adultsRaw ?? 2;
+  const children = childrenRaw ?? 0;
 
   const property = await prisma.property.findUnique({
-    where: { id: q.propertyId },
+    where: { id: propertyId },
     select: {
       id: true,
       slug: true,
@@ -61,6 +78,13 @@ export default async function BookPage({
       cleaningFee: true,
       status: true,
       deletedAt: true,
+      beachfront: true,
+      hasPrivatePool: true,
+      photos: {
+        orderBy: { order: "asc" },
+        take: 1,
+        select: { url: true },
+      },
     },
   });
   if (!property || property.deletedAt || property.status !== "ACTIVE") {
@@ -75,11 +99,25 @@ export default async function BookPage({
     );
   }
 
+  const checkInDate = parseLocalDate(checkIn);
+  const checkOutDate = parseLocalDate(checkOut);
+  let nights: number;
+  try {
+    nights = nightsBetween(checkInDate, checkOutDate);
+  } catch {
+    return (
+      <ErrorView
+        title="Dates invalides"
+        message="La date d'arrivée doit précéder la date de départ."
+      />
+    );
+  }
+
   // Preflight availability check — the EXCLUDE constraint is the final word.
   const conflicts = await findConflicts({
     propertyId: property.id,
-    checkIn: parseLocalDate(q.checkIn!),
-    checkOut: parseLocalDate(q.checkOut!),
+    checkIn: checkInDate,
+    checkOut: checkOutDate,
   });
   if (conflicts.length > 0) {
     return (
@@ -93,42 +131,34 @@ export default async function BookPage({
   const taxRate = await getSetting("tax.rate");
 
   return (
-    <main className="flex-1 bg-sand">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-        <header className="mb-10">
-          <p className="text-xs uppercase tracking-[0.3em] text-primary">
-            Étape finale
-          </p>
-          <h1 className="mt-2 text-3xl font-medium text-foreground sm:text-4xl">
-            Réservation
-          </h1>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            Vérifiez votre récapitulatif et complétez vos coordonnées. La
-            confirmation est instantanée — notre équipe vous contactera pour
-            organiser le paiement.
-          </p>
-        </header>
-
-        <PublicBookingForm
-          propertyId={property.id}
-          propertyName={property.name}
-          propertyType={property.type}
-          basePrice={property.basePrice}
-          cleaningFee={property.cleaningFee}
-          checkInDate={q.checkIn!}
-          checkOutDate={q.checkOut!}
-          adults={adults}
-          childrenCount={children}
-          taxRate={taxRate}
-        />
-      </div>
+    <main className="flex-1 bg-sand pt-24">
+      <FunnelClient
+        property={{
+          id: property.id,
+          slug: property.slug,
+          name: property.name,
+          type: property.type,
+          photoUrl: property.photos[0]?.url ?? null,
+          beachfront: property.beachfront,
+          hasPrivatePool: property.hasPrivatePool,
+          basePrice: property.basePrice,
+          cleaningFee: property.cleaningFee,
+        }}
+        checkIn={checkIn}
+        checkOut={checkOut}
+        nights={nights}
+        adults={adults}
+        childrenCount={children}
+        taxRate={taxRate}
+        promoCode={promo}
+      />
     </main>
   );
 }
 
 function MissingParamsView() {
   return (
-    <main className="flex-1 bg-sand">
+    <main className="flex-1 bg-sand pt-24">
       <div className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6">
         <h1 className="text-3xl font-medium text-foreground">Réserver</h1>
         <p className="mt-3 text-muted-foreground">
@@ -158,7 +188,7 @@ function PropertyMissingView() {
 
 function ErrorView({ title, message }: { title: string; message: string }) {
   return (
-    <main className="flex-1 bg-sand">
+    <main className="flex-1 bg-sand pt-24">
       <div className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6">
         <h1 className="text-3xl font-medium text-foreground">{title}</h1>
         <p className="mt-3 text-muted-foreground">{message}</p>
