@@ -1,10 +1,15 @@
-import type { ChannelType } from "@prisma/client";
 import { setRequestLocale } from "next-intl/server";
-import { prisma } from "@/lib/prisma";
-import { env } from "@/lib/env";
-import { SyncRow } from "@/components/admin/channels/sync-row";
+import {
+  detectChannelConflicts,
+  listAdminChannels,
+  listChannelSyncLog,
+} from "@/lib/queries";
+import { ChannelCard } from "@/components/admin/channels/channel-card";
+import { ConflictsBanner } from "@/components/admin/channels/conflicts-banner";
+import { SyncLog } from "@/components/admin/channels/sync-log";
+import { ForceSyncAllButton } from "@/components/admin/channels/force-sync-all-button";
 
-const SUPPORTED_CHANNELS: ChannelType[] = ["BOOKING", "AIRBNB", "EXPEDIA"];
+export const dynamic = "force-dynamic";
 
 export default async function ChannelsPage({
   params,
@@ -14,70 +19,40 @@ export default async function ChannelsPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const [properties, syncs] = await Promise.all([
-    prisma.property.findMany({
-      where: { deletedAt: null, status: "ACTIVE" },
-      select: { id: true, name: true, type: true },
-      orderBy: [{ type: "asc" }, { name: "asc" }],
-    }),
-    prisma.channelSync.findMany({
-      select: {
-        id: true,
-        channel: true,
-        propertyId: true,
-        url: true,
-        lastSyncAt: true,
-        status: true,
-      },
-    }),
+  const [cards, conflicts, log] = await Promise.all([
+    listAdminChannels(),
+    detectChannelConflicts({ lookbackDays: 90 }),
+    listChannelSyncLog(30),
   ]);
 
-  const syncMap = new Map<string, (typeof syncs)[number]>();
-  for (const s of syncs) {
-    syncMap.set(`${s.propertyId}:${s.channel}`, s);
-  }
-
-  const baseUrl = env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-medium text-foreground">Canaux</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Configure les feeds iCal entrants (depuis Booking / Airbnb / Expedia)
-          et fournit l&apos;URL sortante de Diar Yasmine aux OTAs pour
-          qu&apos;ils bloquent les nuits déjà réservées en direct. La synchro
-          entrante tourne toutes les 15 minutes via Vercel Cron.
-        </p>
-      </header>
+    <>
+      <div className="page-head">
+        <div>
+          <h1>Channel Manager</h1>
+          <p>Synchronisation avec les plateformes de distribution</p>
+        </div>
+        <div className="page-actions">
+          <ForceSyncAllButton />
+          <button
+            type="button"
+            className="btn-admin btn-admin-primary"
+            aria-label="Connecter un nouveau canal"
+          >
+            + Connecter un canal
+          </button>
+        </div>
+      </div>
 
-      {properties.map((property) => (
-        <section key={property.id} className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-            {property.type === "CHALET" ? "🏖️" : "🌿"} {property.name}
-          </h2>
-          <div className="space-y-2">
-            {SUPPORTED_CHANNELS.map((channel) => {
-              const existing = syncMap.get(`${property.id}:${channel}`);
-              return (
-                <SyncRow
-                  key={channel}
-                  propertyId={property.id}
-                  propertyName={property.name}
-                  channel={channel}
-                  sync={{
-                    id: existing?.id ?? null,
-                    url: existing?.url ?? null,
-                    lastSyncAt: existing?.lastSyncAt ?? null,
-                    status: existing?.status ?? null,
-                  }}
-                  inboundUrl={`${baseUrl}/api/channels/ical/${property.id}`}
-                />
-              );
-            })}
-          </div>
-        </section>
-      ))}
-    </div>
+      <ConflictsBanner conflicts={conflicts} />
+
+      <div className="channels-grid">
+        {cards.map((card) => (
+          <ChannelCard key={card.key} card={card} isEnabled={true} />
+        ))}
+      </div>
+
+      <SyncLog entries={log} />
+    </>
   );
 }

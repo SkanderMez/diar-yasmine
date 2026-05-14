@@ -1,4 +1,6 @@
 import type {
+  ChannelSyncStatus,
+  ChannelType,
   Prisma,
   PropertyStatus,
   PropertyType,
@@ -1049,9 +1051,7 @@ export async function listAdminClients(
  * deterministically from the guest id so each guest gets a stable set
  * until Phase D introduces the real `Guest.tags` column.
  */
-function demoPreferencesFor(
-  guestId: string,
-): {
+function demoPreferencesFor(guestId: string): {
   icon: "home" | "eye" | "alert" | "baby" | "user" | "check";
   label: string;
 }[] {
@@ -1201,3 +1201,492 @@ export async function findAdminClient(id: string) {
 export type AdminClientDetail = NonNullable<
   Awaited<ReturnType<typeof findAdminClient>>
 >;
+
+// =============================================================================
+// ADMIN — /admin/channels channel-manager page
+// =============================================================================
+
+/**
+ * Synthetic channel key used by the admin Channels page. Includes a
+ * pseudo "DIRECT" entry that aggregates every in-house reservation
+ * source (DIRECT_WEB, WALK_IN, PHONE, PARTNER, OTHER) so the channel
+ * grid can show the direct funnel as a peer of Booking/Airbnb/Expedia.
+ */
+export type AdminChannelKey = "DIRECT" | "BOOKING" | "AIRBNB" | "EXPEDIA";
+
+export interface AdminChannelChip {
+  unitName: string;
+  state: "synced" | "conflict" | "revision";
+}
+
+export interface AdminChannelCard {
+  key: AdminChannelKey;
+  /** ChannelType-aligned value when the channel maps to a real ChannelSync row. */
+  channelType: ChannelType | null;
+  name: string;
+  url: string;
+  syncedCount: number;
+  conflictCount: number;
+  revisionCount: number;
+  totalListings: number;
+  reservations30d: number;
+  revenue30dMillimes: number;
+  /** Highest-priority sync status across this channel's listings. */
+  status: ChannelSyncStatus | null;
+  /** Most recent successful sync across this channel's listings. */
+  lastSyncAt: Date | null;
+  /** Per-listing chips for the channel card row. */
+  chips: AdminChannelChip[];
+}
+
+/**
+ * One row per source × source conflict on a given property/window. Used by
+ * the conflicts banner at the top of /admin/channels.
+ */
+export interface AdminChannelConflict {
+  id: string;
+  propertyName: string;
+  rangeLabel: string;
+  primary: { guestLabel: string; source: ReservationSource; status: string };
+  secondary: { guestLabel: string; source: ReservationSource; status: string };
+}
+
+export interface AdminChannelSyncLogEntry {
+  id: string;
+  timestamp: Date;
+  /** Compact channel tag key — "direct" | "booking" | "airbnb" | "expedia" | "conflict". */
+  channelKey: "direct" | "booking" | "airbnb" | "expedia" | "conflict";
+  description: string;
+  isDanger: boolean;
+}
+
+const DIRECT_SOURCES: ReservationSource[] = [
+  "DIRECT_WEB",
+  "WALK_IN",
+  "PHONE",
+  "PARTNER",
+  "OTHER",
+];
+
+const CHANNEL_TO_SOURCE: Record<
+  Exclude<AdminChannelKey, "DIRECT">,
+  ReservationSource
+> = {
+  BOOKING: "BOOKING",
+  AIRBNB: "AIRBNB",
+  EXPEDIA: "EXPEDIA",
+};
+
+const CHANNEL_META: Record<
+  AdminChannelKey,
+  { name: string; url: string; channelType: ChannelType | null }
+> = {
+  DIRECT: {
+    name: "Site direct",
+    url: "diaryasmine.tn",
+    channelType: null,
+  },
+  BOOKING: {
+    name: "Booking.com",
+    url: "diaryasmine-tazarka.booking.com",
+    channelType: "BOOKING",
+  },
+  AIRBNB: {
+    name: "Airbnb",
+    url: "airbnb.com/h/diar-yasmine",
+    channelType: "AIRBNB",
+  },
+  EXPEDIA: {
+    name: "Expedia",
+    url: "expedia.com/Diar-Yasmine-Tazarka",
+    channelType: "EXPEDIA",
+  },
+};
+
+/**
+ * Returns one card payload per channel (Direct + the three configured OTAs).
+ * Stats are computed in-process from the existing ChannelSync rows and the
+ * last 30 days of reservations — kept here so the page is a single
+ * round-trip.
+ */
+export async function listAdminChannels(): Promise<AdminChannelCard[]> {
+  const now = new Date();
+  const thirtyDaysAgo = addDays(now, -30);
+
+  const [properties, syncs, recentReservations] = await Promise.all([
+    prisma.property.findMany({
+      where: { deletedAt: null, status: "ACTIVE" },
+      select: { id: true, name: true, type: true },
+      orderBy: [{ type: "asc" }, { name: "asc" }],
+    }),
+    prisma.channelSync.findMany({
+      select: {
+        id: true,
+        channel: true,
+        propertyId: true,
+        url: true,
+        lastSyncAt: true,
+        status: true,
+      },
+    }),
+    prisma.reservation.findMany({
+      where: {
+        deletedAt: null,
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        checkIn: { gte: thirtyDaysAgo },
+      },
+      select: {
+        id: true,
+        source: true,
+        total: true,
+      },
+    }),
+  ]);
+
+  const totalProperties = properties.length;
+  const propertyName = new Map(properties.map((p) => [p.id, p.name] as const));
+
+  // Map: channel → propertyId → ChannelSync row
+  const syncByChannel = new Map<
+    ChannelType,
+    Map<string, (typeof syncs)[number]>
+  >();
+  for (const s of syncs) {
+    let inner = syncByChannel.get(s.channel);
+    if (!inner) {
+      inner = new Map();
+      syncByChannel.set(s.channel, inner);
+    }
+    inner.set(s.propertyId, s);
+  }
+
+  // 30-day reservation/revenue per source
+  const resCountBySource = new Map<ReservationSource, number>();
+  const revenueBySource = new Map<ReservationSource, number>();
+  for (const r of recentReservations) {
+    resCountBySource.set(r.source, (resCountBySource.get(r.source) ?? 0) + 1);
+    revenueBySource.set(
+      r.source,
+      (revenueBySource.get(r.source) ?? 0) + r.total,
+    );
+  }
+
+  const directRes = DIRECT_SOURCES.reduce(
+    (acc, s) => acc + (resCountBySource.get(s) ?? 0),
+    0,
+  );
+  const directRevenue = DIRECT_SOURCES.reduce(
+    (acc, s) => acc + (revenueBySource.get(s) ?? 0),
+    0,
+  );
+
+  const cards: AdminChannelCard[] = (
+    ["DIRECT", "BOOKING", "AIRBNB", "EXPEDIA"] as AdminChannelKey[]
+  ).map((key) => {
+    const meta = CHANNEL_META[key];
+
+    if (key === "DIRECT") {
+      // Direct is always on; every active property is "exposed" on the public
+      // site, so there is no per-listing sync to inspect.
+      const chips: AdminChannelChip[] = properties.map((p) => ({
+        unitName: p.name,
+        state: "synced",
+      }));
+      return {
+        key,
+        channelType: null,
+        name: meta.name,
+        url: meta.url,
+        syncedCount: totalProperties,
+        conflictCount: 0,
+        revisionCount: 0,
+        totalListings: totalProperties,
+        reservations30d: directRes,
+        revenue30dMillimes: directRevenue,
+        status: null,
+        lastSyncAt: null,
+        chips,
+      };
+    }
+
+    const channelType = meta.channelType as ChannelType;
+    const inner = syncByChannel.get(channelType) ?? new Map();
+    let synced = 0;
+    let revision = 0;
+    let conflict = 0;
+    let worst: ChannelSyncStatus | null = null;
+    let lastSyncAt: Date | null = null;
+    const chips: AdminChannelChip[] = [];
+
+    for (const property of properties) {
+      const row = inner.get(property.id);
+      let state: AdminChannelChip["state"] = "synced";
+      if (!row || !row.url) {
+        state = "revision";
+        revision++;
+      } else if (row.status === "ERROR") {
+        state = "conflict";
+        conflict++;
+      } else {
+        state = "synced";
+        synced++;
+      }
+      if (row?.status === "ERROR") {
+        worst = "ERROR";
+      } else if (row?.status === "SYNCING" && worst !== "ERROR") {
+        worst = "SYNCING";
+      } else if (row?.status === "IDLE" && worst === null) {
+        worst = "IDLE";
+      }
+      if (row?.lastSyncAt && (!lastSyncAt || row.lastSyncAt > lastSyncAt)) {
+        lastSyncAt = row.lastSyncAt;
+      }
+      chips.push({ unitName: property.name, state });
+    }
+
+    const sourceKey = CHANNEL_TO_SOURCE[key];
+
+    return {
+      key,
+      channelType,
+      name: meta.name,
+      url: meta.url,
+      syncedCount: synced,
+      conflictCount: conflict,
+      revisionCount: revision,
+      totalListings: totalProperties,
+      reservations30d: resCountBySource.get(sourceKey) ?? 0,
+      revenue30dMillimes: revenueBySource.get(sourceKey) ?? 0,
+      status: worst,
+      lastSyncAt,
+      chips,
+    };
+  });
+
+  // Mark units that hit a true double-booking conflict (overlap with another
+  // source) as `conflict` regardless of their sync status.
+  const conflicts = await detectChannelConflicts({ lookbackDays: 90 });
+  if (conflicts.length > 0) {
+    const conflictPropertyNames = new Set(conflicts.map((c) => c.propertyName));
+    for (const card of cards) {
+      for (const chip of card.chips) {
+        if (
+          conflictPropertyNames.has(chip.unitName) &&
+          chip.state === "synced"
+        ) {
+          chip.state = "conflict";
+          card.syncedCount = Math.max(0, card.syncedCount - 1);
+          card.conflictCount += 1;
+        }
+      }
+    }
+  }
+
+  // Suppress unused-var lints for the property-name map (kept for future
+  // per-conflict labelling).
+  void propertyName;
+
+  return cards;
+}
+
+/**
+ * Detect overlapping reservations from different sources on the same
+ * property in the last `lookbackDays`. This is the canonical "double
+ * booking" check the channel manager surfaces in the danger banner.
+ *
+ * Implementation: we scan reservations created since `lookbackDays` ago
+ * and bucket them per property. Within each bucket we look for any pair
+ * of rows whose `[checkIn, checkOut)` ranges overlap AND whose `source`
+ * differs. The 21-unit volume keeps this comfortably linear.
+ */
+export async function detectChannelConflicts(
+  opts: {
+    lookbackDays?: number;
+  } = {},
+): Promise<AdminChannelConflict[]> {
+  const lookback = opts.lookbackDays ?? 90;
+  const since = addDays(new Date(), -lookback);
+
+  const rows = await prisma.reservation.findMany({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      OR: [{ checkOut: { gte: since } }, { checkIn: { gte: since } }],
+    },
+    select: {
+      id: true,
+      propertyId: true,
+      source: true,
+      status: true,
+      checkIn: true,
+      checkOut: true,
+      property: { select: { name: true } },
+      guest: { select: { firstName: true, lastName: true } },
+    },
+    orderBy: [{ propertyId: "asc" }, { checkIn: "asc" }],
+  });
+
+  const byProperty = new Map<string, typeof rows>();
+  for (const r of rows) {
+    const list = byProperty.get(r.propertyId) ?? [];
+    list.push(r);
+    byProperty.set(r.propertyId, list);
+  }
+
+  const dayFmt = new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "long",
+    timeZone: TZ,
+  });
+
+  const conflicts: AdminChannelConflict[] = [];
+  const seen = new Set<string>();
+
+  for (const list of byProperty.values()) {
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i];
+        const b = list[j];
+        if (!a || !b) continue;
+        // Half-open overlap: a.start < b.end && b.start < a.end.
+        if (a.checkIn < b.checkOut && b.checkIn < a.checkOut) {
+          if (a.source === b.source) continue;
+          const pairKey = [a.id, b.id].sort().join(":");
+          if (seen.has(pairKey)) continue;
+          seen.add(pairKey);
+
+          const start = a.checkIn < b.checkIn ? a.checkIn : b.checkIn;
+          const end = a.checkOut > b.checkOut ? a.checkOut : b.checkOut;
+          conflicts.push({
+            id: pairKey,
+            propertyName: a.property.name,
+            rangeLabel: `${dayFmt.format(start)} → ${dayFmt.format(end)}`,
+            primary: {
+              guestLabel: `${a.guest.firstName} ${a.guest.lastName}`,
+              source: a.source,
+              status: a.status,
+            },
+            secondary: {
+              guestLabel: `${b.guest.firstName} ${b.guest.lastName}`,
+              source: b.source,
+              status: b.status,
+            },
+          });
+        }
+      }
+    }
+  }
+
+  return conflicts;
+}
+
+/**
+ * Returns the most recent channel-related audit log entries. Pulls rows
+ * tagged on `ChannelSync` plus any `channel.*` reservation events
+ * (imports, conflict detections, sync errors) so the log surfaces both
+ * sync runs and their downstream side effects.
+ */
+export async function listChannelSyncLog(
+  limit = 30,
+): Promise<AdminChannelSyncLogEntry[]> {
+  const rows = await prisma.auditLog.findMany({
+    where: {
+      OR: [
+        { entity: "ChannelSync" },
+        { action: { startsWith: "channel." } },
+        { action: { contains: "channel_sync" } },
+        { action: "reservation.imported_from_channel" },
+        { action: "reservation.cancelled_via_channel_sync" },
+      ],
+    },
+    orderBy: { timestamp: "desc" },
+    take: limit,
+  });
+
+  return rows.map((r) => {
+    const diff =
+      r.diff && typeof r.diff === "object" && !Array.isArray(r.diff)
+        ? (r.diff as Record<string, unknown>)
+        : {};
+    const rawChannel =
+      typeof diff.channel === "string" ? diff.channel.toUpperCase() : undefined;
+
+    let channelKey: AdminChannelSyncLogEntry["channelKey"] = "direct";
+    if (rawChannel === "BOOKING") channelKey = "booking";
+    else if (rawChannel === "AIRBNB") channelKey = "airbnb";
+    else if (rawChannel === "EXPEDIA") channelKey = "expedia";
+
+    let description = r.action;
+    let isDanger = false;
+    switch (r.action) {
+      case "reservation.imported_from_channel": {
+        const code =
+          typeof diff.code === "string" ? diff.code : String(r.entityId);
+        description = `Nouvelle réservation ${code} importée`;
+        break;
+      }
+      case "reservation.cancelled_via_channel_sync": {
+        const ext = typeof diff.externalId === "string" ? diff.externalId : "";
+        description = `Réservation annulée (vanished upstream${ext ? ` · ${ext}` : ""})`;
+        break;
+      }
+      case "channel.updated":
+        description = "Configuration de canal mise à jour";
+        break;
+      case "channel.toggled":
+        description =
+          diff.enabled === true
+            ? "Canal activé"
+            : diff.enabled === false
+              ? "Canal désactivé"
+              : "Canal basculé";
+        break;
+      case "channel.sync_started":
+        description = "Synchronisation manuelle déclenchée";
+        break;
+      case "channel.sync_completed": {
+        const created = typeof diff.created === "number" ? diff.created : null;
+        const updated = typeof diff.updated === "number" ? diff.updated : null;
+        const cancelled =
+          typeof diff.cancelled === "number" ? diff.cancelled : null;
+        if (created != null && updated != null && cancelled != null) {
+          description = `Calendrier synchronisé · ${created} créées, ${updated} mises à jour, ${cancelled} annulées`;
+        } else {
+          description = "Calendrier synchronisé";
+        }
+        break;
+      }
+      case "channel.sync_failed": {
+        description =
+          typeof diff.error === "string"
+            ? `Erreur de synchronisation · ${diff.error}`
+            : "Erreur de synchronisation";
+        isDanger = true;
+        break;
+      }
+      case "channel.conflict_detected": {
+        const name =
+          typeof diff.propertyName === "string" ? diff.propertyName : "";
+        description = name
+          ? `Conflit détecté · ${name}`
+          : "Conflit de double réservation détecté";
+        channelKey = "conflict";
+        isDanger = true;
+        break;
+      }
+      default:
+        // Generic fallback for unknown channel.* actions.
+        if (r.action.startsWith("channel.")) {
+          description = r.action.replace(/^channel\./, "").replace(/_/g, " ");
+        }
+    }
+
+    return {
+      id: r.id,
+      timestamp: r.timestamp,
+      channelKey,
+      description,
+      isDanger,
+    };
+  });
+}
