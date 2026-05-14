@@ -1,12 +1,24 @@
 import { redirect } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { auth } from "@/auth";
-import { Sidebar } from "@/components/admin/sidebar";
-import { Topbar } from "@/components/admin/topbar";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { AdminTopbar } from "@/components/admin/admin-topbar";
+import { AdminShellBootstrap } from "@/components/admin/admin-shell-bootstrap";
 import { QuickBookProvider } from "@/components/admin/quick-book/provider";
 import { QuickBookSheet } from "@/components/admin/quick-book/sheet";
 import { listActiveProperties } from "@/lib/queries";
 import { getSetting } from "@/lib/settings";
+
+// Admin-only design system. Scoped to this segment; do NOT import in the
+// public layout — the public site has its own tokens in app/globals.css.
+import "@/app/admin.css";
+
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Administrateur",
+  MANAGER: "Gestionnaire",
+  RECEPTION: "Réception",
+  VIEWER: "Lecture seule",
+};
 
 export default async function AdminLayout({
   children,
@@ -33,15 +45,18 @@ export default async function AdminLayout({
     getSetting("tax.rate"),
   ]);
 
+  const userName = session.user.name ?? session.user.email ?? "Utilisateur";
+  const role = session.user.role;
+  const userRole = ROLE_LABELS[role] ?? role;
+
   return (
     <QuickBookProvider properties={properties}>
-      <div className="flex h-full min-h-screen flex-1">
-        <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Topbar user={session.user} />
-          <main className="flex-1 overflow-y-auto bg-secondary/30 p-6">
-            {children}
-          </main>
+      <AdminShellBootstrap />
+      <div data-admin-shell className="app">
+        <AdminSidebar user={{ name: userName, role: userRole }} />
+        <div className="main">
+          <AdminTopbar />
+          <main className="content">{children}</main>
         </div>
       </div>
       <QuickBookSheet taxRate={taxRate} />
