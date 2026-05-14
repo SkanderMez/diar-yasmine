@@ -1645,6 +1645,231 @@ html:has([data-admin-shell]) {
   border-bottom: none;
 }
 
+/* ==========================================================================
+   RESERVATIONS LIST — /admin/reservations.
+   Ported from the maquette page-level <style> block. Scoped to
+   [data-admin-shell] so the public site is untouched.
+   ========================================================================== */
+
+[data-admin-shell] .filter-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 12px;
+}
+[data-admin-shell] .fchip {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+[data-admin-shell] .fchip:hover {
+  color: var(--text);
+}
+[data-admin-shell] .fchip.active {
+  background: rgba(79, 184, 196, 0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+[data-admin-shell] .fchip .num {
+  background: var(--bg-app);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+}
+
+[data-admin-shell] .table-wrap {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+[data-admin-shell] .table-toolbar {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+[data-admin-shell] .table-toolbar .count {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-right: auto;
+}
+[data-admin-shell] .checkbox {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--bg-surface-2);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+[data-admin-shell] .checkbox:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+[data-admin-shell] .checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid var(--bg-app);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+[data-admin-shell] .checkbox:indeterminate {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+[data-admin-shell] .checkbox:indeterminate::after {
+  content: "";
+  position: absolute;
+  left: 2.5px;
+  top: 6px;
+  width: 9px;
+  height: 2px;
+  background: var(--bg-app);
+  border: none;
+  transform: none;
+}
+
+[data-admin-shell] .res-table th,
+[data-admin-shell] .res-table td {
+  white-space: nowrap;
+}
+[data-admin-shell] .res-table .id-col {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+[data-admin-shell] .res-table .id-col a:hover {
+  color: var(--primary);
+}
+[data-admin-shell] .res-table .client-cell {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+[data-admin-shell] .res-table .client-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-surface-3);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+[data-admin-shell] .res-table .client-name {
+  font-weight: 500;
+}
+[data-admin-shell] .res-table .client-meta {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+[data-admin-shell] .res-table .amount {
+  font-family: var(--font-mono);
+}
+
+[data-admin-shell] .action-menu-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+}
+[data-admin-shell] .action-menu-btn:hover {
+  background: var(--bg-surface-3);
+  color: var(--text);
+}
+
+/* Bulk action bar */
+[data-admin-shell] .bulk-bar {
+  background: var(--primary);
+  color: var(--bg-app);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+[data-admin-shell] .bulk-bar button {
+  padding: 4px 12px;
+  background: var(--bg-app);
+  color: var(--text);
+  border-radius: 4px;
+  font-size: 0.82rem;
+}
+[data-admin-shell] .bulk-bar button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-admin-shell] .pagination {
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+[data-admin-shell] .pagination-controls {
+  display: flex;
+  gap: 4px;
+}
+[data-admin-shell] .pagination-controls button,
+[data-admin-shell] .pagination-controls a {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+[data-admin-shell] .pagination-controls a:hover {
+  background: var(--bg-surface-3);
+  color: var(--text);
+}
+[data-admin-shell] .pagination-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+[data-admin-shell] .pagination-controls button.active,
+[data-admin-shell] .pagination-controls a.active {
+  background: var(--primary);
+  color: var(--bg-app);
+  font-weight: 600;
+}
+
 /* ---------- UTILITY (renamed text-muted to avoid Tailwind collision) ---------- */
 .text-muted-admin {
   color: var(--text-muted);

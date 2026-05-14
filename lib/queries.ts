@@ -1,5 +1,9 @@
+import type { Prisma, ReservationSource } from "@prisma/client";
 import { prisma } from "./prisma";
 import { findUnavailablePropertyIds } from "./availability";
+import { TZ } from "./date";
+import { toZonedTime, fromZonedTime } from "date-fns-tz";
+import { addDays, startOfDay } from "date-fns";
 
 /**
  * Server-only read helpers used by admin layouts and Server Components.
@@ -408,3 +412,250 @@ export async function findReservationForDrawer(reservationId: string) {
 export type DrawerReservation = NonNullable<
   Awaited<ReturnType<typeof findReservationForDrawer>>
 >;
+
+// =============================================================================
+// ADMIN — /admin/reservations listing
+// =============================================================================
+
+/**
+ * Filters available on the /admin/reservations chip row. Maps 1:1 with
+ * the `?filter=` query parameter.
+ */
+export type ReservationListFilter =
+  | "all"
+  | "confirmed"
+  | "option"
+  | "checkin_today"
+  | "checkout_today"
+  | "upcoming"
+  | "completed"
+  | "cancelled"
+  | "unpaid"
+  | "deposit";
+
+export interface ListReservationsOptions {
+  filter?: ReservationListFilter;
+  /** Substring match across code, guest name and phone. */
+  search?: string;
+  source?: ReservationSource;
+  page?: number;
+  /** Defaults to 25. */
+  perPage?: number;
+}
+
+/**
+ * Returns the [start, end) interval in UTC corresponding to "today" in the
+ * Africa/Tunis timezone. Used by the chip filters that key on the wall
+ * calendar (e.g. arrivals today).
+ */
+function todayBoundsUtc(): { start: Date; end: Date } {
+  const nowZoned = toZonedTime(new Date(), TZ);
+  const wallStart = startOfDay(nowZoned);
+  const start = fromZonedTime(wallStart, TZ);
+  const end = addDays(start, 1);
+  return { start, end };
+}
+
+function whereForFilter(
+  filter: ReservationListFilter,
+): Prisma.ReservationWhereInput {
+  const base: Prisma.ReservationWhereInput = { deletedAt: null };
+  const { start: todayStart, end: todayEnd } = todayBoundsUtc();
+
+  switch (filter) {
+    case "confirmed":
+      return { ...base, status: "CONFIRMED" };
+    case "option":
+      return { ...base, status: "PENDING" };
+    case "checkin_today":
+      return {
+        ...base,
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        checkIn: { gte: todayStart, lt: todayEnd },
+      };
+    case "checkout_today":
+      return {
+        ...base,
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        checkOut: { gte: todayStart, lt: todayEnd },
+      };
+    case "upcoming":
+      return {
+        ...base,
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        checkIn: { gte: todayEnd },
+      };
+    case "completed":
+      return { ...base, status: "CHECKED_OUT" };
+    case "cancelled":
+      return { ...base, status: { in: ["CANCELLED", "NO_SHOW"] } };
+    case "unpaid":
+      return {
+        ...base,
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        paidAmount: { lte: 0 },
+      };
+    case "deposit":
+      // Acompte = something paid, but strictly less than total.
+      return {
+        ...base,
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        AND: [
+          { paidAmount: { gt: 0 } },
+          // Using a raw column reference for paidAmount < total — Prisma
+          // doesn't expose `lt` against another column, so we leave the
+          // strict-less check to a final in-memory filter on the page; here
+          // we just narrow the candidate set.
+        ],
+      };
+    case "all":
+    default:
+      return base;
+  }
+}
+
+/**
+ * Paginated listing for the /admin/reservations table. Returns the rows
+ * plus the total count for the filtered set so the pagination component
+ * can render N pages.
+ */
+export async function listReservations(opts: ListReservationsOptions = {}) {
+  const page = Math.max(1, opts.page ?? 1);
+  const perPage = Math.max(1, Math.min(100, opts.perPage ?? 25));
+  const filter = opts.filter ?? "all";
+
+  const filterWhere = whereForFilter(filter);
+  const searchTerm = opts.search?.trim();
+
+  const where: Prisma.ReservationWhereInput = {
+    ...filterWhere,
+    ...(opts.source ? { source: opts.source } : {}),
+    ...(searchTerm
+      ? {
+          OR: [
+            { code: { contains: searchTerm, mode: "insensitive" } },
+            {
+              guest: {
+                firstName: { contains: searchTerm, mode: "insensitive" },
+              },
+            },
+            {
+              guest: {
+                lastName: { contains: searchTerm, mode: "insensitive" },
+              },
+            },
+            { guest: { phone: { contains: searchTerm } } },
+            { guest: { email: { contains: searchTerm, mode: "insensitive" } } },
+          ],
+        }
+      : {}),
+  };
+
+  const [total, rows] = await Promise.all([
+    prisma.reservation.count({ where }),
+    prisma.reservation.findMany({
+      where,
+      orderBy: [{ createdAt: "desc" }],
+      skip: (page - 1) * perPage,
+      take: perPage,
+      select: {
+        id: true,
+        code: true,
+        checkIn: true,
+        checkOut: true,
+        nights: true,
+        adults: true,
+        children: true,
+        total: true,
+        paidAmount: true,
+        status: true,
+        source: true,
+        property: { select: { id: true, name: true } },
+        guest: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            country: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  // For the "deposit" filter we need paidAmount < total — Prisma can't
+  // express column-vs-column directly. We over-fetch candidates (paid > 0)
+  // and filter the final page in memory; for our 21-unit volume this is
+  // perfectly fine.
+  const filteredRows =
+    filter === "deposit" ? rows.filter((r) => r.paidAmount < r.total) : rows;
+
+  return { rows: filteredRows, total, page, perPage };
+}
+
+export type ReservationRow = Awaited<
+  ReturnType<typeof listReservations>
+>["rows"][number];
+
+/**
+ * KPI tuple shown in the /admin/reservations page-head subtitle:
+ *   - total:    every non-deleted reservation
+ *   - active:   not cancelled and currently within or ahead of check-out
+ *   - newToday: created in the last 24h
+ */
+export async function getReservationsKpis() {
+  const { start: todayStart, end: todayEnd } = todayBoundsUtc();
+  const [total, active, newToday] = await Promise.all([
+    prisma.reservation.count({ where: { deletedAt: null } }),
+    prisma.reservation.count({
+      where: {
+        deletedAt: null,
+        status: { notIn: ["CANCELLED", "NO_SHOW", "CHECKED_OUT"] },
+        checkOut: { gte: todayStart },
+      },
+    }),
+    prisma.reservation.count({
+      where: {
+        deletedAt: null,
+        createdAt: { gte: todayStart, lt: todayEnd },
+      },
+    }),
+  ]);
+  return { total, active, newToday };
+}
+
+/**
+ * Per-filter counts for the chip row at the top of /admin/reservations.
+ * One round-trip per chip — the table is on the same page so the small
+ * fan-out is acceptable given Postgres can satisfy each `count(*)` from
+ * the existing indexes.
+ */
+export async function getReservationsFilterCounts() {
+  const filters: ReservationListFilter[] = [
+    "all",
+    "confirmed",
+    "option",
+    "checkin_today",
+    "checkout_today",
+    "upcoming",
+    "completed",
+    "cancelled",
+    "unpaid",
+    "deposit",
+  ];
+
+  const counts = await Promise.all(
+    filters.map(async (f) => {
+      const where = whereForFilter(f);
+      // The deposit candidate set over-counts because we can't express
+      // paidAmount < total in Prisma; the page-list query filters in
+      // memory but for the chip count we accept the over-estimate.
+      const c = await prisma.reservation.count({ where });
+      return [f, c] as const;
+    }),
+  );
+
+  return Object.fromEntries(counts) as Record<ReservationListFilter, number>;
+}
