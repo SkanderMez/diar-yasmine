@@ -1,10 +1,15 @@
 import { getTranslations } from "next-intl/server";
 import { HeaderShell } from "./header-shell";
 
+/**
+ * Public navigation order — matches the maquette nav exactly.
+ * The "experiences" entry currently points at /padel; we'll move the
+ * route to /experiences when the page itself is rebuilt in Phase B6.
+ */
 const NAV_ITEMS = [
   { key: "chalets" as const, href: "/chalets" },
   { key: "bungalows" as const, href: "/bungalows" },
-  { key: "padel" as const, href: "/padel" },
+  { key: "experiences" as const, href: "/padel" },
   { key: "about" as const, href: "/about" },
   { key: "contact" as const, href: "/contact" },
 ];

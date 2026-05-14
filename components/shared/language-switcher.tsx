@@ -1,63 +1,67 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
-import { Globe } from "lucide-react";
+import { useTransition } from "react";
+import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { SUPPORTED_LOCALES, type SupportedLocale } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 interface LanguageSwitcherProps {
-  /** When `dark` is true the trigger styles assume a dark background
-   *  (e.g. transparent header on hero), so we invert the text colour. */
+  /** When `dark` is true the pill renders white-on-transparent (over a
+   *  dark hero); otherwise it renders dark-on-light. */
   dark?: boolean;
 }
 
+/**
+ * Segmented 3-button language pill matching the maquette's `.lang-switcher`.
+ * The active locale becomes a filled pill in inverted color; the border
+ * and text follow `currentColor` so the same component looks correct on
+ * both light and dark headers without per-state classes.
+ */
 export function LanguageSwitcher({ dark = false }: LanguageSwitcherProps) {
-  const locale = useLocale();
+  const locale = useLocale() as SupportedLocale;
   const pathname = usePathname();
   const router = useRouter();
-  const t = useTranslations("locale");
-  const tCommon = useTranslations("common");
+  const [, startTransition] = useTransition();
+
+  function switchTo(next: SupportedLocale) {
+    if (next === locale) return;
+    startTransition(() => {
+      router.replace(pathname, { locale: next });
+    });
+  }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label={tCommon("language")}
-          className={cn(
-            "gap-1.5",
-            dark && "text-white/90 hover:bg-white/10 hover:text-white",
-          )}
-        >
-          <Globe className="size-4" />
-          <span className="text-xs font-medium uppercase tracking-wider">
-            {locale}
-          </span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {SUPPORTED_LOCALES.map((l) => (
-          <DropdownMenuItem
+    <div
+      className={cn(
+        "inline-flex gap-px rounded-full border p-0.5 transition-opacity",
+        dark
+          ? "border-white/70 text-white opacity-85 hover:opacity-100"
+          : "border-foreground/40 text-foreground opacity-85 hover:opacity-100",
+      )}
+      role="group"
+      aria-label="Langue"
+    >
+      {SUPPORTED_LOCALES.map((l) => {
+        const active = l === locale;
+        return (
+          <button
             key={l}
-            onSelect={() => {
-              router.replace(pathname, { locale: l as SupportedLocale });
-            }}
-            data-active={l === locale}
-            className="cursor-pointer data-[active=true]:font-semibold"
+            type="button"
+            onClick={() => switchTo(l)}
+            className={cn(
+              "rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider transition-colors",
+              active
+                ? dark
+                  ? "bg-white text-primary"
+                  : "bg-foreground text-ivory"
+                : "hover:bg-foreground/5",
+            )}
           >
-            {t(l)}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            {l}
+          </button>
+        );
+      })}
+    </div>
   );
 }
