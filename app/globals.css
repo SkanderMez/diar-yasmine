@@ -1,75 +1,78 @@
 @import "tailwindcss";
 
 /*
- * Diar Yasmine — Editorial Coastal Luxury.
+ * Diar Yasmine — Design System (Maquette officielle)
  *
- * Three-layer architecture:
+ * Source de vérité : la maquette HTML/CSS dans
+ *   /diar yasmine assets/diar yasmine maquette/
+ *
+ * Trois couches :
  *   1. :root          — raw brand values + shadcn semantic mappings
- *   2. @theme inline  — expose values as Tailwind utilities
+ *   2. @theme inline  — expose values as Tailwind v4 utilities
  *   3. /components/ui — consume Tailwind utilities only, no raw hex
  *
- * Design DNA:
- *  - Layered palette: deep teal + warm honey accent + clean ivory
- *  - Oversized serif headlines with tight tracking
- *  - Generous spacing, multiple visual rhythms
- *  - Soft diffuse shadows, never harsh
- *  - Scroll-triggered fade-ins, subtle parallax
+ * Couleurs :
+ *  - Primary teal #0E5A6B (CTA, eyebrows, headings d'accent)
+ *  - Accent turquoise #4FB8C4 (highlights, light-on-dark)
+ *  - Bougainvillier #C44E7A (hover des boutons primary !)
+ *  - Olive #7A8F6B (CTA padel)
+ *  - Gold #C9A85B (étoiles ratings)
+ *  - Sand #F5EFE6 / Ivory #FAF7F2 / Charcoal #1F2A2E
  */
 
 :root {
-  /* ===== Brand raw values — sober coastal palette ===== */
-  --brand-deep: #002a32; /* primary deep — footer / dark sections */
-  --brand-teal: #00505f; /* primary — CTAs, eyebrows on light */
-  --brand-turquoise: #1d98a8; /* primary-light — rare accents */
-  --brand-clay: #b66a52; /* terracotta — warm script + dark-bg eyebrows */
-  --brand-clay-light: #d9a08d;
-  /* Legacy honey aliases now point to clay so the old API keeps working
-     without any gold tones bleeding through. */
-  --brand-honey: var(--brand-clay);
-  --brand-honey-light: var(--brand-clay-light);
-  --brand-sand: #efe7d8; /* sand background, neutral warm */
-  --brand-bone: #f5f0e6; /* mid layer between sand & ivory */
-  --brand-ivory: #fbf8f1; /* lightest layer */
-  --brand-charcoal: #14181a; /* deeper charcoal for headings */
-  --brand-graphite: #2c3438;
-  --brand-bougainvillier: #c44e7a;
-  --brand-olive: #7a8f6b;
-  --brand-green: #2f9e6a;
-  --brand-amber: #e0a458;
-  --brand-red: #c44e4e;
-  --brand-neutral-fg: #6b7370;
-  --brand-border: rgba(20, 24, 26, 0.08);
-  --brand-input: rgba(20, 24, 26, 0.12);
+  /* ===== Brand raw values — extracted from maquette styles.css ===== */
+  --color-primary-raw: #0e5a6b;
+  --color-primary-700: #0a4854;
+  --color-primary-900: #062f37;
+  --color-accent: #4fb8c4;
+  --color-accent-light: #8dd5de;
+  --color-sand: #f5efe6;
+  --color-sand-dark: #ece3d2;
+  --color-ivory: #faf7f2;
+  --color-charcoal-raw: #1f2a2e;
+  --color-charcoal-soft: #3d4a4f;
+  --color-muted: #6b7a80;
+  --color-line: #e5ddd0;
+  --color-line-soft: #efe9dd;
+  --color-bougainvillier: #c44e7a;
+  --color-bougainvillier-light: #e89bb5;
+  --color-olive: #7a8f6b;
+  --color-olive-light: #a8b998;
+  --color-gold: #c9a85b;
+  --color-success: #4a8f6b;
+  --color-danger: #c04e4e;
+  --color-warning: #d89f4e;
 
   /* ===== Shadcn semantic mappings ===== */
-  --background: var(--brand-ivory);
-  --foreground: var(--brand-charcoal);
+  --background: var(--color-ivory);
+  --foreground: var(--color-charcoal-raw);
   --card: #ffffff;
-  --card-foreground: var(--brand-charcoal);
+  --card-foreground: var(--color-charcoal-raw);
   --popover: #ffffff;
-  --popover-foreground: var(--brand-charcoal);
-  --primary: var(--brand-teal);
-  --primary-foreground: var(--brand-ivory);
-  --secondary: var(--brand-bone);
-  --secondary-foreground: var(--brand-charcoal);
-  --muted: var(--brand-bone);
-  --muted-foreground: var(--brand-neutral-fg);
-  --accent: var(--brand-bone);
-  --accent-foreground: var(--brand-charcoal);
-  --destructive: var(--brand-red);
-  --destructive-foreground: var(--brand-ivory);
-  --border: var(--brand-border);
-  --input: var(--brand-input);
-  --ring: var(--brand-teal);
-  --radius: 0.75rem;
+  --popover-foreground: var(--color-charcoal-raw);
+  --primary: var(--color-primary-raw);
+  --primary-foreground: var(--color-ivory);
+  --secondary: var(--color-sand);
+  --secondary-foreground: var(--color-charcoal-raw);
+  --muted: var(--color-sand);
+  --muted-foreground: var(--color-muted);
+  --accent: var(--color-sand);
+  --accent-foreground: var(--color-charcoal-raw);
+  --destructive: var(--color-danger);
+  --destructive-foreground: var(--color-ivory);
+  --border: var(--color-line);
+  --input: var(--color-line);
+  --ring: var(--color-accent);
+  --radius: 10px;
 
   /* ===== Reservation source palette (admin calendar blocks) ===== */
-  --source-direct-web: var(--brand-teal);
-  --source-walk-in: var(--brand-olive);
-  --source-phone: var(--brand-olive);
-  --source-booking: #1e3a8a;
-  --source-airbnb: #e11d48;
-  --source-expedia: var(--brand-amber);
+  --source-direct-web: var(--color-primary-raw);
+  --source-walk-in: var(--color-olive);
+  --source-phone: var(--color-olive);
+  --source-booking: #2d5be3;
+  --source-airbnb: #ff5a5f;
+  --source-expedia: #f2c94c;
   --source-partner: #7c3aed;
   --source-other: #6b7280;
 }
@@ -97,22 +100,35 @@
   --color-ring: var(--ring);
 
   /* Brand extras — exposed as Tailwind utilities */
-  --color-deep: var(--brand-deep);
-  --color-primary-light: var(--brand-turquoise);
-  --color-honey: var(--brand-honey);
-  --color-honey-light: var(--brand-honey-light);
-  --color-clay: var(--brand-clay);
-  --color-clay-light: var(--brand-clay-light);
-  --color-sand: var(--brand-sand);
-  --color-bone: var(--brand-bone);
-  --color-ivory: var(--brand-ivory);
-  --color-charcoal: var(--brand-charcoal);
-  --color-graphite: var(--brand-graphite);
-  --color-bougainvillier: var(--brand-bougainvillier);
-  --color-olive: var(--brand-olive);
-  --color-success: var(--brand-green);
-  --color-warning: var(--brand-amber);
-  --color-danger: var(--brand-red);
+  --color-primary-deep: var(--color-primary-700);
+  --color-primary-900: var(--color-primary-900);
+  --color-accent-light: var(--color-accent-light);
+  --color-sand: var(--color-sand);
+  --color-sand-dark: var(--color-sand-dark);
+  --color-ivory: var(--color-ivory);
+  --color-charcoal: var(--color-charcoal-raw);
+  --color-charcoal-soft: var(--color-charcoal-soft);
+  --color-line: var(--color-line);
+  --color-line-soft: var(--color-line-soft);
+  --color-bougainvillier: var(--color-bougainvillier);
+  --color-bougainvillier-light: var(--color-bougainvillier-light);
+  --color-olive: var(--color-olive);
+  --color-olive-light: var(--color-olive-light);
+  --color-gold: var(--color-gold);
+  --color-success: var(--color-success);
+  --color-danger: var(--color-danger);
+  --color-warning: var(--color-warning);
+
+  /* Legacy compat aliases (some components still reference these) */
+  --color-bone: var(--color-sand);
+  --color-clay: var(--color-bougainvillier);
+  --color-clay-light: var(--color-bougainvillier-light);
+  --color-deep: var(--color-primary-900);
+  --color-graphite: #2c3438;
+  --color-honey: var(--color-bougainvillier);
+  --color-honey-light: var(--color-bougainvillier-light);
+  --color-turquoise: var(--color-accent);
+  --color-primary-light: var(--color-accent);
 
   /* Reservation sources */
   --color-source-direct-web: var(--source-direct-web);
@@ -130,25 +146,26 @@
   --font-script: var(--font-caveat);
   --font-arabic: var(--font-tajawal);
 
-  /* Radii — finer scale */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
+  /* Radii — maquette scale */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
   --radius-xl: 24px;
   --radius-2xl: 32px;
-  --radius-3xl: 48px;
-  --radius-pill: 9999px;
+  --radius-pill: 999px;
 
-  /* Shadows — luxe diffuse */
-  --shadow-xs: 0 1px 2px rgba(20, 24, 26, 0.04);
-  --shadow-sm: 0 2px 8px rgba(20, 24, 26, 0.06);
-  --shadow-md: 0 8px 24px rgba(20, 24, 26, 0.08);
-  --shadow-lg: 0 20px 50px rgba(20, 24, 26, 0.1);
-  --shadow-xl: 0 32px 80px rgba(20, 24, 26, 0.14);
-  --shadow-2xl: 0 50px 120px rgba(20, 24, 26, 0.18);
-  --shadow-inner: inset 0 1px 2px rgba(20, 24, 26, 0.04);
-  --shadow-glow: 0 0 0 6px rgba(0, 80, 95, 0.18);
+  /* Shadows — teinted primary (maquette) */
+  --shadow-xs: 0 1px 2px rgba(14, 90, 107, 0.04);
+  --shadow-sm:
+    0 1px 2px rgba(14, 90, 107, 0.06), 0 1px 3px rgba(14, 90, 107, 0.04);
+  --shadow-md:
+    0 4px 12px rgba(14, 90, 107, 0.08), 0 2px 4px rgba(14, 90, 107, 0.04);
+  --shadow-lg:
+    0 12px 32px rgba(14, 90, 107, 0.1), 0 4px 12px rgba(14, 90, 107, 0.06);
+  --shadow-xl:
+    0 24px 48px rgba(14, 90, 107, 0.14), 0 8px 16px rgba(14, 90, 107, 0.08);
+  --shadow-2xl:
+    0 32px 80px rgba(14, 90, 107, 0.16), 0 12px 32px rgba(14, 90, 107, 0.1);
 }
 
 @layer base {
@@ -165,13 +182,10 @@
     color: var(--foreground);
     font-family: var(--font-sans);
     font-size: 16px;
-    line-height: 1.65;
-    font-feature-settings:
-      "rlig" 1,
-      "calt" 1,
-      "ss01" 1;
+    line-height: 1.5;
   }
 
+  /* Headings inherit color from their parent so dark-bg sections work */
   h1,
   h2,
   h3,
@@ -179,19 +193,29 @@
   h5,
   h6 {
     font-family: var(--font-heading);
-    font-weight: 400;
-    letter-spacing: -0.025em;
-    line-height: 1.02;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
     color: inherit;
   }
-
   h1 {
-    letter-spacing: -0.04em;
+    font-weight: 300; /* maquette: light weight for the editorial feel */
+    letter-spacing: -0.02em;
+  }
+  h2 {
+    font-weight: 400;
+  }
+  h3 {
+    font-weight: 500;
+  }
+
+  /* Body paragraphs default to soft charcoal */
+  p {
+    color: var(--color-charcoal-soft);
   }
 
   ::selection {
-    background-color: var(--brand-clay-light);
-    color: var(--brand-charcoal);
+    background-color: var(--color-accent);
+    color: var(--color-primary-900);
   }
 
   [lang="ar"] body {
@@ -209,65 +233,73 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--brand-teal);
+    outline: 2px solid var(--color-accent);
     outline-offset: 3px;
     border-radius: 4px;
   }
 
-  body {
-    color: var(--foreground);
-  }
-
   a {
-    transition:
-      color 200ms ease,
-      opacity 200ms ease;
+    transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
 @layer utilities {
-  /* Editorial container with breathing room */
+  /* Editorial container — maquette uses 1280 (.container) + 1440 (.container-wide) */
   .container-x {
     margin-inline: auto;
-    padding-inline: clamp(1.25rem, 4vw, 4rem);
-    max-width: 88rem; /* 1408px */
+    padding-inline: clamp(1rem, 4vw, 3rem);
+    max-width: 1280px;
+  }
+  .container-x-wide {
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 4vw, 3rem);
+    max-width: 1440px;
   }
 
-  /* Section padding presets */
+  /* Section padding presets (maquette: --s-24 = 96px) */
   .section-y {
-    padding-block: clamp(4rem, 8vw, 8rem);
+    padding-block: clamp(3rem, 6vw, 6rem);
   }
   .section-y-lg {
-    padding-block: clamp(6rem, 10vw, 12rem);
+    padding-block: clamp(4rem, 8vw, 8rem);
   }
 
   /* Editorial heading utility */
   .heading-display {
     font-family: var(--font-heading);
-    font-weight: 400;
-    letter-spacing: -0.04em;
-    line-height: 0.95;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
   }
 
-  /* Tag / eyebrow utility */
+  /* Tag / eyebrow utility (maquette .eyebrow) */
   .eyebrow {
-    font-size: 11px;
-    font-weight: 600;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    letter-spacing: 0.32em;
-    color: var(--brand-clay);
+    color: var(--color-primary-raw);
   }
 
-  /* Honey gradient text — for special emphasis */
-  .text-gradient-honey {
-    background: linear-gradient(
-      135deg,
-      var(--brand-honey) 0%,
-      var(--brand-clay) 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  /* Italic emphasis inside h1/h2 (maquette h1 em) */
+  .heading-em {
+    font-style: italic;
+    color: var(--color-primary-raw);
+    font-weight: 400;
+  }
+  .heading-em-light {
+    font-style: italic;
+    color: var(--color-accent-light);
+    font-weight: 400;
+  }
+
+  /* Easing curves (use in inline style with var()) */
+  .ease-editorial {
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .ease-spring {
+    transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   /* Hide scrollbar */
@@ -279,7 +311,7 @@
     display: none;
   }
 
-  /* Smooth horizontal scroll snap */
+  /* Smooth horizontal scroll snap (carousels) */
   .scroll-snap-x {
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
@@ -288,14 +320,22 @@
     scroll-snap-align: start;
   }
 
-  /* Decorative noise overlay */
-  .noise-overlay::after {
+  /* Ornate divider (maquette .divider-ornate) */
+  .divider-ornate {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px auto;
+    width: fit-content;
+    color: var(--color-accent);
+  }
+  .divider-ornate::before,
+  .divider-ornate::after {
     content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.03;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    width: 48px;
+    height: 1px;
+    background: var(--color-accent);
+    opacity: 0.4;
   }
 
   @media print {
@@ -308,7 +348,9 @@
     html {
       scroll-behavior: auto;
     }
-    * {
+    *,
+    *::before,
+    *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
