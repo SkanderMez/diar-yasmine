@@ -11,16 +11,12 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatTND } from "@/lib/money";
-import {
-  TOURIST_TAX_PER_GUEST_PER_NIGHT_MILLIMES,
-  computePricing,
-} from "./pricing";
+import { computePricing } from "./pricing";
 import type { PriceLine } from "./types";
 
 interface Step3PricingProps {
   basePriceMillimes: number;
   nights: number;
-  guests: number;
   lines: PriceLine[];
   onLinesChange: (lines: PriceLine[]) => void;
   onContinue: () => void;
@@ -37,13 +33,11 @@ const EXTRA_PRESETS = [
  *
  * The pricing editor. Lines are kept in a flat array; the discount line
  * has a %/TND toggle (the critical widget). Extras can be added freely
- * with preset shortcuts. TVA is editable as a percent; taxe de séjour
- * is derived (3 × nights × guests × 2.33 TND) and shown read-only.
+ * with preset shortcuts. TVA is editable as a percent.
  */
 export function Step3Pricing({
   basePriceMillimes,
   nights,
-  guests,
   lines,
   onLinesChange,
   onContinue,
@@ -53,10 +47,9 @@ export function Step3Pricing({
       computePricing({
         basePriceMillimes,
         nights,
-        guests,
         lines,
       }),
-    [basePriceMillimes, nights, guests, lines],
+    [basePriceMillimes, nights, lines],
   );
 
   const discountLine = lines.find((l) => l.kind === "discount");
@@ -349,20 +342,6 @@ export function Step3Pricing({
           </div>
         )}
 
-        {/* Taxe de séjour — read-only formula */}
-        <div className="price-row editable">
-          <div className="label">
-            <input
-              className="line-label"
-              value={`Taxe de séjour (${guests} × ${nights || 0} × 2,33)`}
-              readOnly
-            />
-          </div>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem" }}>
-            {formatTND(breakdown.touristTax)}
-          </span>
-        </div>
-
         {/* Grand total */}
         <div className="price-row grand-total">
           <span className="label">Total TTC</span>
@@ -393,21 +372,6 @@ export function Step3Pricing({
           </div>
         </div>
       )}
-
-      <p
-        style={{
-          marginTop: "12px",
-          fontSize: "0.78rem",
-          color: "var(--text-dim)",
-        }}
-      >
-        Taxe de séjour calculée à{" "}
-        {(TOURIST_TAX_PER_GUEST_PER_NIGHT_MILLIMES / 1000).toLocaleString(
-          "fr-FR",
-          { minimumFractionDigits: 2, maximumFractionDigits: 2 },
-        )}{" "}
-        TND par voyageur et par nuit.
-      </p>
 
       <div
         style={{

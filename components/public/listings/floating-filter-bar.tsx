@@ -10,8 +10,6 @@ import {
   Search,
   Users,
 } from "lucide-react";
-import { format, parseISO } from "date-fns";
-import { fr } from "date-fns/locale";
 import { DateRangePicker } from "@/components/public/date-range-picker";
 import { cn } from "@/lib/utils";
 
@@ -29,12 +27,11 @@ interface FloatingFilterBarProps {
 }
 
 /**
- * White rounded filter bar that overlaps the hero by -50px. Six cells:
- * Dates / Voyageurs / Capacité min / Prix max / Tri / Rechercher. The dates
- * field uses an inline DateRangePicker popover; voyageurs is a counter
- * popover. The remaining cells are inline selects/inputs. Clicking
- * "Rechercher" pushes a URL with the current filter snapshot — the page
- * re-fetches on the server and the toolbar updates.
+ * White rounded filter bar that overlaps the hero by -50px. Cells:
+ * Dates / Voyageurs / Capacité min / Prix max / Tri / Rechercher. The
+ * Rechercher button commits everything to URL search params and the
+ * server re-fetches. Selects also commit immediately so the user gets
+ * instant feedback when switching sort / capacity / etc.
  */
 export function FloatingFilterBar({
   initialCheckIn,
@@ -58,40 +55,38 @@ export function FloatingFilterBar({
     sp?.get("sort") ?? sortOptions[0]?.value ?? "",
   );
 
-  function apply() {
+  function buildParams(overrides: Partial<Record<string, string>> = {}) {
     const params = new URLSearchParams();
-    if (checkIn) params.set("checkIn", checkIn);
-    if (checkOut) params.set("checkOut", checkOut);
-    if (guests > 1) params.set("guests", String(guests));
-    if (capacity) params.set("capacity", capacity);
-    if (maxPrice) params.set("maxPrice", maxPrice);
-    if (sort && sort !== sortOptions[0]?.value) params.set("sort", sort);
-    // Preserve any other filter params (amenities, pool, etc.) coming from the
-    // sidebar so the two filter surfaces don't fight each other.
+    const merged: Record<string, string> = {
+      checkIn,
+      checkOut,
+      guests: guests > 1 ? String(guests) : "",
+      capacity,
+      maxPrice,
+      sort: sort && sort !== sortOptions[0]?.value ? sort : "",
+      ...overrides,
+    };
+    for (const [k, v] of Object.entries(merged)) {
+      if (v) params.set(k, v);
+    }
+    // Preserve any other filter params (amenities, pool, etc.) coming from
+    // the sidebar so the two filter surfaces don't fight each other.
     sp?.forEach((value, key) => {
-      if (
-        ![
-          "checkIn",
-          "checkOut",
-          "guests",
-          "capacity",
-          "maxPrice",
-          "sort",
-        ].includes(key)
-      ) {
-        params.set(key, value);
-      }
+      if (!(key in merged)) params.set(key, value);
     });
+    return params;
+  }
+
+  function pushParams(params: URLSearchParams) {
     const qs = params.toString();
     startTransition(() => {
       router.push(qs ? `?${qs}` : "?", { scroll: false });
     });
   }
 
-  const datesLabel =
-    checkIn && checkOut
-      ? `${format(parseISO(checkIn), "d MMM", { locale: fr })} – ${format(parseISO(checkOut), "d MMM yyyy", { locale: fr })}`
-      : "Choisir les dates";
+  function apply() {
+    pushParams(buildParams());
+  }
 
   return (
     <div className="container-x relative z-[3] -mt-[50px]">
@@ -101,20 +96,31 @@ export function FloatingFilterBar({
           "grid grid-cols-1 gap-2 md:grid-cols-2 lg:[grid-template-columns:1.4fr_1.2fr_1fr_1fr_1fr_auto]",
         )}
       >
-        <DatesField
-          checkIn={checkIn}
-          checkOut={checkOut}
-          label={datesLabel}
-          onChange={(r) => {
-            setCheckIn(r.checkIn);
-            setCheckOut(r.checkOut);
-          }}
-        />
+        <FieldWrapper>
+          <span className="mb-[2px] block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <Calendar className="mr-1 inline size-3" /> Dates
+          </span>
+          <div className="mt-0.5">
+            <DateRangePicker
+              checkIn={checkIn}
+              checkOut={checkOut}
+              onChange={(r) => {
+                setCheckIn(r.checkIn);
+                setCheckOut(r.checkOut);
+              }}
+            />
+          </div>
+        </FieldWrapper>
+
         <GuestsField guests={guests} onChange={setGuests} />
+
         <SelectField
           label="Capacité min."
           value={capacity}
-          onChange={setCapacity}
+          onChange={(v) => {
+            setCapacity(v);
+            pushParams(buildParams({ capacity: v }));
+          }}
           options={[
             { value: "", label: "Indifférent" },
             { value: "2", label: "2 voyageurs" },
@@ -123,13 +129,23 @@ export function FloatingFilterBar({
             { value: "8", label: "8+ voyageurs" },
           ]}
         />
-        <PriceField value={maxPrice} onChange={setMaxPrice} />
+
+        <PriceField value={maxPrice} onChange={setMaxPrice} onCommit={apply} />
+
         <SelectField
           label="Tri"
           value={sort}
-          onChange={setSort}
+          onChange={(v) => {
+            setSort(v);
+            pushParams(
+              buildParams({
+                sort: v && v !== sortOptions[0]?.value ? v : "",
+              }),
+            );
+          }}
           options={sortOptions}
         />
+
         <button
           type="button"
           onClick={apply}
@@ -159,66 +175,6 @@ function FieldWrapper({
       )}
     >
       {children}
-    </div>
-  );
-}
-
-function DatesField({
-  checkIn,
-  checkOut,
-  label,
-  onChange,
-}: {
-  checkIn: string;
-  checkOut: string;
-  label: string;
-  onChange: (r: { checkIn: string; checkOut: string }) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  return (
-    <div ref={rootRef} className="relative">
-      <FieldWrapper>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="block w-full text-left"
-        >
-          <span className="mb-[2px] block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            Dates
-          </span>
-          <span className="flex items-center gap-1.5 text-[0.9rem] font-medium text-charcoal">
-            <Calendar className="size-3.5 text-muted-foreground" />
-            <span>{label}</span>
-          </span>
-        </button>
-      </FieldWrapper>
-      {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-max max-w-[calc(100vw-2rem)] rounded-2xl bg-card p-3 shadow-xl">
-          <DateRangePicker
-            checkIn={checkIn}
-            checkOut={checkOut}
-            onChange={onChange}
-          />
-        </div>
-      )}
     </div>
   );
 }
@@ -349,9 +305,11 @@ function SelectField({
 function PriceField({
   value,
   onChange,
+  onCommit,
 }: {
   value: string;
   onChange: (v: string) => void;
+  onCommit: () => void;
 }) {
   return (
     <FieldWrapper>
@@ -365,6 +323,7 @@ function PriceField({
             min={0}
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            onBlur={onCommit}
             placeholder="0"
             className="w-full bg-transparent text-charcoal outline-none placeholder:text-muted-foreground/40"
           />

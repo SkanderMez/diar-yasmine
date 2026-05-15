@@ -12,8 +12,6 @@ interface SectionTaxesProps {
   displayedCurrencies: readonly Currency[];
   /** Decimal in [0, 1]; e.g. 0.19 = 19%. */
   taxRate: number;
-  /** Stay/sejour tax in millimes per guest per night. */
-  staySejourMillimes: number;
 }
 
 const CURRENCY_OPTIONS: readonly { value: Currency; label: string }[] = [
@@ -28,17 +26,12 @@ export function SectionTaxes({
   primaryCurrency,
   displayedCurrencies,
   taxRate,
-  staySejourMillimes,
 }: SectionTaxesProps) {
   const router = useRouter();
   const [primary, setPrimary] = useState<Currency>(primaryCurrency);
   // Stored as decimal, displayed as percent.
   const [taxPercent, setTaxPercent] = useState<string>(
     (taxRate * 100).toString(),
-  );
-  // Stored as millimes, displayed as TND.
-  const [sejourTnd, setSejourTnd] = useState<string>(
-    (staySejourMillimes / 1000).toString(),
   );
   const [displayed, setDisplayed] = useState<Set<Currency>>(
     new Set<Currency>(displayedCurrencies),
@@ -73,7 +66,6 @@ export function SectionTaxes({
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const percentValue = Number.parseFloat(taxPercent);
-    const sejourValue = Number.parseFloat(sejourTnd);
 
     if (
       !Number.isFinite(percentValue) ||
@@ -82,12 +74,6 @@ export function SectionTaxes({
     ) {
       toast.error("TVA invalide", {
         description: "Valeur attendue entre 0 et 100.",
-      });
-      return;
-    }
-    if (!Number.isFinite(sejourValue) || sejourValue < 0) {
-      toast.error("Taxe de séjour invalide", {
-        description: "La valeur doit être positive.",
       });
       return;
     }
@@ -108,8 +94,6 @@ export function SectionTaxes({
           primaryCurrency: primary,
           displayedCurrencies: orderedDisplayed,
           taxRate: percentValue / 100,
-          // Convert TND → millimes; round to int.
-          staySejourMillimes: Math.round(sejourValue * 1000),
         });
         toast.success("Paramètres enregistrés");
         router.refresh();
@@ -165,25 +149,6 @@ export function SectionTaxes({
             onChange={(e) => setTaxPercent(e.target.value)}
             style={{ width: 100 }}
             aria-label="TVA en pourcentage"
-          />
-        </div>
-
-        <div className="toggle-row">
-          <div>
-            <div className="label">Taxe de séjour</div>
-            <div className="sub" style={{ margin: 0 }}>
-              Par personne et par nuit (TND)
-            </div>
-          </div>
-          <input
-            className="input-admin"
-            type="number"
-            min={0}
-            step={0.001}
-            value={sejourTnd}
-            onChange={(e) => setSejourTnd(e.target.value)}
-            style={{ width: 120 }}
-            aria-label="Taxe de séjour en TND"
           />
         </div>
 

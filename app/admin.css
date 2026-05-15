@@ -960,9 +960,8 @@ html:has([data-admin-shell]) {
   background: var(--bg-surface-2);
   border-bottom: 1px solid var(--border);
   height: 48px;
-  position: sticky;
-  top: calc(var(--topbar-h));
-  z-index: 10;
+  position: relative;
+  z-index: 1;
 }
 [data-admin-shell] .cal-header-row .month-marker {
   position: absolute;
@@ -1016,9 +1015,8 @@ html:has([data-admin-shell]) {
   align-items: center;
   padding: 0 14px;
   background: var(--bg-surface-2);
-  position: sticky;
-  top: calc(var(--topbar-h));
-  z-index: 11;
+  position: relative;
+  z-index: 1;
 }
 [data-admin-shell] .cal-left-header .label {
   font-size: 0.7rem;

@@ -46,7 +46,7 @@ describe("calculateReservationTotal — happy path", () => {
       nights: 1,
       extras: [
         { label: "Padel session", amount: 30 * TND },
-        { label: "Tourist tax", amount: 5 * TND },
+        { label: "Beach pass", amount: 5 * TND },
       ],
       taxRate: 0,
     });
@@ -180,7 +180,7 @@ describe("calculateReservationTotal — Tunisian VAT scenario", () => {
     const out = calculateReservationTotal({
       property: { basePrice: 350 * TND, cleaningFee: 80 * TND },
       nights: 5,
-      extras: [{ label: "Tourist tax", amount: 3 * TND }],
+      extras: [{ label: "Beach pass", amount: 3 * TND }],
       discount: { type: "PERCENT", value: 10 },
       taxRate: 0.19,
     });

@@ -11,7 +11,7 @@ export type NewBookingProperty = ActiveProperty & {
   photoAlt: string | null;
 };
 
-export type PriceLineKind = "base" | "discount" | "extra" | "tax" | "tourist";
+export type PriceLineKind = "base" | "discount" | "extra" | "tax";
 
 export interface PriceLine {
   id: string;
@@ -20,7 +20,7 @@ export interface PriceLine {
   /**
    * For `discount`: percent (0-100) when `mode === "%"`, millimes when
    * `mode === "TND"`. For `extra`: millimes. For `tax`: percent (0-100).
-   * For `base` / `tourist`: computed display millimes (not editable).
+   * For `base`: computed display millimes (not editable).
    */
   value: number;
   /** Only meaningful for `discount`. */
@@ -42,8 +42,6 @@ export interface ComputedPricing {
   tax: number;
   /** Effective tax rate (0..1). */
   taxRate: number;
-  /** Taxe de séjour, millimes. */
-  touristTax: number;
   /** Grand total TTC, millimes. */
   total: number;
 }

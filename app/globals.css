@@ -246,6 +246,47 @@
   }
 }
 
+/* Native range thumbs used by the listing price slider. The track is
+ * drawn separately as a styled div underneath; we only need the thumb
+ * to be visible + interactive, and the input to span the same width as
+ * the track. `pointer-events-none` on the input itself + `auto` on the
+ * thumb lets two stacked range inputs both be draggable for the dual
+ * handle pattern. */
+.price-range-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary-raw);
+  background: var(--card);
+  box-shadow: 0 1px 4px rgba(14, 90, 107, 0.2);
+  cursor: grab;
+  pointer-events: auto;
+  margin-top: 0;
+}
+.price-range-thumb::-webkit-slider-thumb:active {
+  cursor: grabbing;
+}
+.price-range-thumb::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary-raw);
+  background: var(--card);
+  box-shadow: 0 1px 4px rgba(14, 90, 107, 0.2);
+  cursor: grab;
+  pointer-events: auto;
+}
+.price-range-thumb::-webkit-slider-runnable-track {
+  height: 4px;
+  background: transparent;
+}
+.price-range-thumb::-moz-range-track {
+  height: 4px;
+  background: transparent;
+}
+
 @layer utilities {
   /* Editorial container — maquette uses 1280 (.container) + 1440 (.container-wide) */
   .container-x {

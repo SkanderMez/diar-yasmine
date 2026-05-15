@@ -199,6 +199,12 @@ export type FilterableAmenity = Awaited<
   ReturnType<typeof listFilterableAmenities>
 >[number];
 
+export type PublicPropertySort =
+  | "recommended"
+  | "price-asc"
+  | "price-desc"
+  | "capacity";
+
 export async function listPublicProperties(
   /** Property type to filter on, or omit/`null` for the unified search. */
   type: "CHALET" | "BUNGALOW" | null,
@@ -214,6 +220,8 @@ export async function listPublicProperties(
     checkOut?: string;
     /** Amenity slugs that must ALL be present on the property. */
     amenitySlugs?: string[];
+    /** Sort order — default `recommended` (chalets first, then name). */
+    sort?: PublicPropertySort;
   } = {},
 ) {
   const priceFilter: { gte?: number; lte?: number } = {};
@@ -230,6 +238,21 @@ export async function listPublicProperties(
       unavailableIds = await findUnavailablePropertyIds(ci, co);
     }
   }
+
+  const orderBy: Prisma.PropertyOrderByWithRelationInput[] = (() => {
+    switch (options.sort) {
+      case "price-asc":
+        return [{ basePrice: "asc" }, { name: "asc" }];
+      case "price-desc":
+        return [{ basePrice: "desc" }, { name: "asc" }];
+      case "capacity":
+        return [{ capacity: "desc" }, { name: "asc" }];
+      default:
+        // "recommended": chalets before bungalows when type is null,
+        // then alphabetical.
+        return type ? [{ name: "asc" }] : [{ type: "asc" }, { name: "asc" }];
+    }
+  })();
 
   return prisma.property.findMany({
     where: {
@@ -280,7 +303,7 @@ export async function listPublicProperties(
         select: { url: true, alt: true },
       },
     },
-    orderBy: { name: "asc" },
+    orderBy,
   });
 }
 

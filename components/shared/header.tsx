@@ -7,6 +7,7 @@ import { HeaderShell } from "./header-shell";
  * route to /experiences when the page itself is rebuilt in Phase B6.
  */
 const NAV_ITEMS = [
+  { key: "home" as const, href: "/" },
   { key: "chalets" as const, href: "/chalets" },
   { key: "bungalows" as const, href: "/bungalows" },
   { key: "experiences" as const, href: "/padel" },

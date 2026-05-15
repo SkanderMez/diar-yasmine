@@ -63,8 +63,6 @@ const updateTaxesAndCurrencySchema = z
     displayedCurrencies: z.array(currencyEnum).min(1),
     /** TVA rate as a decimal in [0, 1]; e.g. 0.19 = 19%. */
     taxRate: z.number().min(0).max(1),
-    /** Tourist tax per guest per night, in millimes. */
-    staySejourMillimes: z.number().int().min(0).max(100000),
   })
   .refine(
     (input) => input.displayedCurrencies.includes(input.primaryCurrency),
@@ -85,17 +83,11 @@ export async function updateTaxesAndCurrency(
     primaryCurrency: parsed.primaryCurrency,
     displayedCurrencies: parsed.displayedCurrencies,
     taxRate: parsed.taxRate,
-    staySejourMillimes: parsed.staySejourMillimes,
   };
 
   await setSetting("currency.primary", parsed.primaryCurrency, staff.id);
   await setSetting("currency.displayed", parsed.displayedCurrencies, staff.id);
   await setSetting("tax.rate", parsed.taxRate, staff.id);
-  await setSetting(
-    "tax.stay_sejour_millimes",
-    parsed.staySejourMillimes,
-    staff.id,
-  );
 
   await writeAudit({
     userId: staff.id,

@@ -110,23 +110,18 @@ async function renderSection(
     }
 
     case "taxes": {
-      const [
-        primaryCurrency,
-        displayedCurrencies,
-        taxRate,
-        staySejourMillimes,
-      ] = await Promise.all([
-        getSetting("currency.primary"),
-        getSetting("currency.displayed"),
-        getSetting("tax.rate"),
-        getSetting("tax.stay_sejour_millimes"),
-      ]);
+      const [primaryCurrency, displayedCurrencies, taxRate] = await Promise.all(
+        [
+          getSetting("currency.primary"),
+          getSetting("currency.displayed"),
+          getSetting("tax.rate"),
+        ],
+      );
       return (
         <SectionTaxes
           primaryCurrency={primaryCurrency}
           displayedCurrencies={displayedCurrencies}
           taxRate={taxRate}
-          staySejourMillimes={staySejourMillimes}
         />
       );
     }

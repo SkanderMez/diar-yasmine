@@ -49,18 +49,16 @@ export function SummaryAside({
   source,
   lines,
 }: SummaryAsideProps) {
-  const guests = guest.adults + guest.children;
   const breakdown = useMemo(
     () =>
       property
         ? computePricing({
             basePriceMillimes: property.basePrice,
             nights,
-            guests,
             lines,
           })
         : null,
-    [property, nights, guests, lines],
+    [property, nights, lines],
   );
 
   const checkInLabel = checkIn
@@ -218,12 +216,6 @@ export function SummaryAside({
                 <Line
                   label={`TVA ${taxLine.value}%`}
                   value={`+ ${formatTND(breakdown.tax)}`}
-                />
-              )}
-              {breakdown.touristTax > 0 && (
-                <Line
-                  label="Taxe séjour"
-                  value={`+ ${formatTND(breakdown.touristTax)}`}
                 />
               )}
 

@@ -70,16 +70,12 @@ export function FunnelRecapSticky({
       nights >= 5 && longStayDiscountPct > 0
         ? Math.round((stay * longStayDiscountPct) / 100)
         : 0;
-    const guests = adults + childrenCount;
-    // Maquette tax-séjour ≈ 2.33 TND / pers / nuit.
-    const touristTax = Math.round(guests * nights * 2330);
     const promo = Math.max(0, Math.min(promoDiscount, stay - longStay));
-    const subtotal = stay - longStay - promo + cleaningFee + touristTax;
+    const subtotal = stay - longStay - promo + cleaningFee;
     const tax = Math.round(subtotal * taxRate);
     return {
       stay,
       longStay,
-      touristTax,
       promo,
       subtotal,
       tax,
@@ -89,8 +85,6 @@ export function FunnelRecapSticky({
     basePrice,
     nights,
     longStayDiscountPct,
-    adults,
-    childrenCount,
     cleaningFee,
     taxRate,
     promoDiscount,
@@ -221,10 +215,6 @@ export function FunnelRecapSticky({
           {cleaningFee > 0 && (
             <PriceRow label="Frais de ménage" value={formatTND(cleaningFee)} />
           )}
-          <PriceRow
-            label={`Taxe de séjour`}
-            value={formatTND(breakdown.touristTax)}
-          />
           <PriceRow
             label={`Taxes (${Math.round(taxRate * 100)}%)`}
             value={formatTND(breakdown.tax)}

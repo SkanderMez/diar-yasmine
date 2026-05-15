@@ -10,25 +10,19 @@ import type { ComputedPricing, PriceLine } from "./types";
  *
  * Conventions:
  *  - All monetary values in millimes (1 TND = 1000 millimes).
- *  - `tourist tax` is built from a hard-coded 2 330 millimes / guest /
- *    night (matches the public funnel recap).
  *  - The discount line stores its value in either percent or millimes
  *    based on `mode`; everything else is read-only by construction.
  */
 
-export const TOURIST_TAX_PER_GUEST_PER_NIGHT_MILLIMES = 2_330;
-
 export interface PricingArgs {
   basePriceMillimes: number;
   nights: number;
-  guests: number;
   lines: PriceLine[];
 }
 
 export function computePricing({
   basePriceMillimes,
   nights,
-  guests,
   lines,
 }: PricingArgs): ComputedPricing {
   const safeNights = nights > 0 ? nights : 0;
@@ -58,12 +52,7 @@ export function computePricing({
   const taxRate = taxLine ? Math.max(0, Math.min(100, taxLine.value)) / 100 : 0;
   const tax = Math.round(subtotal * taxRate);
 
-  const touristTax =
-    guests > 0 && safeNights > 0
-      ? guests * safeNights * TOURIST_TAX_PER_GUEST_PER_NIGHT_MILLIMES
-      : 0;
-
-  const total = subtotal + tax + touristTax;
+  const total = subtotal + tax;
 
   return {
     nightlyPrice,
@@ -73,7 +62,6 @@ export function computePricing({
     subtotal,
     tax,
     taxRate,
-    touristTax,
     total,
   };
 }

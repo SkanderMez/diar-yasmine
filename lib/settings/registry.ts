@@ -125,13 +125,6 @@ export const SETTING_REGISTRY = {
   // ---------------------------------------------------------------------------
   // Taxes & currency — Phase 8 settings page.
   // ---------------------------------------------------------------------------
-  "tax.stay_sejour_millimes": {
-    schema: z.number().int().min(0).max(100000),
-    default: 2330,
-    description:
-      "Tourist tax per guest, per night, in millimes (TND × 1000). 2330 = 2,330 TND.",
-    role: "ADMIN",
-  },
   "currency.primary": {
     schema: z.enum(["TND", "EUR", "USD"]),
     default: "TND" as const,

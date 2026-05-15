@@ -119,9 +119,8 @@ export function NewBookingClient({
       lines,
       basePriceMillimes: property.basePrice,
       nights,
-      guests: step2.adults + step2.children,
     });
-  }, [lines, nights, property, step2.adults, step2.children]);
+  }, [lines, nights, property]);
 
   const [pending, startTransition] = useTransition();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -387,7 +386,6 @@ export function NewBookingClient({
             <Step3Pricing
               basePriceMillimes={property.basePrice}
               nights={nights}
-              guests={step2.adults + step2.children}
               lines={lines}
               onLinesChange={setLines}
               onContinue={() => goTo("payment")}

@@ -4,6 +4,7 @@ import {
   getPropertyPriceRange,
   listFilterableAmenities,
   listPublicProperties,
+  type PublicPropertySort,
 } from "@/lib/queries";
 import { ListingPageHero } from "@/components/public/listings/listing-page-hero";
 import { FloatingFilterBar } from "@/components/public/listings/floating-filter-bar";
@@ -24,8 +25,14 @@ const SORT_OPTIONS = [
   { value: "price-asc", label: "Prix croissant" },
   { value: "price-desc", label: "Prix décroissant" },
   { value: "capacity", label: "Capacité" },
-  { value: "rating", label: "Mieux notés" },
 ];
+
+const SORT_VALUES = new Set(SORT_OPTIONS.map((o) => o.value));
+
+function parseSort(value: string | undefined): PublicPropertySort | undefined {
+  if (!value || !SORT_VALUES.has(value)) return undefined;
+  return value as PublicPropertySort;
+}
 
 export default async function ChaletsListingPage({
   params,
@@ -77,6 +84,7 @@ export default async function ChaletsListingPage({
       checkIn: sp.checkIn,
       checkOut: sp.checkOut,
       amenitySlugs,
+      sort: parseSort(sp.sort),
     }),
     listFilterableAmenities(),
     getPropertyPriceRange("CHALET"),
@@ -134,7 +142,6 @@ export default async function ChaletsListingPage({
               label={`chalet${chalets.length === 1 ? "" : "s"}`}
               dateLabel={dateLabel}
               sortOptions={SORT_OPTIONS}
-              view="grid"
             />
 
             {chalets.length === 0 ? (

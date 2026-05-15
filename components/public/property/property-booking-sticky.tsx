@@ -97,25 +97,21 @@ export function PropertyBookingSticky({
   }, [checkIn, checkOut]);
 
   /* Long-stay discount = 10 % for stays of 5 nights or more (matches the
-   * maquette callout). Tax-séjour estimated at 2.33 TND / guest / night
-   * — same as the maquette price-breakdown copy. */
+   * maquette callout). */
   const totals = useMemo(() => {
     if (!nights) return null;
     const stay = basePrice * nights;
     const longStayDiscount = nights >= 5 ? Math.round(stay * 0.1) : 0;
     const stayNet = stay - longStayDiscount;
-    const guests = adults + children;
-    const touristTaxMillimes = Math.round(guests * nights * 2330);
-    const subtotal = stayNet + cleaningFee + touristTaxMillimes;
+    const subtotal = stayNet + cleaningFee;
     const tax = Math.round(subtotal * taxRate);
     return {
       stay,
       longStayDiscount,
-      touristTax: touristTaxMillimes,
       tax,
       total: subtotal + tax,
     };
-  }, [nights, basePrice, cleaningFee, taxRate, adults, children]);
+  }, [nights, basePrice, cleaningFee, taxRate]);
 
   const guestsTotal = adults + children;
   const tooMany = guestsTotal > capacity;
@@ -298,10 +294,6 @@ export function PropertyBookingSticky({
           {cleaningFee > 0 && (
             <Row label="Frais de ménage" value={formatTND(cleaningFee)} />
           )}
-          <Row
-            label={`Taxe de séjour (${guestsTotal} voy × ${nights} × 2,33 TND)`}
-            value={formatTND(totals.touristTax)}
-          />
           <Row
             label={`Taxes (${Math.round(taxRate * 100)} %)`}
             value={formatTND(totals.tax)}
