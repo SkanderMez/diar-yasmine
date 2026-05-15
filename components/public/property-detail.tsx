@@ -34,6 +34,8 @@ interface PropertyDetailProps {
   similarProperties: PublicPropertyCard[];
   ratingSummary: { avg: number; count: number } | null;
   publishedReviews: PublishedReview[];
+  /** Booked half-open windows fetched server-side. */
+  unavailableRanges: { checkIn: string; checkOut: string }[];
 }
 
 const TAB_ITEMS = [
@@ -51,6 +53,21 @@ const TAB_ITEMS = [
  * equipements, disponibilites, localisation, avis, regles) and a sticky
  * booking widget on the right.
  */
+function expandRangesToDays(
+  ranges: { checkIn: string; checkOut: string }[],
+): Date[] {
+  const out: Date[] = [];
+  for (const r of ranges) {
+    let d = new Date(r.checkIn);
+    const end = new Date(r.checkOut);
+    while (d.getTime() < end.getTime()) {
+      out.push(new Date(d));
+      d = new Date(d.getTime() + 86400000);
+    }
+  }
+  return out;
+}
+
 function avatarToneFor(index: number): "primary" | "bougainvillier" | "olive" {
   const tones: ("primary" | "bougainvillier" | "olive")[] = [
     "primary",
@@ -73,6 +90,7 @@ export function PropertyDetail({
   similarProperties,
   ratingSummary,
   publishedReviews,
+  unavailableRanges,
 }: PropertyDetailProps) {
   const photos = property.photos.map((p) => ({ url: p.url, alt: p.alt }));
   const listingHref = property.type === "CHALET" ? "/chalets" : "/bungalows";
@@ -148,23 +166,33 @@ export function PropertyDetail({
         </h1>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.95rem] text-charcoal-soft">
-          <span className="inline-flex items-center gap-1.5">
-            <Star
-              className="size-4 text-gold"
-              fill="currentColor"
-              strokeWidth={0}
-            />
-            <strong className="font-semibold text-charcoal">4.92</strong>
-            <a href="#avis" className="text-charcoal underline">
-              127 avis
-            </a>
-          </span>
-          <span className="text-muted-foreground">·</span>
-          <span className="inline-flex items-center gap-1.5">
-            <Zap className="size-4" />
-            Coup de cœur
-          </span>
-          <span className="text-muted-foreground">·</span>
+          {ratingSummary ? (
+            <>
+              <span className="inline-flex items-center gap-1.5">
+                <Star
+                  className="size-4 text-gold"
+                  fill="currentColor"
+                  strokeWidth={0}
+                />
+                <strong className="font-semibold text-charcoal">
+                  {ratingSummary.avg.toFixed(2)}
+                </strong>
+                <a href="#avis" className="text-charcoal underline">
+                  {ratingSummary.count} avis
+                </a>
+              </span>
+              <span className="text-muted-foreground">·</span>
+            </>
+          ) : null}
+          {property.beachfront ? (
+            <>
+              <span className="inline-flex items-center gap-1.5">
+                <Zap className="size-4" />
+                Coup de cœur
+              </span>
+              <span className="text-muted-foreground">·</span>
+            </>
+          ) : null}
           <span className="inline-flex items-center gap-1.5">
             <MapPin className="size-4" />
             Tazarka Plage, Cap Bon
@@ -251,7 +279,9 @@ export function PropertyDetail({
               <p className="mb-6 mt-2 text-[1.05rem] text-charcoal-soft">
                 Sélectionnez vos dates pour voir le tarif exact.
               </p>
-              <PropertyMiniCalendar />
+              <PropertyMiniCalendar
+                unavailableDays={expandRangesToDays(unavailableRanges)}
+              />
               <p className="mt-6 text-sm text-muted-foreground">
                 Min. {property.minStay} nuit{property.minStay > 1 ? "s" : ""} ·
                 Annulation gratuite jusqu&apos;à 7 jours avant l&apos;arrivée.
@@ -434,7 +464,12 @@ export function PropertyDetail({
               cleaningFee={property.cleaningFee}
               capacity={property.capacity}
               taxRate={taxRate}
-              rating={{ score: 4.92, count: 127 }}
+              rating={
+                ratingSummary
+                  ? { score: ratingSummary.avg, count: ratingSummary.count }
+                  : null
+              }
+              unavailableRanges={unavailableRanges}
             />
           </aside>
         </div>

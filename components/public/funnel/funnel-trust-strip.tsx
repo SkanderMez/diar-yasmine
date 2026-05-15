@@ -1,4 +1,4 @@
-import { CalendarX, ShieldCheck, Star } from "lucide-react";
+import { CalendarX, ShieldCheck } from "lucide-react";
 
 /**
  * Maquette `.trust-strip` — three reassuring stats below the action footer.
@@ -13,16 +13,6 @@ export function FunnelTrustStrip() {
     {
       icon: <CalendarX className="size-4" />,
       label: "Annulation gratuite J-7",
-    },
-    {
-      icon: (
-        <Star
-          className="size-4 text-gold"
-          fill="currentColor"
-          strokeWidth={0}
-        />
-      ),
-      label: "4,9 / 5 sur 127 séjours",
     },
   ];
 

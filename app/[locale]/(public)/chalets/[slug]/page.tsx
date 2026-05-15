@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
+import { addMonths } from "date-fns";
 import {
   findPublicProperty,
   getPropertyRatingSummary,
   listPublicProperties,
   listPublishedReviewsForProperty,
+  listReservedRangesForProperty,
 } from "@/lib/queries";
 import { getSetting } from "@/lib/settings";
 import { PropertyDetail } from "@/components/public/property-detail";
@@ -39,10 +41,14 @@ export default async function ChaletDetailPage({
   ]);
   if (!property || property.type !== "CHALET") notFound();
 
-  const [ratingSummary, publishedReviews] = await Promise.all([
-    getPropertyRatingSummary(property.id),
-    listPublishedReviewsForProperty(property.id, 6),
-  ]);
+  const now = new Date();
+  const availabilityHorizon = addMonths(now, 18);
+  const [ratingSummary, publishedReviews, unavailableRanges] =
+    await Promise.all([
+      getPropertyRatingSummary(property.id),
+      listPublishedReviewsForProperty(property.id, 6),
+      listReservedRangesForProperty(property.id, now, availabilityHorizon),
+    ]);
 
   const similarProperties = allChalets
     .filter((p) => p.id !== property.id)
@@ -55,6 +61,7 @@ export default async function ChaletDetailPage({
       similarProperties={similarProperties}
       ratingSummary={ratingSummary}
       publishedReviews={publishedReviews}
+      unavailableRanges={unavailableRanges}
     />
   );
 }

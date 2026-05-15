@@ -27,8 +27,12 @@ interface PropertyBookingStickyProps {
   capacity: number;
   /** Tax rate as a 0-1 decimal (e.g. 0.19). */
   taxRate: number;
-  /** Placeholder rating shown beside the price. */
-  rating?: { score: number; count: number };
+  /** Published-review aggregate shown beside the price. Null until the
+   *  property has at least one moderated review. */
+  rating?: { score: number; count: number } | null;
+  /** Booked half-open windows fetched server-side. The DateRangePicker
+   *  strikes these through and blocks selection across them. */
+  unavailableRanges?: { checkIn: string; checkOut: string }[];
 }
 
 /**
@@ -47,6 +51,7 @@ export function PropertyBookingSticky({
   capacity,
   taxRate,
   rating,
+  unavailableRanges,
 }: PropertyBookingStickyProps) {
   const router = useRouter();
   const [checkIn, setCheckIn] = useState("");
@@ -170,6 +175,7 @@ export function PropertyBookingSticky({
           <DateRangePicker
             checkIn={checkIn}
             checkOut={checkOut}
+            unavailableRanges={unavailableRanges}
             onChange={(r) => {
               setCheckIn(r.checkIn);
               setCheckOut(r.checkOut);

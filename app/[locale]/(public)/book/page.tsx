@@ -7,6 +7,7 @@ import { FunnelClient } from "@/components/public/funnel/funnel-client";
 import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
 import { findConflicts } from "@/lib/availability";
+import { getPropertyRatingSummary } from "@/lib/queries";
 import { parseLocalDate, nightsBetween } from "@/lib/date";
 
 export const metadata: Metadata = { title: "Réserver" };
@@ -128,7 +129,10 @@ export default async function BookPage({
     );
   }
 
-  const taxRate = await getSetting("tax.rate");
+  const [taxRate, ratingSummary] = await Promise.all([
+    getSetting("tax.rate"),
+    getPropertyRatingSummary(property.id),
+  ]);
 
   return (
     <main className="flex-1 bg-sand pt-24">
@@ -151,6 +155,7 @@ export default async function BookPage({
         childrenCount={children}
         taxRate={taxRate}
         promoCode={promo}
+        rating={ratingSummary}
       />
     </main>
   );

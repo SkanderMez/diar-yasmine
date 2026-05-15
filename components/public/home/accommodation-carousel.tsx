@@ -15,20 +15,6 @@ interface PropertyTeaserCardProps {
   property: PublicPropertyCard;
 }
 
-/**
- * Mock rating until reviews land — UI placeholder, never persisted.
- * Stable per-property so cards don't shuffle on re-render.
- */
-function teaserRating(id: string): { score: string; count: number } {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  }
-  const score = (4.7 + (hash % 4) * 0.1).toFixed(1);
-  const count = 50 + (hash % 120);
-  return { score, count };
-}
-
 function PropertyTeaserCard({ property }: PropertyTeaserCardProps) {
   const [saved, setSaved] = useState(false);
   const photo = property.photos[0];
@@ -69,7 +55,7 @@ function PropertyTeaserCard({ property }: PropertyTeaserCardProps) {
     ? tnd.toLocaleString("fr-FR")
     : tnd.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
 
-  const rating = teaserRating(property.id);
+  const rating = property.rating;
 
   const metaParts: string[] = [
     typeLabel,
@@ -161,11 +147,17 @@ function PropertyTeaserCard({ property }: PropertyTeaserCardProps) {
                 TND / nuit
               </span>
             </div>
-            <div className="flex items-center gap-1 text-[0.85rem] text-foreground">
-              <Star className="size-3.5 fill-gold stroke-gold" />
-              {rating.score}
-              <span className="text-muted-foreground">({rating.count})</span>
-            </div>
+            {rating ? (
+              <div className="flex items-center gap-1 text-[0.85rem] text-foreground">
+                <Star className="size-3.5 fill-gold stroke-gold" />
+                {rating.avg.toFixed(1)}
+                <span className="text-muted-foreground">({rating.count})</span>
+              </div>
+            ) : (
+              <span className="text-[0.78rem] text-muted-foreground">
+                Nouveau
+              </span>
+            )}
           </div>
         </div>
       </Link>

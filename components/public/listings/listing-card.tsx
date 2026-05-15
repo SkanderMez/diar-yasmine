@@ -9,21 +9,6 @@ interface ListingCardProps {
 }
 
 /**
- * Stable placeholder rating until reviews land — derived from the property
- * id so cards don't shuffle on re-render and so each property has a
- * consistent score / count between SSR and hydration.
- */
-function stableRating(id: string): { score: string; count: number } {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  }
-  const score = (4.7 + (hash % 4) * 0.1).toFixed(1);
-  const count = 50 + (hash % 120);
-  return { score, count };
-}
-
-/**
  * Maquette `.card` — beachfront badge / heart button / "+N photos" pill on
  * the photo, badges row + title + meta + price/rating row below. The hover
  * lift and the image scale-up are driven by the outer `group` so the entire
@@ -43,7 +28,7 @@ export function ListingCard({ property }: ListingCardProps) {
     ? tnd.toLocaleString("fr-FR")
     : tnd.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
 
-  const rating = stableRating(property.id);
+  const rating = property.rating;
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-line-soft bg-card transition-all duration-300 hover:-translate-y-1 hover:border-line hover:shadow-lg">
@@ -119,15 +104,21 @@ export function ListingCard({ property }: ListingCardProps) {
               TND / nuit
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[0.85rem] text-foreground">
-            <Star
-              className="size-3.5 text-gold"
-              fill="currentColor"
-              strokeWidth={0}
-            />
-            <span>{rating.score}</span>
-            <span className="text-muted-foreground">({rating.count})</span>
-          </div>
+          {rating ? (
+            <div className="flex items-center gap-1 text-[0.85rem] text-foreground">
+              <Star
+                className="size-3.5 text-gold"
+                fill="currentColor"
+                strokeWidth={0}
+              />
+              <span>{rating.avg.toFixed(1)}</span>
+              <span className="text-muted-foreground">({rating.count})</span>
+            </div>
+          ) : (
+            <span className="text-[0.78rem] text-muted-foreground">
+              Nouveau
+            </span>
+          )}
         </div>
       </div>
     </article>

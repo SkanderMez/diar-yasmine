@@ -2,14 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Calendar,
-  ChevronDown,
-  Minus,
-  Plus,
-  Search,
-  Users,
-} from "lucide-react";
+import { ChevronDown, Minus, Plus, Search, Users } from "lucide-react";
 import { DateRangePicker } from "@/components/public/date-range-picker";
 import { cn } from "@/lib/utils";
 
@@ -96,21 +89,17 @@ export function FloatingFilterBar({
           "grid grid-cols-1 gap-2 md:grid-cols-2 lg:[grid-template-columns:1.4fr_1.2fr_1fr_1fr_1fr_auto]",
         )}
       >
-        <FieldWrapper>
-          <span className="mb-[2px] block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            <Calendar className="mr-1 inline size-3" /> Dates
-          </span>
-          <div className="mt-0.5">
-            <DateRangePicker
-              checkIn={checkIn}
-              checkOut={checkOut}
-              onChange={(r) => {
-                setCheckIn(r.checkIn);
-                setCheckOut(r.checkOut);
-              }}
-            />
-          </div>
-        </FieldWrapper>
+        <div className="filter-bar-date-wrap">
+          <DateRangePicker
+            variant="compact"
+            checkIn={checkIn}
+            checkOut={checkOut}
+            onChange={(r) => {
+              setCheckIn(r.checkIn);
+              setCheckOut(r.checkOut);
+            }}
+          />
+        </div>
 
         <GuestsField guests={guests} onChange={setGuests} />
 

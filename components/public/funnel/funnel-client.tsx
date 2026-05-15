@@ -42,6 +42,8 @@ interface FunnelClientProps {
   taxRate: number;
   /** Default promo from search params (not yet validated server-side). */
   promoCode?: string;
+  /** Published-review aggregate. Null when the property has none yet. */
+  rating?: { avg: number; count: number } | null;
 }
 
 /**
@@ -62,6 +64,7 @@ export function FunnelClient({
   childrenCount,
   taxRate,
   promoCode,
+  rating,
 }: FunnelClientProps) {
   const router = useRouter();
   // The funnel currently lives at step 2 — step 1 is summarised on top, step
@@ -245,7 +248,9 @@ export function FunnelClient({
             basePrice={property.basePrice}
             cleaningFee={property.cleaningFee}
             taxRate={taxRate}
-            rating={{ score: 4.92, count: 127 }}
+            rating={
+              rating ? { score: rating.avg, count: rating.count } : undefined
+            }
             onPromoApply={async (code) => {
               try {
                 const res = await previewPromoCode({

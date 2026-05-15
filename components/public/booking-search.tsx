@@ -85,24 +85,22 @@ export function BookingSearch() {
     TYPE_OPTIONS.find((o) => o.value === type) ?? TYPE_OPTIONS[0]!;
 
   return (
-    <div className="rounded-2xl bg-white p-1.5 shadow-2xl">
-      <div className="grid grid-cols-1 items-stretch gap-0.5 sm:grid-cols-[1.4fr_minmax(0,2fr)_1fr_auto]">
-        {/* Hébergement — custom popover select */}
+    <div className="booking-pill">
+      <div className="booking-pill-inner">
         <TypeSelect value={type} activeOption={activeType} onChange={setType} />
+        <span aria-hidden className="booking-pill-divider" />
 
-        {/* Dates */}
-        <div className="px-1">
-          <DateRangePicker
-            checkIn={checkIn}
-            checkOut={checkOut}
-            onChange={(r) => {
-              setCheckIn(r.checkIn);
-              setCheckOut(r.checkOut);
-            }}
-          />
-        </div>
+        <DateRangePicker
+          variant="compact"
+          checkIn={checkIn}
+          checkOut={checkOut}
+          onChange={(r) => {
+            setCheckIn(r.checkIn);
+            setCheckOut(r.checkOut);
+          }}
+        />
+        <span aria-hidden className="booking-pill-divider" />
 
-        {/* Voyageurs — portaled centered popover */}
         <GuestsPopover
           adults={adults}
           childrenCount={childrenCount}
@@ -111,14 +109,13 @@ export function BookingSearch() {
           summary={guestsLabel}
         />
 
-        {/* Search CTA */}
         <button
           type="button"
           onClick={submit}
-          className="my-1 mx-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-7 text-sm font-medium text-ivory shadow-sm transition-all hover:-translate-y-px hover:bg-bougainvillier hover:shadow-md sm:my-0"
+          aria-label="Rechercher"
+          className="booking-pill-cta"
         >
-          <Search className="size-4" />
-          <span>Rechercher</span>
+          <Search className="size-[18px]" strokeWidth={2.25} />
         </button>
       </div>
     </div>
@@ -202,22 +199,15 @@ function TypeSelect({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className={cn(
-          "flex w-full cursor-pointer items-center justify-between rounded-xl px-4 py-3 text-left transition-colors hover:bg-sand",
-          open && "bg-sand",
-        )}
+        className={cn("booking-pill-cell booking-pill-trigger", open && "open")}
       >
         <div className="min-w-0 flex-1">
-          <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            Hébergement
-          </span>
-          <span className="mt-0.5 block truncate text-[15px] font-medium text-charcoal">
-            {activeOption.label}
-          </span>
+          <span className="booking-pill-label">Hébergement</span>
+          <span className="booking-pill-value">{activeOption.label}</span>
         </div>
         <ChevronDown
           className={cn(
-            "ml-2 size-4 shrink-0 text-muted-foreground transition-transform",
+            "ml-2 size-3.5 shrink-0 text-muted-foreground transition-transform",
             open && "rotate-180",
           )}
         />
@@ -330,14 +320,13 @@ function GuestsPopover({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="block w-full rounded-xl px-4 py-3 text-left transition-colors hover:bg-sand"
+        className="booking-pill-cell booking-pill-trigger"
       >
-        <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          <Users className="mr-1 inline size-3" /> Voyageurs
+        <span className="booking-pill-label">
+          <Users className="mr-1 inline size-3" />
+          Voyageurs
         </span>
-        <span className="mt-0.5 block text-[15px] font-medium text-charcoal">
-          {summary}
-        </span>
+        <span className="booking-pill-value">{summary}</span>
       </button>
 
       {open &&

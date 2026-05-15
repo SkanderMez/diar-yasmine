@@ -427,7 +427,7 @@ export async function listPublicProperties(
     }
   })();
 
-  return prisma.property.findMany({
+  const properties = await prisma.property.findMany({
     where: {
       deletedAt: null,
       status: "ACTIVE",
@@ -478,6 +478,28 @@ export async function listPublicProperties(
     },
     orderBy,
   });
+
+  // Group rating aggregates in one round-trip rather than one query per card.
+  const ratings = await prisma.review.groupBy({
+    by: ["propertyId"],
+    where: {
+      status: "PUBLISHED",
+      propertyId: { in: properties.map((p) => p.id) },
+    },
+    _avg: { rating: true },
+    _count: { _all: true },
+  });
+  const ratingByProp = new Map(
+    ratings.map((r) => [
+      r.propertyId,
+      { avg: Number(r._avg.rating ?? 0), count: r._count._all },
+    ]),
+  );
+
+  return properties.map((p) => ({
+    ...p,
+    rating: ratingByProp.get(p.id) ?? null,
+  }));
 }
 
 export type PublicPropertyCard = Awaited<
@@ -518,6 +540,34 @@ export async function findPublicProperty(slug: string) {
 export type PublicPropertyDetail = NonNullable<
   Awaited<ReturnType<typeof findPublicProperty>>
 >;
+
+/**
+ * Returns the booked half-open intervals for a property within
+ * `[from, until]`. Used to strike through unavailable nights in the
+ * public DateRangePicker + mini-calendar. Cancelled / no-show stays are
+ * treated as free.
+ */
+export async function listReservedRangesForProperty(
+  propertyId: string,
+  from: Date,
+  until: Date,
+): Promise<{ checkIn: string; checkOut: string }[]> {
+  const rows = await prisma.reservation.findMany({
+    where: {
+      propertyId,
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { lt: until },
+      checkOut: { gt: from },
+    },
+    select: { checkIn: true, checkOut: true },
+    orderBy: { checkIn: "asc" },
+  });
+  return rows.map((r) => ({
+    checkIn: r.checkIn.toISOString(),
+    checkOut: r.checkOut.toISOString(),
+  }));
+}
 
 /**
  * Payments listing for /admin/payments — paginated, filtered by date
