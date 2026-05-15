@@ -30,8 +30,11 @@ import type {
   ClientPreference,
   ClientStats,
   ClientStayHistory,
+  InternalNoteEntry,
 } from "@/lib/queries";
+import { InternalNotesThread } from "../reservation-detail/internal-notes-thread";
 import { channelKeyFromSource } from "@/components/admin/calendar/types";
+import { VipTagsEditor } from "./vip-tags-editor";
 
 interface ClientDetailProps {
   guest: Guest;
@@ -39,6 +42,7 @@ interface ClientDetailProps {
   reservations: ClientStayHistory[];
   preferences: ClientPreference[];
   documents: ClientDocuments;
+  internalNotes: InternalNoteEntry[];
 }
 
 const SOURCE_LABEL: Record<ReservationSource, string> = {
@@ -125,6 +129,7 @@ export function ClientDetail({
   reservations,
   preferences,
   documents,
+  internalNotes,
 }: ClientDetailProps) {
   const fullName = `${guest.firstName} ${guest.lastName}`.trim();
   const initials = avatarInitials(guest.firstName, guest.lastName);
@@ -175,6 +180,11 @@ export function ClientDetail({
                 <span className="tag tag-confirmed">Client fidèle</span>
               ) : null}
             </div>
+            <VipTagsEditor
+              guestId={guest.id}
+              initialIsVip={guest.isVip}
+              initialTags={guest.tags}
+            />
             <div className="contact-line">
               {guest.email ? (
                 <div>
@@ -379,6 +389,12 @@ export function ClientDetail({
             </div>
           </div>
         </section>
+
+        <InternalNotesThread
+          scope={{ guestId: guest.id }}
+          initial={internalNotes}
+          title="Notes voyageur"
+        />
       </div>
     </>
   );

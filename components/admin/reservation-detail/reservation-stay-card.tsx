@@ -73,7 +73,21 @@ export function ReservationStayCard({ reservation }: ReservationStayCardProps) {
             <span className="reservation-stay-value reservation-stay-client">
               <span className="reservation-stay-client-name">
                 {reservation.guest.firstName} {reservation.guest.lastName}
+                {reservation.guest.isVip && (
+                  <span className="vip-badge" title="Voyageur VIP">
+                    ★ VIP
+                  </span>
+                )}
               </span>
+              {reservation.guest.tags.length > 0 && (
+                <span className="reservation-stay-client-tags">
+                  {reservation.guest.tags.map((t) => (
+                    <span key={t} className="guest-tag-chip">
+                      {t}
+                    </span>
+                  ))}
+                </span>
+              )}
               <span className="reservation-stay-client-contact">
                 <a
                   href={`tel:${reservation.guest.phone}`}

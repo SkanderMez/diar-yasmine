@@ -5006,3 +5006,196 @@ html:has([data-admin-shell]) {
   text-align: center;
   color: var(--text-muted);
 }
+
+/* ==========================================================================
+   INTERNAL NOTES — threaded log on reservation + client detail
+   ========================================================================== */
+[data-admin-shell] .internal-notes-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+[data-admin-shell] .internal-notes-empty {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  margin: 0 0 4px;
+  padding: 12px;
+  border-radius: 6px;
+  background: var(--bg-surface-2);
+}
+[data-admin-shell] .internal-notes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+[data-admin-shell] .internal-note-item {
+  background: var(--bg-surface-2);
+  border-left: 3px solid var(--primary);
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+[data-admin-shell] .internal-note-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+[data-admin-shell] .internal-note-author {
+  font-weight: 600;
+  color: var(--text);
+}
+[data-admin-shell] .internal-note-category {
+  background: var(--bg-app);
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.65rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+[data-admin-shell] .internal-note-delete {
+  margin-left: auto;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+}
+[data-admin-shell] .internal-note-delete:hover {
+  color: var(--rose, #d35d6e);
+}
+[data-admin-shell] .internal-note-body {
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+}
+[data-admin-shell] .internal-note-form {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+[data-admin-shell] .internal-note-form textarea {
+  width: 100%;
+}
+[data-admin-shell] .internal-note-form-foot {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+[data-admin-shell] .internal-note-category-input {
+  flex: 1;
+  min-width: 0;
+}
+[data-admin-shell] .internal-notes-counter {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   GUEST VIP + TAGS — editor on client detail + chips elsewhere
+   ========================================================================== */
+[data-admin-shell] .vip-tags-editor {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+[data-admin-shell] .vip-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+[data-admin-shell] .vip-toggle:hover {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+[data-admin-shell] .vip-toggle.active {
+  background: rgba(224, 176, 116, 0.15);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+[data-admin-shell] .guest-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+[data-admin-shell] .guest-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--text);
+}
+[data-admin-shell] .guest-tag-chip.removable button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: inline-flex;
+}
+[data-admin-shell] .guest-tag-chip.removable button:hover {
+  color: var(--rose, #d35d6e);
+}
+[data-admin-shell] .guest-tag-add-form input {
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--text);
+  outline: none;
+  min-width: 120px;
+}
+[data-admin-shell] .guest-tag-add-form input:focus {
+  border-color: var(--primary);
+  border-style: solid;
+}
+[data-admin-shell] .vip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(224, 176, 116, 0.18);
+  color: var(--warning);
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-left: 8px;
+  letter-spacing: 0.04em;
+}
+[data-admin-shell] .reservation-stay-client-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}

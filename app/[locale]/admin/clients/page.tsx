@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import {
   findAdminClient,
   listAdminClients,
+  listInternalNotesForGuest,
   type ClientSegment,
 } from "@/lib/queries";
 import { ClientsClient } from "@/components/admin/clients/clients-client";
@@ -47,6 +48,10 @@ export default async function AdminClientsPage({
     selectedId ? findAdminClient(selectedId) : Promise.resolve(null),
   ]);
 
+  const selectedNotes = selected
+    ? await listInternalNotesForGuest(selected.guest.id)
+    : [];
+
   return (
     <>
       <div className="page-head">
@@ -89,6 +94,7 @@ export default async function AdminClientsPage({
               reservations={selected.reservations}
               preferences={selected.preferences}
               documents={selected.documents}
+              internalNotes={selectedNotes}
             />
           ) : (
             <ClientEmptyState />

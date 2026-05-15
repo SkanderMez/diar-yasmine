@@ -1,11 +1,15 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { findReservationByCode } from "@/lib/queries";
+import {
+  findReservationByCode,
+  listInternalNotesForReservation,
+} from "@/lib/queries";
 import { ReservationPageHead } from "@/components/admin/reservation-detail/reservation-page-head";
 import { ReservationStayCard } from "@/components/admin/reservation-detail/reservation-stay-card";
 import { ReservationTariffCard } from "@/components/admin/reservation-detail/reservation-tariff-card";
 import { ReservationPaymentsCard } from "@/components/admin/reservation-detail/reservation-payments-card";
 import { ReservationNotesCard } from "@/components/admin/reservation-detail/reservation-notes-card";
+import { InternalNotesThread } from "@/components/admin/reservation-detail/internal-notes-thread";
 import { ReservationActivityCard } from "@/components/admin/reservation-detail/reservation-activity-card";
 import { ReservationActions } from "@/components/admin/reservation-detail/reservation-actions";
 
@@ -21,6 +25,7 @@ export default async function ReservationDetailPage({
   if (!data) notFound();
 
   const { reservation, audit } = data;
+  const internalNotes = await listInternalNotesForReservation(reservation.id);
 
   return (
     <>
@@ -43,6 +48,10 @@ export default async function ReservationDetailPage({
           <ReservationNotesCard
             reservationId={reservation.id}
             initialNotes={reservation.internalNotes}
+          />
+          <InternalNotesThread
+            scope={{ reservationId: reservation.id }}
+            initial={internalNotes}
           />
         </div>
 

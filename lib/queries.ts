@@ -150,6 +150,42 @@ export type ReservationDetail = NonNullable<
 >;
 
 /**
+ * InternalNote thread for a reservation OR a guest. Returns oldest-first
+ * so the UI can render a normal top-down log.
+ */
+export async function listInternalNotesForReservation(reservationId: string) {
+  return prisma.internalNote.findMany({
+    where: { reservationId },
+    select: {
+      id: true,
+      body: true,
+      category: true,
+      createdAt: true,
+      author: { select: { id: true, name: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+export type InternalNoteEntry = Awaited<
+  ReturnType<typeof listInternalNotesForReservation>
+>[number];
+
+export async function listInternalNotesForGuest(guestId: string) {
+  return prisma.internalNote.findMany({
+    where: { guestId },
+    select: {
+      id: true,
+      body: true,
+      category: true,
+      createdAt: true,
+      author: { select: { id: true, name: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+/**
  * Reviews queries — used by the admin moderation queue and the public
  * property fiche. Published reviews surface on /chalets/[slug] and
  * /bungalows/[slug]; PENDING land in /admin/reviews.
@@ -1000,6 +1036,7 @@ export interface ClientListItem {
   lastName: string;
   country: string | null;
   isVip: boolean;
+  tags: string[];
   staysCount: number;
   /**
    * Free-form short subtitle line shown in the master list. Computed from
@@ -1017,15 +1054,6 @@ export interface ClientListKpis {
 interface ListAdminClientsOpts {
   search?: string;
   segment?: ClientSegment;
-}
-
-/**
- * Demo helper — every guest is considered non-VIP until Phase D introduces
- * the `isVip` column. Centralised so the entire CRM page treats VIP-ness
- * consistently.
- */
-function demoIsVipForGuest(_guestId: string): boolean {
-  return false;
 }
 
 function thirtyDaysAgoUtc(): Date {
@@ -1083,6 +1111,8 @@ export async function listAdminClients(
         lastName: true,
         country: true,
         createdAt: true,
+        isVip: true,
+        tags: true,
         reservations: {
           where: { deletedAt: null },
           orderBy: { checkIn: "desc" },
@@ -1159,7 +1189,8 @@ export async function listAdminClients(
       firstName: g.firstName,
       lastName: g.lastName,
       country: g.country,
-      isVip: demoIsVipForGuest(g.id),
+      isVip: g.isVip,
+      tags: g.tags,
       staysCount: g._count.reservations,
       lastActivity,
     };
@@ -1318,7 +1349,7 @@ export async function findAdminClient(id: string) {
     avgBasket,
     avgRating: 4.8,
     reviewsCount: Math.max(0, staysCount - upcomingCount),
-    isVip: demoIsVipForGuest(guest.id),
+    isVip: guest.isVip,
   };
 
   const preferences = demoPreferencesFor(guest.id);
