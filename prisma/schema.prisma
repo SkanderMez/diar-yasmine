@@ -123,10 +123,14 @@ model User {
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  createdReservations Reservation[] @relation("CreatedBy")
-  receivedPayments    Payment[]     @relation("ReceivedBy")
+  createdReservations Reservation[]   @relation("CreatedBy")
+  receivedPayments    Payment[]       @relation("ReceivedBy")
   auditLogs           AuditLog[]
   settingsUpdated     Setting[]
+  moderatedReviews    Review[]        @relation("ReviewModeratedBy")
+  notesAuthored       InternalNote[]
+  documentsUploaded   GuestDocument[]
+  promoCodesCreated   PromoCode[]
 
   @@index([role])
 }
@@ -146,6 +150,14 @@ model Guest {
   idDocument String?
   notes      String?
 
+  /// Flagged VIP — surfaced as a badge on the reservation calendar and
+  /// the reservation detail. Used to fast-track service.
+  isVip Boolean @default(false)
+
+  /// Free-form admin tags (e.g. "Allergie chat", "Famille fidèle",
+  /// "Anniversaire en mai"). Indexed for fuzzy admin search.
+  tags String[] @default([])
+
   // Auth fields — all null until the guest creates an account.
   // The upgrade flow uses OTP SMS on the registered phone (see CLAUDE.md).
   hashedPassword   String?
@@ -158,12 +170,16 @@ model Guest {
   updatedAt DateTime  @updatedAt @db.Timestamptz(3)
   deletedAt DateTime? @db.Timestamptz(3)
 
-  reservations Reservation[]
+  reservations  Reservation[]
+  reviews       Review[]
+  documents     GuestDocument[]
+  internalNotes InternalNote[]
 
   @@index([phone])
   @@index([email])
   @@index([accountCreatedAt])
   @@index([deletedAt])
+  @@index([isVip])
 }
 
 // =============================================================================
@@ -202,6 +218,7 @@ model Property {
   priceRules   PriceRule[]
   reservations Reservation[]
   channelSyncs ChannelSync[]
+  reviews      Review[]
 
   @@index([type, status])
   @@index([deletedAt])
@@ -333,10 +350,13 @@ model Reservation {
   updatedAt DateTime  @updatedAt @db.Timestamptz(3)
   deletedAt DateTime? @db.Timestamptz(3)
 
-  property  Property  @relation(fields: [propertyId], references: [id])
-  guest     Guest     @relation(fields: [guestId], references: [id])
-  createdBy User?     @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  payments  Payment[]
+  property            Property         @relation(fields: [propertyId], references: [id])
+  guest               Guest            @relation(fields: [guestId], references: [id])
+  createdBy           User?            @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  payments            Payment[]
+  review              Review?
+  internalNoteEntries InternalNote[]
+  promoRedemption     PromoRedemption?
 
   @@index([propertyId, checkIn, checkOut])
   @@index([guestId])
@@ -459,4 +479,206 @@ model Setting {
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 
   updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+}
+
+// =============================================================================
+// REVIEWS — guest-submitted post-stay, admin-moderated, OTA imports
+// =============================================================================
+
+enum ReviewStatus {
+  PENDING // submitted, awaiting admin moderation
+  PUBLISHED // visible on the property fiche
+  REJECTED // moderated out (spam, abusive, off-topic)
+}
+
+enum ReviewSource {
+  DIRECT // public /review/[code] submission
+  BOOKING
+  AIRBNB
+  EXPEDIA
+  MANUAL // typed in by admin
+}
+
+model Review {
+  id            String       @id @default(cuid())
+  reservationId String?      @unique
+  propertyId    String
+  guestId       String?
+  /// 1-5 stars (inclusive).
+  rating        Int
+  /// Optional free-text in the guest's locale.
+  comment       String?      @db.Text
+  /// FR/EN/AR — used to filter display on the property fiche.
+  locale        String       @default("fr")
+  source        ReviewSource @default(DIRECT)
+  status        ReviewStatus @default(PENDING)
+  /// Optional reply from the host shown beneath the review.
+  hostReply     String?      @db.Text
+  hostReplyAt   DateTime?    @db.Timestamptz(3)
+  moderatedById String?
+  moderatedAt   DateTime?    @db.Timestamptz(3)
+  publishedAt   DateTime?    @db.Timestamptz(3)
+  /// IP of the public submitter — kept for rate-limit / abuse forensics.
+  submitterIp   String?
+  /// External review ID (Booking/Airbnb) for import dedup.
+  externalId    String?
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  property    Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  guest       Guest?       @relation(fields: [guestId], references: [id], onDelete: SetNull)
+  moderatedBy User?        @relation("ReviewModeratedBy", fields: [moderatedById], references: [id], onDelete: SetNull)
+
+  @@index([propertyId, status, publishedAt])
+  @@index([status, createdAt])
+  @@index([source, externalId])
+}
+
+// =============================================================================
+// INTERNAL NOTES — admin-only annotations on a reservation or guest
+// =============================================================================
+
+model InternalNote {
+  id            String   @id @default(cuid())
+  /// Either reservationId OR guestId must be set (or both — a note on
+  /// a guest stays visible across all their reservations too).
+  reservationId String?
+  guestId       String?
+  authorId      String?
+  body          String   @db.Text
+  /// Optional category for filtering ("alerte", "préférence", "incident").
+  category      String?
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
+
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  guest       Guest?       @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  author      User?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([reservationId, createdAt])
+  @@index([guestId, createdAt])
+}
+
+// =============================================================================
+// GUEST DOCUMENTS — ID scans uploaded to Supabase Storage
+// =============================================================================
+
+enum GuestDocumentKind {
+  ID_CARD
+  PASSPORT
+  DRIVING_LICENSE
+  OTHER
+}
+
+model GuestDocument {
+  id           String            @id @default(cuid())
+  guestId      String
+  kind         GuestDocumentKind @default(ID_CARD)
+  /// Storage key within the private `guest-docs` Supabase bucket.
+  /// Signed URLs are minted on-demand by lib/storage.
+  storageKey   String
+  mimeType     String
+  /// Original filename uploaded by the staff (for display only).
+  filename     String
+  /// Bytes — surfaced in the admin UI.
+  sizeBytes    Int
+  /// Document number (passport #, ID #) typed by the receptionist.
+  docNumber    String?
+  /// Expiration date of the document (optional).
+  expiresAt    DateTime?         @db.Date
+  notes        String?
+  uploadedById String?
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  guest      Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  uploadedBy User? @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([guestId, createdAt])
+}
+
+// =============================================================================
+// PROMO CODES — promotional discounts applied in the funnel and admin wizard
+// =============================================================================
+
+enum PromoCodeKind {
+  PERCENT // value = percent 0-100
+  FIXED // value = millimes off
+}
+
+model PromoCode {
+  id           String        @id @default(cuid())
+  /// Uppercase code (e.g. "ETE2026") — unique across the catalog.
+  code         String        @unique
+  /// Optional human-friendly label for the admin list ("Soldes été 2026").
+  label        String?
+  kind         PromoCodeKind @default(PERCENT)
+  /// For PERCENT: 0-100. For FIXED: millimes.
+  value        Int
+  /// Minimum stay (nights) before the code can be applied. 0 = no minimum.
+  minNights    Int           @default(0)
+  /// Restrict to a specific property type. Null = both.
+  propertyType PropertyType?
+  /// Total redemption cap. 0 = unlimited.
+  maxUses      Int           @default(0)
+  /// Counter incremented on each successful application.
+  usedCount    Int           @default(0)
+  /// Validity window — both inclusive.
+  validFrom    DateTime?     @db.Date
+  validTo      DateTime?     @db.Date
+  active       Boolean       @default(true)
+  createdById  String?
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  createdBy   User?             @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  redemptions PromoRedemption[]
+
+  @@index([active, validFrom, validTo])
+}
+
+/// One row per Reservation that consumed a PromoCode. Keeps audit clean
+/// and lets us decrement `usedCount` safely on cancellation.
+model PromoRedemption {
+  id            String   @id @default(cuid())
+  promoCodeId   String
+  reservationId String   @unique
+  /// Millimes actually discounted at the moment of application.
+  amountApplied Int
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  promoCode   PromoCode   @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([promoCodeId, createdAt])
+}
+
+// =============================================================================
+// PRICING SUPPLEMENTS — reusable admin catalog of extras (cleaning, padel, …)
+// =============================================================================
+
+model PricingSupplement {
+  id            String  @id @default(cuid())
+  /// Stable slug ("cleaning-final", "padel-session") for code-level refs.
+  slug          String  @unique
+  labelFr       String
+  labelEn       String?
+  labelAr       String?
+  /// Default price in millimes. Receptionists can override per reservation.
+  priceMillimes Int
+  /// Free-form category for grouping in the picker ("Services", "Loisirs").
+  category      String?
+  /// Optional lucide icon name for the picker.
+  icon          String?
+  sortOrder     Int     @default(100)
+  active        Boolean @default(true)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([active, sortOrder])
 }
