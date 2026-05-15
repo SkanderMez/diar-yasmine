@@ -996,13 +996,13 @@ html:has([data-admin-shell]) {
   background: rgba(127, 127, 127, 0.04);
 }
 [data-theme="light"] [data-admin-shell] .cal-day.weekend {
-  background: rgba(122, 143, 107, 0.06);
+  background: rgba(122, 143, 107, 0.14);
 }
 [data-admin-shell] .cal-day.today {
   background: rgba(79, 184, 196, 0.1);
 }
 [data-theme="light"] [data-admin-shell] .cal-day.today {
-  background: rgba(14, 90, 107, 0.08);
+  background: rgba(14, 90, 107, 0.18);
 }
 [data-admin-shell] .cal-day.today .dnum {
   color: var(--primary);
@@ -1109,7 +1109,7 @@ html:has([data-admin-shell]) {
   background: rgba(127, 127, 127, 0.04);
 }
 [data-theme="light"] [data-admin-shell] .booking-row .cells .cell.weekend {
-  background: rgba(122, 143, 107, 0.06);
+  background: rgba(122, 143, 107, 0.14);
 }
 /* Subtle today-column tint that only shows in empty cells (any booking
  * bar drawn over it covers the tint with its own background). Avoids the
@@ -1118,7 +1118,7 @@ html:has([data-admin-shell]) {
   background: rgba(79, 184, 196, 0.12);
 }
 [data-theme="light"] [data-admin-shell] .booking-row .cells .cell.today {
-  background: rgba(14, 90, 107, 0.08);
+  background: rgba(14, 90, 107, 0.18);
 }
 [data-admin-shell] .booking-row .cells .cell.is-empty {
   cursor: cell;
@@ -1126,8 +1126,18 @@ html:has([data-admin-shell]) {
 [data-admin-shell] .booking-row .cells .cell.is-empty:hover {
   background: rgba(79, 184, 196, 0.08);
 }
+[data-theme="light"]
+  [data-admin-shell]
+  .booking-row
+  .cells
+  .cell.is-empty:hover {
+  background: rgba(14, 90, 107, 0.16);
+}
 [data-admin-shell] .booking-row .cells .cell.selecting {
   background: rgba(79, 184, 196, 0.22);
+}
+[data-theme="light"] [data-admin-shell] .booking-row .cells .cell.selecting {
+  background: rgba(14, 90, 107, 0.28);
 }
 [data-admin-shell] .booking-row .drag-ghost {
   position: absolute;
