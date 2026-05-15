@@ -5281,3 +5281,130 @@ html:has([data-admin-shell]) {
   align-self: flex-end;
   cursor: pointer;
 }
+
+/* ==========================================================================
+   PROMO CODES + SUPPLEMENTS — admin CRUD list + edit modal
+   ========================================================================== */
+[data-admin-shell] .promo-code-cell {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  background: var(--bg-surface-2);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+[data-admin-shell] .promo-code-label {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+[data-admin-shell] .promo-code-sub {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+[data-admin-shell] tr.muted-row {
+  opacity: 0.55;
+}
+[data-admin-shell] .status-switch {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+[data-admin-shell] .status-switch.active {
+  background: rgba(93, 191, 140, 0.15);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+/* Modal (used by promo codes + supplements editors) */
+[data-admin-shell] .modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 24, 32, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+}
+[data-admin-shell] .modal-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
+}
+[data-admin-shell] .modal-head {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+[data-admin-shell] .modal-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+[data-admin-shell] .modal-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+[data-admin-shell] .modal-foot {
+  margin-top: 6px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+/* Promo / supplement form fields */
+[data-admin-shell] .promo-code-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+[data-admin-shell] .promo-code-form label > span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+[data-admin-shell] .promo-code-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+[data-admin-shell] .promo-code-checkbox {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+[data-admin-shell] .promo-code-checkbox input {
+  width: 16px;
+  height: 16px;
+}

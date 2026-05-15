@@ -33,7 +33,7 @@ interface FunnelRecapStickyProps {
   /** Optional rating shown top-right. */
   rating?: { score: number; count: number };
   /** Promo flow — parent owns the applied state. */
-  onPromoApply?: (code: string) => void;
+  onPromoApply?: (code: string) => void | Promise<void>;
   /** Promo discount currently applied, in millimes. */
   promoDiscount?: number;
   /** Pre-fill the promo input (e.g. from search params). */

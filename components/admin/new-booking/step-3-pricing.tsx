@@ -20,9 +20,12 @@ interface Step3PricingProps {
   lines: PriceLine[];
   onLinesChange: (lines: PriceLine[]) => void;
   onContinue: () => void;
+  /** Active supplements loaded from /admin/supplements. Optional — when
+   * empty the wizard falls back to the legacy hard-coded preset list. */
+  supplementPresets?: { label: string; amount: number }[];
 }
 
-const EXTRA_PRESETS = [
+const FALLBACK_PRESETS = [
   { label: "Frais de ménage final", amount: 80_000 },
   { label: "Padel · 1 session", amount: 60_000 },
   { label: "Transfert aéroport AR", amount: 240_000 },
@@ -41,7 +44,12 @@ export function Step3Pricing({
   lines,
   onLinesChange,
   onContinue,
+  supplementPresets,
 }: Step3PricingProps) {
+  const presets =
+    supplementPresets && supplementPresets.length > 0
+      ? supplementPresets
+      : FALLBACK_PRESETS;
   const breakdown = useMemo(
     () =>
       computePricing({
@@ -256,7 +264,7 @@ export function Step3Pricing({
             <Plus className="size-3.5" />
             Ajouter une ligne
           </button>
-          {EXTRA_PRESETS.map((preset) => (
+          {presets.map((preset) => (
             <button
               key={preset.label}
               type="button"

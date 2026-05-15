@@ -150,6 +150,42 @@ export type ReservationDetail = NonNullable<
 >;
 
 /**
+ * PromoCode catalog — admin CRUD page.
+ */
+export async function listPromoCodes() {
+  return prisma.promoCode.findMany({
+    orderBy: [{ active: "desc" }, { createdAt: "desc" }],
+    include: {
+      _count: { select: { redemptions: true } },
+      createdBy: { select: { id: true, name: true } },
+    },
+  });
+}
+
+export type PromoCodeRow = Awaited<ReturnType<typeof listPromoCodes>>[number];
+
+/**
+ * Active supplements — fetched server-side and surfaced as preset chips
+ * in the admin new-booking wizard + the public funnel.
+ */
+export async function listActiveSupplements() {
+  return prisma.pricingSupplement.findMany({
+    where: { active: true },
+    orderBy: [{ sortOrder: "asc" }, { labelFr: "asc" }],
+  });
+}
+
+export async function listAllSupplements() {
+  return prisma.pricingSupplement.findMany({
+    orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { labelFr: "asc" }],
+  });
+}
+
+export type SupplementRow = Awaited<
+  ReturnType<typeof listAllSupplements>
+>[number];
+
+/**
  * GuestDocument list — used by the admin client detail. The actual file
  * bytes live in Supabase Storage; the UI mints a signed URL on click via
  * `getGuestDocumentSignedUrl`.

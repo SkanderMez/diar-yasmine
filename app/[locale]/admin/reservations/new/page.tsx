@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
-import { listActiveProperties } from "@/lib/queries";
+import { listActiveProperties, listActiveSupplements } from "@/lib/queries";
 import { getSetting } from "@/lib/settings";
 import { NewBookingClient } from "@/components/admin/new-booking/new-booking-client";
 
@@ -31,14 +31,20 @@ export default async function NewBookingPage({
   setRequestLocale(locale);
   const sp = await searchParams;
 
-  const [propertiesRaw, taxRate, photoRows] = await Promise.all([
+  const [propertiesRaw, taxRate, photoRows, supplements] = await Promise.all([
     listActiveProperties(),
     getSetting("tax.rate"),
     prisma.photo.findMany({
       where: { order: 0 },
       select: { propertyId: true, url: true, alt: true },
     }),
+    listActiveSupplements(),
   ]);
+
+  const supplementPresets = supplements.map((s) => ({
+    label: s.labelFr,
+    amount: s.priceMillimes,
+  }));
 
   const photoByProperty = new Map<
     string,
@@ -58,6 +64,7 @@ export default async function NewBookingPage({
     <NewBookingClient
       properties={properties}
       taxRate={taxRate}
+      supplementPresets={supplementPresets}
       prefill={{
         propertyId: sp.propertyId ?? null,
         checkIn: isYmd(sp.checkIn) ? sp.checkIn : null,

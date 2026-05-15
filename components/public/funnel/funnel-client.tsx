@@ -8,6 +8,7 @@ import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { Link } from "@/i18n/navigation";
 import { createReservation } from "@/lib/reservations";
+import { previewPromoCode } from "@/lib/promo-codes-actions";
 import { FunnelStepper } from "./funnel-stepper";
 import { FunnelStepSummary } from "./funnel-step-summary";
 import { FunnelGuestForm, type GuestFormValues } from "./funnel-guest-form";
@@ -76,6 +77,7 @@ export function FunnelClient({
   const [appliedPromo, setAppliedPromo] = useState<string | null>(
     promoCode ?? null,
   );
+  const [promoDiscount, setPromoDiscount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -244,13 +246,29 @@ export function FunnelClient({
             cleaningFee={property.cleaningFee}
             taxRate={taxRate}
             rating={{ score: 4.92, count: 127 }}
-            onPromoApply={(code) => {
-              setAppliedPromo(code);
-              toast.info("Code promo enregistré", {
-                description: `Le code « ${code} » sera vérifié lors de la confirmation.`,
-              });
+            onPromoApply={async (code) => {
+              try {
+                const res = await previewPromoCode({
+                  code,
+                  nights,
+                  propertyType: property.type,
+                  basePriceMillimes: property.basePrice * nights,
+                });
+                setAppliedPromo(code.toUpperCase());
+                setPromoDiscount(res.amountMillimes);
+                toast.success(
+                  res.label
+                    ? `Code appliqué — ${res.label}`
+                    : "Code promo appliqué",
+                );
+              } catch (err) {
+                setPromoDiscount(0);
+                toast.error(
+                  err instanceof Error ? err.message : "Code invalide",
+                );
+              }
             }}
-            promoDiscount={0}
+            promoDiscount={promoDiscount}
             initialPromoCode={appliedPromo ?? undefined}
           />
         </div>

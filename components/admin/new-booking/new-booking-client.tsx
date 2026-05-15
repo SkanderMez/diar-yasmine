@@ -19,6 +19,8 @@ import type { NewBookingProperty, PriceLine } from "./types";
 interface NewBookingClientProps {
   properties: NewBookingProperty[];
   taxRate: number;
+  /** Active supplements surfaced as preset chips in step 3. */
+  supplementPresets?: { label: string; amount: number }[];
   prefill: {
     propertyId: string | null;
     checkIn: string | null;
@@ -39,6 +41,7 @@ type StepKey = "unit" | "client" | "pricing" | "payment";
 export function NewBookingClient({
   properties,
   taxRate,
+  supplementPresets,
   prefill,
 }: NewBookingClientProps) {
   const router = useRouter();
@@ -389,6 +392,7 @@ export function NewBookingClient({
               lines={lines}
               onLinesChange={setLines}
               onContinue={() => goTo("payment")}
+              supplementPresets={supplementPresets}
             />
           ) : activeStep !== "pricing" && step1Complete && step2Complete ? (
             <CollapsedStep

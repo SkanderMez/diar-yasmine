@@ -11,8 +11,10 @@ import {
   LineChart,
   Plus,
   Settings,
+  Sparkles,
   Star,
   Tags,
+  Ticket,
   Users,
 } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -87,6 +89,18 @@ const SECTIONS: NavSection[] = [
         href: "/admin/pricing",
         label: "Tarification",
         icon: Tags,
+      },
+      {
+        key: "supplements",
+        href: "/admin/supplements",
+        label: "Suppléments",
+        icon: Sparkles,
+      },
+      {
+        key: "promo-codes",
+        href: "/admin/promo-codes",
+        label: "Codes promo",
+        icon: Ticket,
       },
       {
         key: "channels",
