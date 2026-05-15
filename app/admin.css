@@ -5199,3 +5199,85 @@ html:has([data-admin-shell]) {
   gap: 4px;
   margin-top: 4px;
 }
+
+/* ==========================================================================
+   GUEST DOCUMENTS — upload + list on client detail
+   ========================================================================== */
+[data-admin-shell] .guest-documents-empty {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  margin: 0 0 12px;
+  padding: 12px;
+  border-radius: 6px;
+  background: var(--bg-surface-2);
+  border: 1px dashed var(--border);
+}
+[data-admin-shell] .guest-documents-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+[data-admin-shell] .guest-document-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+[data-admin-shell] .guest-document-item > svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+[data-admin-shell] .guest-document-main {
+  flex: 1;
+  min-width: 0;
+}
+[data-admin-shell] .guest-document-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+[data-admin-shell] .guest-document-sub {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+[data-admin-shell] .guest-document-meta {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+[data-admin-shell] .guest-document-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+[data-admin-shell] .guest-document-upload {
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+[data-admin-shell] .guest-document-upload-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 720px) {
+  [data-admin-shell] .guest-document-upload-row {
+    grid-template-columns: 1fr;
+  }
+}
+[data-admin-shell] .guest-document-upload-btn {
+  align-self: flex-end;
+  cursor: pointer;
+}

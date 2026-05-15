@@ -211,6 +211,12 @@ Functional surfaces shipped:
 (Append new decisions here as ADRs land in /docs/adr/*.)
 
 ## Active TODOs (project-level, not code-level)
+- [ ] **Créer le bucket Supabase `guest-docs` (privé)** avant le premier
+      upload via `/admin/clients`. Dashboard Supabase → Storage → New
+      bucket → name=`guest-docs`, public=off. RLS désactivable tant qu'on
+      tape via service-role (le client navigateur ne touche jamais le
+      bucket directement; l'upload passe par
+      `/api/admin/guests/[id]/documents` qui authentifie via Auth.js).
 - [ ] Confirmer les 3 derniers noms de bungalows (TBD-1..3) — créer via
       /admin/properties → New
 - [ ] Brancher Flouci (FLOUCI_APP_TOKEN + FLOUCI_APP_SECRET) — adapter

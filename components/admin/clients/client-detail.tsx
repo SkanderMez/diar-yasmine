@@ -30,9 +30,11 @@ import type {
   ClientPreference,
   ClientStats,
   ClientStayHistory,
+  GuestDocumentRow,
   InternalNoteEntry,
 } from "@/lib/queries";
 import { InternalNotesThread } from "../reservation-detail/internal-notes-thread";
+import { GuestDocumentsCard } from "./guest-documents-card";
 import { channelKeyFromSource } from "@/components/admin/calendar/types";
 import { VipTagsEditor } from "./vip-tags-editor";
 
@@ -42,6 +44,7 @@ interface ClientDetailProps {
   reservations: ClientStayHistory[];
   preferences: ClientPreference[];
   documents: ClientDocuments;
+  documentRows: GuestDocumentRow[];
   internalNotes: InternalNoteEntry[];
 }
 
@@ -129,6 +132,7 @@ export function ClientDetail({
   reservations,
   preferences,
   documents,
+  documentRows,
   internalNotes,
 }: ClientDetailProps) {
   const fullName = `${guest.firstName} ${guest.lastName}`.trim();
@@ -354,21 +358,14 @@ export function ClientDetail({
           </div>
         </section>
 
+        <GuestDocumentsCard guestId={guest.id} initial={documentRows} />
+
         <section className="detail-section">
           <h3>
             <FileText className="size-3.5" />
-            Documents
+            Historique fichiers
           </h3>
           <div className="doc-grid">
-            <div className="doc-card">
-              <FileText className="size-5" />
-              <div>
-                <div className="doc-name">Pièce d&apos;identité</div>
-                <div className="doc-sub">
-                  {documents.hasIdDocument ? "Vérifiée" : "Non fournie"}
-                </div>
-              </div>
-            </div>
             <div className="doc-card">
               <FileText className="size-5" />
               <div>

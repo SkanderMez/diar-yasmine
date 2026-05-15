@@ -150,6 +150,34 @@ export type ReservationDetail = NonNullable<
 >;
 
 /**
+ * GuestDocument list — used by the admin client detail. The actual file
+ * bytes live in Supabase Storage; the UI mints a signed URL on click via
+ * `getGuestDocumentSignedUrl`.
+ */
+export async function listGuestDocuments(guestId: string) {
+  return prisma.guestDocument.findMany({
+    where: { guestId },
+    select: {
+      id: true,
+      kind: true,
+      filename: true,
+      mimeType: true,
+      sizeBytes: true,
+      docNumber: true,
+      expiresAt: true,
+      notes: true,
+      createdAt: true,
+      uploadedBy: { select: { id: true, name: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export type GuestDocumentRow = Awaited<
+  ReturnType<typeof listGuestDocuments>
+>[number];
+
+/**
  * InternalNote thread for a reservation OR a guest. Returns oldest-first
  * so the UI can render a normal top-down log.
  */
