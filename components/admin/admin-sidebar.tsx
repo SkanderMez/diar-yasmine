@@ -11,6 +11,7 @@ import {
   LineChart,
   Plus,
   Settings,
+  Star,
   Tags,
   Users,
 } from "lucide-react";
@@ -103,6 +104,12 @@ const SECTIONS: NavSection[] = [
         href: "/admin/reports",
         label: "Rapports",
         icon: LineChart,
+      },
+      {
+        key: "reviews",
+        href: "/admin/reviews",
+        label: "Avis",
+        icon: Star,
       },
     ],
   },

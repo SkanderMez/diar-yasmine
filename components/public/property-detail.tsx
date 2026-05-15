@@ -11,7 +11,11 @@ import {
   Zap,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import type { PublicPropertyCard, PublicPropertyDetail } from "@/lib/queries";
+import type {
+  PublicPropertyCard,
+  PublicPropertyDetail,
+  PublishedReview,
+} from "@/lib/queries";
 import { ListingCard } from "./listings/listing-card";
 import { PropertyJsonLd } from "./json-ld";
 import { PropertyGalleryMagazine } from "./property/property-gallery-magazine";
@@ -28,56 +32,9 @@ interface PropertyDetailProps {
   property: PublicPropertyDetail;
   taxRate: number;
   similarProperties: PublicPropertyCard[];
+  ratingSummary: { avg: number; count: number } | null;
+  publishedReviews: PublishedReview[];
 }
-
-/**
- * Reusable seed for the demo content blocks (reviews, criteria). Keeps
- * the layout pixel-matched to the maquette while we wait for the real
- * reviews data model.
- */
-const DEMO_REVIEWS = [
-  {
-    author: "Sarah K.",
-    initials: "SK",
-    date: "Juillet 2025 · Séjour de 7 nuits",
-    rating: 5,
-    body: "\"Tout est dit dans le nom. On a l'impression de planer pendant 7 jours. La piscine à débordement face à la mer est exactement ce qu'on voyait sur les photos — peut-être en mieux.\"",
-    avatarTone: "primary" as const,
-  },
-  {
-    author: "Mohamed A.",
-    initials: "MA",
-    date: "Septembre 2025 · Séjour de 4 nuits",
-    rating: 5,
-    body: "\"Maison impeccable, équipe ultra-réactive. La cheminée allumée au coucher du soleil avec le bruit des vagues — un souvenir qu'on n'oubliera pas.\"",
-    avatarTone: "bougainvillier" as const,
-  },
-  {
-    author: "Léa B.",
-    initials: "LB",
-    date: "Avril 2025 · Séjour de 5 nuits",
-    rating: 5,
-    body: '"Le détail nous a frappés : les serviettes en lin lavé, les peignoirs en coton turc, le panier de bienvenue avec dattes et amandes locales. Cette maison sait recevoir."',
-    avatarTone: "olive" as const,
-  },
-  {
-    author: "Yacine T.",
-    initials: "YT",
-    date: "Mai 2025 · Séjour de 3 nuits",
-    rating: 4.5,
-    body: '"Court séjour mais quel impact. Le padel à 5 min, la mer à 2 pas. Tout est aligné. Reviendrons en famille."',
-    avatarTone: "primary" as const,
-  },
-];
-
-const DEMO_CRITERIA = [
-  { label: "Propreté", value: 4.95 },
-  { label: "Confort", value: 4.91 },
-  { label: "Précision", value: 4.93 },
-  { label: "Communication", value: 4.97 },
-  { label: "Emplacement", value: 4.88 },
-  { label: "Rapport qualité-prix", value: 4.85 },
-];
 
 const TAB_ITEMS = [
   { id: "description", label: "Description" },
@@ -94,10 +51,28 @@ const TAB_ITEMS = [
  * equipements, disponibilites, localisation, avis, regles) and a sticky
  * booking widget on the right.
  */
+function avatarToneFor(index: number): "primary" | "bougainvillier" | "olive" {
+  const tones: ("primary" | "bougainvillier" | "olive")[] = [
+    "primary",
+    "bougainvillier",
+    "olive",
+  ];
+  return tones[index % tones.length]!;
+}
+
+function initialsFor(firstName: string | null | undefined): string {
+  if (!firstName) return "V";
+  const trimmed = firstName.trim();
+  if (!trimmed) return "V";
+  return trimmed.slice(0, 1).toUpperCase();
+}
+
 export function PropertyDetail({
   property,
   taxRate,
   similarProperties,
+  ratingSummary,
+  publishedReviews,
 }: PropertyDetailProps) {
   const photos = property.photos.map((p) => ({ url: p.url, alt: p.alt }));
   const listingHref = property.type === "CHALET" ? "/chalets" : "/bungalows";
@@ -352,33 +327,54 @@ export function PropertyDetail({
               className="border-b border-line-soft py-8"
               style={{ scrollMarginTop: "140px" }}
             >
-              <h2 className="flex items-center gap-2 font-heading text-[1.75rem] text-charcoal">
-                <Star
-                  className="size-5 text-gold"
-                  fill="currentColor"
-                  strokeWidth={0}
-                />
-                4.92 ·{" "}
-                <em className="heading-em" style={{ fontStyle: "italic" }}>
-                  127 avis
-                </em>
-              </h2>
-              <div className="mt-6">
-                <PropertyReviewsSummary
-                  overallRating={4.92}
-                  totalReviews={127}
-                  criteria={DEMO_CRITERIA}
-                  reviews={DEMO_REVIEWS}
-                />
-              </div>
-              <div className="mt-6">
-                <button
-                  type="button"
-                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-                >
-                  Voir les 127 avis →
-                </button>
-              </div>
+              {ratingSummary && publishedReviews.length > 0 ? (
+                <>
+                  <h2 className="flex items-center gap-2 font-heading text-[1.75rem] text-charcoal">
+                    <Star
+                      className="size-5 text-gold"
+                      fill="currentColor"
+                      strokeWidth={0}
+                    />
+                    {ratingSummary.avg.toFixed(2)} ·{" "}
+                    <em className="heading-em" style={{ fontStyle: "italic" }}>
+                      {ratingSummary.count} avis
+                    </em>
+                  </h2>
+                  <div className="mt-6">
+                    <PropertyReviewsSummary
+                      overallRating={ratingSummary.avg}
+                      totalReviews={ratingSummary.count}
+                      criteria={[]}
+                      reviews={publishedReviews.map((r, i) => ({
+                        author: r.guest?.firstName ?? "Voyageur",
+                        initials: initialsFor(r.guest?.firstName),
+                        date: r.publishedAt
+                          ? new Date(r.publishedAt).toLocaleDateString(
+                              "fr-FR",
+                              {
+                                month: "long",
+                                year: "numeric",
+                              },
+                            )
+                          : "",
+                        rating: r.rating,
+                        body: r.comment ?? "",
+                        avatarTone: avatarToneFor(i),
+                      }))}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-2xl border border-line-soft bg-sand/40 p-8 text-center">
+                  <h2 className="font-heading text-[1.5rem] text-charcoal">
+                    Pas encore d&apos;avis pour {property.name}
+                  </h2>
+                  <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                    Soyez le premier à partager votre expérience après votre
+                    séjour.
+                  </p>
+                </div>
+              )}
             </section>
 
             {/* Rules */}

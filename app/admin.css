@@ -4883,3 +4883,126 @@ html:has([data-admin-shell]) {
   color: var(--text-muted);
   flex-wrap: wrap;
 }
+
+/* ==========================================================================
+   REVIEWS — admin moderation queue
+   ========================================================================== */
+[data-admin-shell] .reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+[data-admin-shell] .review-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+}
+[data-admin-shell] .review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+[data-admin-shell] .review-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+[data-admin-shell] .review-author {
+  font-size: 0.9rem;
+  color: var(--text);
+  font-weight: 500;
+}
+[data-admin-shell] .review-source {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  background: var(--bg-surface-2);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+[data-admin-shell] .review-dates {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+[data-admin-shell] .review-property {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 4px 0 10px;
+}
+[data-admin-shell] .review-comment {
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin: 0;
+}
+[data-admin-shell] .review-comment.empty {
+  color: var(--text-dim);
+  font-style: italic;
+}
+[data-admin-shell] .review-host-reply {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--bg-surface-2);
+  border-left: 3px solid var(--primary);
+  border-radius: 4px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+[data-admin-shell] .review-host-reply svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--primary);
+}
+[data-admin-shell] .review-reply-editor {
+  margin-top: 12px;
+}
+[data-admin-shell] .review-reply-editor textarea {
+  width: 100%;
+  background: var(--bg-app);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  resize: vertical;
+  outline: none;
+}
+[data-admin-shell] .review-reply-editor textarea:focus {
+  border-color: var(--primary);
+}
+[data-admin-shell] .review-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+[data-admin-shell] .review-stars {
+  display: inline-flex;
+  gap: 1px;
+  color: var(--border);
+}
+[data-admin-shell] .review-stars svg.filled {
+  color: var(--gold, #d4a850);
+  fill: currentColor;
+}
+[data-admin-shell] .placeholder-card {
+  background: var(--bg-surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  text-align: center;
+  color: var(--text-muted);
+}

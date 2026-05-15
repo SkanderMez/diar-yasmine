@@ -150,6 +150,79 @@ export type ReservationDetail = NonNullable<
 >;
 
 /**
+ * Reviews queries — used by the admin moderation queue and the public
+ * property fiche. Published reviews surface on /chalets/[slug] and
+ * /bungalows/[slug]; PENDING land in /admin/reviews.
+ */
+export async function listReviewsForModeration(
+  status: "PENDING" | "PUBLISHED" | "REJECTED" | "ALL" = "PENDING",
+) {
+  return prisma.review.findMany({
+    where: status === "ALL" ? {} : { status },
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      locale: true,
+      source: true,
+      status: true,
+      hostReply: true,
+      hostReplyAt: true,
+      publishedAt: true,
+      createdAt: true,
+      property: { select: { id: true, name: true, type: true, slug: true } },
+      guest: { select: { firstName: true, lastName: true, country: true } },
+      reservation: { select: { code: true, checkIn: true, checkOut: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+}
+
+export type ReviewModerationRow = Awaited<
+  ReturnType<typeof listReviewsForModeration>
+>[number];
+
+export async function listPublishedReviewsForProperty(
+  propertyId: string,
+  limit = 6,
+) {
+  return prisma.review.findMany({
+    where: { propertyId, status: "PUBLISHED" },
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      locale: true,
+      source: true,
+      publishedAt: true,
+      hostReply: true,
+      hostReplyAt: true,
+      guest: { select: { firstName: true, country: true } },
+    },
+    orderBy: { publishedAt: "desc" },
+    take: limit,
+  });
+}
+
+export type PublishedReview = Awaited<
+  ReturnType<typeof listPublishedReviewsForProperty>
+>[number];
+
+export async function getPropertyRatingSummary(propertyId: string) {
+  const result = await prisma.review.aggregate({
+    where: { propertyId, status: "PUBLISHED" },
+    _avg: { rating: true },
+    _count: { _all: true },
+  });
+  if (!result._count._all) return null;
+  return {
+    avg: Number(result._avg.rating ?? 0),
+    count: result._count._all,
+  };
+}
+
+/**
  * Listing query for the public site (/chalets, /bungalows). Returns
  * active properties of the requested type plus their first 3 photos
  * for the card. Sorted by name.

@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { findPublicProperty, listPublicProperties } from "@/lib/queries";
+import {
+  findPublicProperty,
+  getPropertyRatingSummary,
+  listPublicProperties,
+  listPublishedReviewsForProperty,
+} from "@/lib/queries";
 import { getSetting } from "@/lib/settings";
 import { PropertyDetail } from "@/components/public/property-detail";
 
@@ -34,6 +39,11 @@ export default async function ChaletDetailPage({
   ]);
   if (!property || property.type !== "CHALET") notFound();
 
+  const [ratingSummary, publishedReviews] = await Promise.all([
+    getPropertyRatingSummary(property.id),
+    listPublishedReviewsForProperty(property.id, 6),
+  ]);
+
   const similarProperties = allChalets
     .filter((p) => p.id !== property.id)
     .slice(0, 3);
@@ -43,6 +53,8 @@ export default async function ChaletDetailPage({
       property={property}
       taxRate={taxRate}
       similarProperties={similarProperties}
+      ratingSummary={ratingSummary}
+      publishedReviews={publishedReviews}
     />
   );
 }
