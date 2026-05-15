@@ -32,7 +32,47 @@ export interface PricingDiscount {
 export interface PricingExtra {
   label: string;
   amount: Millimes;
+  /** Free-form. Use `"supplement"` for catalog-sourced lines and
+   *  `"promo"` for promo-code reductions so the admin can group / audit
+   *  them downstream. */
   category?: string;
+}
+
+/**
+ * Catalog-sourced extra. Built from `PricingSupplement` records by
+ * `buildSupplementExtras`. Kept structurally compatible with
+ * `PricingExtra` so it drops into `extras` directly.
+ */
+export interface SupplementExtra extends PricingExtra {
+  supplementId: string;
+  slug: string;
+  category: "supplement";
+}
+
+/**
+ * Build extras from a list of `{ supplementId, label, amount, slug }`
+ * tuples resolved by the caller (typically a Server Action that read
+ * the catalog from the DB). Keeping the resolution out of the pricing
+ * engine preserves its purity — no I/O, fully testable.
+ */
+export function buildSupplementExtras(
+  rows: { id: string; slug: string; labelFr: string; priceMillimes: number }[],
+  selectedIds: string[],
+): SupplementExtra[] {
+  const byId = new Map(rows.map((r) => [r.id, r] as const));
+  const out: SupplementExtra[] = [];
+  for (const id of selectedIds) {
+    const row = byId.get(id);
+    if (!row) continue;
+    out.push({
+      supplementId: row.id,
+      slug: row.slug,
+      label: row.labelFr,
+      amount: row.priceMillimes,
+      category: "supplement",
+    });
+  }
+  return out;
 }
 
 export interface PricingInput {

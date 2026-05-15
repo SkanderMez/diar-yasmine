@@ -18,14 +18,46 @@ const SOURCE_LABEL: Record<ReservationSource, string> = {
   OTHER: "Autre",
 };
 
+const SEVERITY_LABEL: Record<AdminChannelConflict["severity"], string> = {
+  imminent: "Imminent",
+  current: "En cours",
+  future: "À venir",
+  past: "Passé",
+};
+
+const SEVERITY_TAG: Record<AdminChannelConflict["severity"], string> = {
+  imminent: "tag-cancelled",
+  current: "tag-cancelled",
+  future: "tag-confirmed",
+  past: "tag-direct",
+};
+
+function severitySubtitle(c: AdminChannelConflict): string {
+  if (c.severity === "imminent") {
+    return c.daysUntilStart <= 0
+      ? "démarre aujourd'hui"
+      : `dans ${c.daysUntilStart} j`;
+  }
+  if (c.severity === "current") return "séjour en cours";
+  if (c.severity === "past") return `il y a ${Math.abs(c.daysUntilStart)} j`;
+  return `dans ${c.daysUntilStart} j`;
+}
+
 export function ConflictsBanner({ conflicts }: ConflictsBannerProps) {
   if (conflicts.length === 0) return null;
 
   const total = conflicts.length;
+  const imminentCount = conflicts.filter(
+    (c) => c.severity === "imminent" || c.severity === "current",
+  ).length;
   const heading =
     total === 1
       ? "1 conflit de double réservation détecté"
-      : `${total} conflits de double réservation détectés`;
+      : `${total} conflits de double réservation détectés${
+          imminentCount > 0
+            ? ` (${imminentCount} urgent${imminentCount > 1 ? "s" : ""})`
+            : ""
+        }`;
 
   return (
     <div className="conflicts-card" role="alert">
@@ -34,7 +66,7 @@ export function ConflictsBanner({ conflicts }: ConflictsBannerProps) {
         {heading}
       </h4>
       {conflicts.map((c) => (
-        <div key={c.id} className="conflict-row">
+        <div key={c.id} className={`conflict-row severity-${c.severity}`}>
           <strong>
             {c.propertyName} · {c.rangeLabel}
           </strong>
@@ -42,8 +74,19 @@ export function ConflictsBanner({ conflicts }: ConflictsBannerProps) {
             {c.primary.guestLabel} ({SOURCE_LABEL[c.primary.source]})
             <strong style={{ color: "var(--text)" }}> vs </strong>
             {c.secondary.guestLabel} ({SOURCE_LABEL[c.secondary.source]})
+            <span
+              style={{
+                marginLeft: 8,
+                fontSize: "0.75rem",
+                color: "var(--text-dim)",
+              }}
+            >
+              · {severitySubtitle(c)}
+            </span>
           </span>
-          <span className="tag tag-cancelled">Conflit</span>
+          <span className={`tag ${SEVERITY_TAG[c.severity]}`}>
+            {SEVERITY_LABEL[c.severity]}
+          </span>
           <div className="conflict-actions">
             <Link
               href="/admin/reservations"

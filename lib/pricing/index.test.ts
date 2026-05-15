@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateReservationTotal } from "./index";
+import { buildSupplementExtras, calculateReservationTotal } from "./index";
 
 const TND = 1000; // 1 TND = 1000 millimes
 
@@ -192,5 +192,50 @@ describe("calculateReservationTotal — Tunisian VAT scenario", () => {
     // subtotal = 1_658_000
     expect(out.tax).toBe(Math.round(1_658_000 * 0.19)); // 315_020
     expect(out.total).toBe(1_658_000 + 315_020);
+  });
+});
+
+describe("buildSupplementExtras", () => {
+  const catalog = [
+    {
+      id: "sup_cleaning",
+      slug: "menage-final",
+      labelFr: "Ménage final",
+      priceMillimes: 80_000,
+    },
+    {
+      id: "sup_padel",
+      slug: "padel-session",
+      labelFr: "Padel · 1 session",
+      priceMillimes: 60_000,
+    },
+  ];
+
+  it("resolves selected IDs preserving order", () => {
+    const out = buildSupplementExtras(catalog, ["sup_padel", "sup_cleaning"]);
+    expect(out).toHaveLength(2);
+    expect(out[0]?.supplementId).toBe("sup_padel");
+    expect(out[0]?.label).toBe("Padel · 1 session");
+    expect(out[0]?.amount).toBe(60_000);
+    expect(out[0]?.category).toBe("supplement");
+    expect(out[1]?.supplementId).toBe("sup_cleaning");
+  });
+
+  it("silently drops unknown IDs", () => {
+    const out = buildSupplementExtras(catalog, ["sup_cleaning", "sup_ghost"]);
+    expect(out).toHaveLength(1);
+    expect(out[0]?.supplementId).toBe("sup_cleaning");
+  });
+
+  it("plugs into calculateReservationTotal as extras", () => {
+    const extras = buildSupplementExtras(catalog, ["sup_cleaning"]);
+    const out = calculateReservationTotal({
+      property: { basePrice: 350_000, cleaningFee: 0 },
+      nights: 2,
+      extras,
+      taxRate: 0,
+    });
+    expect(out.extrasTotal).toBe(80_000);
+    expect(out.total).toBe(700_000 + 80_000);
   });
 });

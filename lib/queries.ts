@@ -1478,6 +1478,10 @@ export interface AdminChannelConflict {
   rangeLabel: string;
   primary: { guestLabel: string; source: ReservationSource; status: string };
   secondary: { guestLabel: string; source: ReservationSource; status: string };
+  /** Bucket the UI uses to colour-code the row. */
+  severity: "past" | "current" | "imminent" | "future";
+  /** Negative for past, 0 for today, positive otherwise. */
+  daysUntilStart: number;
 }
 
 export interface AdminChannelSyncLogEntry {
@@ -1730,17 +1734,26 @@ export async function listAdminChannels(): Promise<AdminChannelCard[]> {
  */
 export async function detectChannelConflicts(
   opts: {
+    /** How many days in the PAST to include. Future conflicts are always
+     *  included (we don't want to miss a far-future double-booking). */
     lookbackDays?: number;
   } = {},
 ): Promise<AdminChannelConflict[]> {
   const lookback = opts.lookbackDays ?? 90;
-  const since = addDays(new Date(), -lookback);
+  const now = new Date();
+  const since = addDays(now, -lookback);
 
+  // Pull every reservation whose stay window touches [since, +∞).
+  // The previous OR clause was inclusive enough to catch most cases but
+  // missed conflicts where neither bound landed inside the past window,
+  // e.g. two distant-future Dec 2026 bookings on the same unit. The new
+  // single bound on `checkOut >= since` is sufficient: a reservation can
+  // only collide with another if it ends after `since`.
   const rows = await prisma.reservation.findMany({
     where: {
       deletedAt: null,
       status: { notIn: ["CANCELLED", "NO_SHOW"] },
-      OR: [{ checkOut: { gte: since } }, { checkIn: { gte: since } }],
+      checkOut: { gte: since },
     },
     select: {
       id: true,
@@ -1771,40 +1784,72 @@ export async function detectChannelConflicts(
   const conflicts: AdminChannelConflict[] = [];
   const seen = new Set<string>();
 
+  // Sweep-line per property: rows are sorted by checkIn, so once a row's
+  // checkOut < candidate.checkIn we can stop comparing it. Drops the
+  // worst-case from O(n²) per property to O(n) when bookings are mostly
+  // non-overlapping (the common case).
   for (const list of byProperty.values()) {
     for (let i = 0; i < list.length; i++) {
+      const a = list[i];
+      if (!a) continue;
       for (let j = i + 1; j < list.length; j++) {
-        const a = list[i];
         const b = list[j];
-        if (!a || !b) continue;
-        // Half-open overlap: a.start < b.end && b.start < a.end.
-        if (a.checkIn < b.checkOut && b.checkIn < a.checkOut) {
-          if (a.source === b.source) continue;
-          const pairKey = [a.id, b.id].sort().join(":");
-          if (seen.has(pairKey)) continue;
-          seen.add(pairKey);
+        if (!b) continue;
+        if (b.checkIn >= a.checkOut) break;
+        if (a.source === b.source) continue;
+        const pairKey = [a.id, b.id].sort().join(":");
+        if (seen.has(pairKey)) continue;
+        seen.add(pairKey);
 
-          const start = a.checkIn < b.checkIn ? a.checkIn : b.checkIn;
-          const end = a.checkOut > b.checkOut ? a.checkOut : b.checkOut;
-          conflicts.push({
-            id: pairKey,
-            propertyName: a.property.name,
-            rangeLabel: `${dayFmt.format(start)} → ${dayFmt.format(end)}`,
-            primary: {
-              guestLabel: `${a.guest.firstName} ${a.guest.lastName}`,
-              source: a.source,
-              status: a.status,
-            },
-            secondary: {
-              guestLabel: `${b.guest.firstName} ${b.guest.lastName}`,
-              source: b.source,
-              status: b.status,
-            },
-          });
-        }
+        const start = a.checkIn < b.checkIn ? a.checkIn : b.checkIn;
+        const end = a.checkOut > b.checkOut ? a.checkOut : b.checkOut;
+        const daysUntilStart = Math.round(
+          (start.getTime() - now.getTime()) / (24 * 60 * 60 * 1000),
+        );
+        const severity: AdminChannelConflict["severity"] =
+          end < now
+            ? "past"
+            : start < now
+              ? "current"
+              : daysUntilStart <= 7
+                ? "imminent"
+                : "future";
+
+        conflicts.push({
+          id: pairKey,
+          propertyName: a.property.name,
+          rangeLabel: `${dayFmt.format(start)} → ${dayFmt.format(end)}`,
+          severity,
+          daysUntilStart,
+          primary: {
+            guestLabel: `${a.guest.firstName} ${a.guest.lastName}`,
+            source: a.source,
+            status: a.status,
+          },
+          secondary: {
+            guestLabel: `${b.guest.firstName} ${b.guest.lastName}`,
+            source: b.source,
+            status: b.status,
+          },
+        });
       }
     }
   }
+
+  // Sort: imminent first, then current, future, past. Within each tier
+  // by daysUntilStart ascending — the most urgent issue lands at the top
+  // of the admin banner.
+  const order: Record<AdminChannelConflict["severity"], number> = {
+    imminent: 0,
+    current: 1,
+    future: 2,
+    past: 3,
+  };
+  conflicts.sort((a, b) => {
+    const so = order[a.severity] - order[b.severity];
+    if (so !== 0) return so;
+    return a.daysUntilStart - b.daysUntilStart;
+  });
 
   return conflicts;
 }
