@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import {
+  getListingHeroPhoto,
   getPropertyPriceRange,
   listFilterableAmenities,
   listPublicProperties,
@@ -79,31 +80,27 @@ export default async function SearchPage({
     : undefined;
 
   // null type → both chalets + bungalows in one query.
-  const [properties, filterableAmenities, priceRange] = await Promise.all([
-    listPublicProperties(null, {
-      minCapacity,
-      hasPrivatePool,
-      seaView,
-      beachfront,
-      minPriceMillimes,
-      maxPriceMillimes,
-      checkIn: sp.checkIn,
-      checkOut: sp.checkOut,
-      amenitySlugs,
-      sort: parseSort(sp.sort),
-    }),
-    listFilterableAmenities(),
-    getPropertyPriceRange(),
-  ]);
+  const [properties, filterableAmenities, priceRange, heroPhoto] =
+    await Promise.all([
+      listPublicProperties(null, {
+        minCapacity,
+        hasPrivatePool,
+        seaView,
+        beachfront,
+        minPriceMillimes,
+        maxPriceMillimes,
+        checkIn: sp.checkIn,
+        checkOut: sp.checkOut,
+        amenitySlugs,
+        sort: parseSort(sp.sort),
+      }),
+      listFilterableAmenities(),
+      getPropertyPriceRange(),
+      getListingHeroPhoto("CHALET"),
+    ]);
 
   const priceMinTnd = Math.floor((priceRange?.min ?? 0) / 1000);
   const priceMaxTnd = Math.ceil((priceRange?.max ?? 1000_000) / 1000);
-
-  // Pick a hero photo: prefer a beachfront chalet, fall back to any.
-  const heroPhoto =
-    properties.find((p) => p.beachfront && p.photos.length > 0)?.photos[0] ??
-    properties.find((p) => p.photos.length > 0)?.photos[0] ??
-    null;
   const dateLabel =
     sp.checkIn && sp.checkOut
       ? `du ${sp.checkIn} au ${sp.checkOut}`

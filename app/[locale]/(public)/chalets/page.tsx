@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import {
+  getListingHeroPhoto,
   getPropertyPriceRange,
   listFilterableAmenities,
   listPublicProperties,
@@ -73,29 +74,29 @@ export default async function ChaletsListingPage({
     ? sp.amenities.split(",").filter(Boolean)
     : undefined;
 
-  const [chalets, filterableAmenities, priceRange] = await Promise.all([
-    listPublicProperties("CHALET", {
-      minCapacity,
-      hasPrivatePool,
-      seaView,
-      beachfront,
-      minPriceMillimes,
-      maxPriceMillimes,
-      checkIn: sp.checkIn,
-      checkOut: sp.checkOut,
-      amenitySlugs,
-      sort: parseSort(sp.sort),
-    }),
-    listFilterableAmenities(),
-    getPropertyPriceRange("CHALET"),
-  ]);
+  const [chalets, filterableAmenities, priceRange, heroPhoto] =
+    await Promise.all([
+      listPublicProperties("CHALET", {
+        minCapacity,
+        hasPrivatePool,
+        seaView,
+        beachfront,
+        minPriceMillimes,
+        maxPriceMillimes,
+        checkIn: sp.checkIn,
+        checkOut: sp.checkOut,
+        amenitySlugs,
+        sort: parseSort(sp.sort),
+      }),
+      listFilterableAmenities(),
+      getPropertyPriceRange("CHALET"),
+      getListingHeroPhoto("CHALET"),
+    ]);
 
   // Fallback bounds when the catalog is empty (shouldn't happen in prod
   // since the seed always has properties, but keep the filter sensible).
   const priceMinTnd = Math.floor((priceRange?.min ?? 0) / 1000);
   const priceMaxTnd = Math.ceil((priceRange?.max ?? 1000_000) / 1000);
-
-  const heroPhoto = chalets[0]?.photos[0] ?? null;
   const dateLabel =
     sp.checkIn && sp.checkOut
       ? `du ${sp.checkIn} au ${sp.checkOut}`

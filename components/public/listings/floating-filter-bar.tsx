@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, Minus, Plus, Search, Users } from "lucide-react";
+import { Minus, Plus, Search, Users } from "lucide-react";
 import { DateRangePicker } from "@/components/public/date-range-picker";
+import { SelectPill } from "@/components/public/select-pill";
 import { cn } from "@/lib/utils";
 
 interface SortOption {
@@ -103,7 +104,7 @@ export function FloatingFilterBar({
 
         <GuestsField guests={guests} onChange={setGuests} />
 
-        <SelectField
+        <SelectPill
           label="Capacité min."
           value={capacity}
           onChange={(v) => {
@@ -121,7 +122,7 @@ export function FloatingFilterBar({
 
         <PriceField value={maxPrice} onChange={setMaxPrice} onCommit={apply} />
 
-        <SelectField
+        <SelectPill
           label="Tri"
           value={sort}
           onChange={(v) => {
@@ -249,45 +250,6 @@ function GuestsField({
         </div>
       )}
     </div>
-  );
-}
-
-function SelectField({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  const current = options.find((o) => o.value === value) ?? options[0];
-  return (
-    <FieldWrapper>
-      <label className="block w-full cursor-pointer">
-        <span className="mb-[2px] block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          {label}
-        </span>
-        <span className="flex items-center justify-between gap-1.5 text-[0.9rem] font-medium text-charcoal">
-          <span>{current?.label}</span>
-          <ChevronDown className="size-3 text-muted-foreground" />
-        </span>
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="absolute inset-0 cursor-pointer opacity-0"
-          aria-label={label}
-        >
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </label>
-    </FieldWrapper>
   );
 }
 

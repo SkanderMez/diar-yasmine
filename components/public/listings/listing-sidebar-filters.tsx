@@ -382,13 +382,13 @@ function PriceRangeSlider({
        *  (the rest is hidden via .pointer-events-none). The visual track
        *  + tinted range underneath are CSS-only, driven by the same min
        *  /max state. Padding-x keeps thumbs visually inside the track. */}
-      <div className="relative h-[30px] px-2">
-        <div className="absolute inset-x-2 top-[13px] h-1 rounded-full bg-line-soft" />
+      <div className="relative h-[34px] px-3">
+        <div className="absolute inset-x-3 top-[15px] h-[5px] rounded-full bg-line-soft" />
         <div
-          className="absolute top-[13px] h-1 rounded-full bg-primary"
+          className="absolute top-[15px] h-[5px] rounded-full bg-primary"
           style={{
-            left: `calc(${minPct}% * (100% - 16px) / 100% + 8px)`,
-            right: `calc(${100 - maxPct}% * (100% - 16px) / 100% + 8px)`,
+            left: `calc(${minPct}% * (100% - 24px) / 100% + 12px)`,
+            right: `calc(${100 - maxPct}% * (100% - 24px) / 100% + 12px)`,
           }}
         />
         <input
@@ -405,7 +405,7 @@ function PriceRangeSlider({
           onTouchEnd={onCommit}
           onKeyUp={onCommit}
           aria-label="Prix minimum"
-          className="price-range-thumb pointer-events-none absolute inset-x-2 top-0 h-[30px] w-[calc(100%-16px)] appearance-none bg-transparent"
+          className="price-range-thumb pointer-events-none absolute inset-x-3 top-0 h-[34px] w-[calc(100%-24px)] appearance-none bg-transparent"
         />
         <input
           type="range"
@@ -421,7 +421,7 @@ function PriceRangeSlider({
           onTouchEnd={onCommit}
           onKeyUp={onCommit}
           aria-label="Prix maximum"
-          className="price-range-thumb pointer-events-none absolute inset-x-2 top-0 h-[30px] w-[calc(100%-16px)] appearance-none bg-transparent"
+          className="price-range-thumb pointer-events-none absolute inset-x-3 top-0 h-[34px] w-[calc(100%-24px)] appearance-none bg-transparent"
         />
       </div>
       <div className="mt-4 flex items-center gap-3">

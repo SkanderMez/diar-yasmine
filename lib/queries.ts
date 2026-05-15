@@ -542,6 +542,29 @@ export type PublicPropertyDetail = NonNullable<
 >;
 
 /**
+ * Stable hero photo for /chalets and /bungalows — independent of any
+ * filter, so the page still shows a banner when the user's filter
+ * combination yields zero results.
+ */
+export async function getListingHeroPhoto(
+  type: "CHALET" | "BUNGALOW",
+): Promise<{ url: string; alt: string | null } | null> {
+  const photo = await prisma.photo.findFirst({
+    where: {
+      property: {
+        deletedAt: null,
+        status: "ACTIVE",
+        type,
+        ...(type === "CHALET" ? { beachfront: true } : {}),
+      },
+    },
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+    select: { url: true, alt: true },
+  });
+  return photo;
+}
+
+/**
  * Returns the booked half-open intervals for a property within
  * `[from, until]`. Used to strike through unavailable nights in the
  * public DateRangePicker + mini-calendar. Cancelled / no-show stays are

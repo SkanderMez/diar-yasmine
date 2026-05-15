@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import {
+  getListingHeroPhoto,
   getPropertyPriceRange,
   listFilterableAmenities,
   listPublicProperties,
@@ -73,28 +74,27 @@ export default async function BungalowsListingPage({
     ? sp.amenities.split(",").filter(Boolean)
     : undefined;
 
-  const [bungalows, filterableAmenities, priceRange] = await Promise.all([
-    listPublicProperties("BUNGALOW", {
-      minCapacity,
-      hasPrivatePool,
-      seaView,
-      beachfront,
-      minPriceMillimes,
-      maxPriceMillimes,
-      checkIn: sp.checkIn,
-      checkOut: sp.checkOut,
-      amenitySlugs,
-      sort: parseSort(sp.sort),
-    }),
-    listFilterableAmenities(),
-    getPropertyPriceRange("BUNGALOW"),
-  ]);
+  const [bungalows, filterableAmenities, priceRange, heroPhoto] =
+    await Promise.all([
+      listPublicProperties("BUNGALOW", {
+        minCapacity,
+        hasPrivatePool,
+        seaView,
+        beachfront,
+        minPriceMillimes,
+        maxPriceMillimes,
+        checkIn: sp.checkIn,
+        checkOut: sp.checkOut,
+        amenitySlugs,
+        sort: parseSort(sp.sort),
+      }),
+      listFilterableAmenities(),
+      getPropertyPriceRange("BUNGALOW"),
+      getListingHeroPhoto("BUNGALOW"),
+    ]);
 
   const priceMinTnd = Math.floor((priceRange?.min ?? 0) / 1000);
   const priceMaxTnd = Math.ceil((priceRange?.max ?? 1000_000) / 1000);
-
-  const heroPhoto =
-    bungalows.find((b) => b.photos.length > 0)?.photos[0] ?? null;
   const dateLabel =
     sp.checkIn && sp.checkOut
       ? `du ${sp.checkIn} au ${sp.checkOut}`

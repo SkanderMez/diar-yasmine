@@ -169,41 +169,36 @@ export function PropertyBookingSticky({
         )}
       </div>
 
-      {/* Dates + guests group */}
-      <div className="overflow-hidden rounded-md border border-line">
-        <div className="border-b border-line">
-          <DateRangePicker
-            checkIn={checkIn}
-            checkOut={checkOut}
-            unavailableRanges={unavailableRanges}
-            onChange={(r) => {
-              setCheckIn(r.checkIn);
-              setCheckOut(r.checkOut);
-            }}
-          />
-        </div>
+      {/* Dates + guests stack — same compact triggers as the listings page */}
+      <div className="flex flex-col gap-2">
+        <DateRangePicker
+          variant="compact"
+          checkIn={checkIn}
+          checkOut={checkOut}
+          unavailableRanges={unavailableRanges}
+          onChange={(r) => {
+            setCheckIn(r.checkIn);
+            setCheckOut(r.checkOut);
+          }}
+        />
+
         <button
           type="button"
           onClick={() => setGuestsOpen((v) => !v)}
-          className="flex w-full items-center justify-between gap-2 px-5 py-3 text-left transition-colors hover:bg-sand"
+          className="booking-pill-cell booking-pill-trigger"
         >
-          <div className="flex flex-col">
-            <span className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              <Users className="mr-1 inline size-3" />
-              Voyageurs
-            </span>
-            <span className="text-sm font-medium text-charcoal">
-              {guestsTotal} voyageur{guestsTotal > 1 ? "s" : ""}
-              {children > 0 &&
-                `, dont ${children} enfant${children > 1 ? "s" : ""}`}
-            </span>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {guestsOpen ? "Fermer" : "Modifier"}
+          <span className="booking-pill-label">
+            <Users className="mr-1 inline size-3" />
+            Voyageurs
+          </span>
+          <span className="booking-pill-value">
+            {guestsTotal} voyageur{guestsTotal > 1 ? "s" : ""}
+            {children > 0 &&
+              `, dont ${children} enfant${children > 1 ? "s" : ""}`}
           </span>
         </button>
         {guestsOpen && (
-          <div className="space-y-3 border-t border-line bg-sand/30 px-5 py-4">
+          <div className="space-y-3 rounded-xl bg-sand/40 px-4 py-4">
             <CounterRow
               label="Adultes"
               hint="13 ans et plus"

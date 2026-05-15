@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { SelectPill } from "@/components/public/select-pill";
 
 interface SortOption {
   value: string;
@@ -54,18 +55,15 @@ export function ListingToolbar({
         disponible{resultCount === 1 ? "" : "s"}
         {dateLabel && <span> · {dateLabel}</span>}
       </div>
-      <select
-        value={currentSort}
-        onChange={(e) => pushSort(e.target.value)}
-        className="rounded-full border border-line bg-card px-3.5 py-2.5 text-[0.85rem] text-charcoal outline-none transition-colors hover:border-charcoal focus:border-primary"
-        aria-label="Tri"
-      >
-        {sortOptions.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      <div className="listing-toolbar-sort">
+        <SelectPill
+          label="Tri"
+          value={currentSort}
+          onChange={pushSort}
+          options={sortOptions}
+          menuMinWidth={180}
+        />
+      </div>
     </div>
   );
 }

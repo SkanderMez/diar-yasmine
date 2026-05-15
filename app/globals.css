@@ -255,28 +255,67 @@
 .price-range-thumb::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 2px solid var(--color-primary-raw);
-  background: var(--card);
-  box-shadow: 0 1px 4px rgba(14, 90, 107, 0.2);
+  border: 0;
+  background: radial-gradient(
+    circle at center,
+    var(--color-primary-raw) 0,
+    var(--color-primary-raw) 5px,
+    #ffffff 6px,
+    #ffffff 100%
+  );
+  box-shadow:
+    0 1px 3px rgba(14, 90, 107, 0.18),
+    0 4px 12px rgba(14, 90, 107, 0.22),
+    0 0 0 1px rgba(14, 90, 107, 0.18) inset;
   cursor: grab;
   pointer-events: auto;
   margin-top: 0;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.price-range-thumb::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+  box-shadow:
+    0 2px 6px rgba(14, 90, 107, 0.22),
+    0 6px 18px rgba(14, 90, 107, 0.28),
+    0 0 0 1px rgba(14, 90, 107, 0.22) inset;
 }
 .price-range-thumb::-webkit-slider-thumb:active {
   cursor: grabbing;
+  transform: scale(1.18);
 }
 .price-range-thumb::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 2px solid var(--color-primary-raw);
-  background: var(--card);
-  box-shadow: 0 1px 4px rgba(14, 90, 107, 0.2);
+  border: 0;
+  background: radial-gradient(
+    circle at center,
+    var(--color-primary-raw) 0,
+    var(--color-primary-raw) 5px,
+    #ffffff 6px,
+    #ffffff 100%
+  );
+  box-shadow:
+    0 1px 3px rgba(14, 90, 107, 0.18),
+    0 4px 12px rgba(14, 90, 107, 0.22),
+    0 0 0 1px rgba(14, 90, 107, 0.18) inset;
   cursor: grab;
   pointer-events: auto;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.price-range-thumb::-moz-range-thumb:hover {
+  transform: scale(1.12);
+}
+.price-range-thumb::-moz-range-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.18);
 }
 .price-range-thumb::-webkit-slider-runnable-track {
   height: 4px;
@@ -425,7 +464,7 @@
 }
 .booking-pill-divider {
   width: 1px;
-  background: var(--line);
+  background: var(--color-line);
   margin: 12px 0;
   align-self: stretch;
 }
@@ -442,7 +481,7 @@
   transition: background-color 0.15s ease;
 }
 .booking-pill-cell:hover {
-  background: var(--bone, var(--sand));
+  background: var(--color-sand);
 }
 .booking-pill-trigger {
   background: transparent;
@@ -451,13 +490,13 @@
   width: 100%;
 }
 .booking-pill-trigger.open {
-  background: var(--bone, var(--sand));
+  background: var(--color-sand);
 }
 .booking-pill-label {
   display: block;
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--charcoal);
+  color: var(--color-charcoal-raw);
   letter-spacing: 0;
   text-transform: none;
   line-height: 1.2;
@@ -466,13 +505,13 @@
   display: block;
   margin-top: 2px;
   font-size: 0.88rem;
-  color: var(--charcoal);
+  color: var(--color-charcoal-soft);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .booking-pill-value-placeholder {
-  color: var(--muted-foreground);
+  color: var(--color-muted);
   font-weight: 400;
 }
 .booking-pill-cta {
@@ -482,7 +521,7 @@
   height: 52px;
   border-radius: 999px;
   background: var(--color-primary-raw);
-  color: var(--ivory);
+  color: var(--color-ivory);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -492,7 +531,7 @@
   box-shadow: 0 4px 12px -2px rgba(0, 99, 120, 0.4);
 }
 .booking-pill-cta:hover {
-  background: var(--color-bougainvillier-raw, var(--color-primary-raw));
+  background: var(--color-bougainvillier);
   transform: scale(1.04);
   box-shadow: 0 6px 18px -2px rgba(0, 99, 120, 0.5);
 }
@@ -525,4 +564,29 @@
     font-size: 0.9rem;
     font-weight: 500;
   }
+}
+
+/* Listing toolbar — narrow SelectPill on the right (sort dropdown). */
+.listing-toolbar-sort {
+  background: var(--card);
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  min-width: 180px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.listing-toolbar-sort .booking-pill-cell {
+  padding: 8px 18px;
+}
+.listing-toolbar-sort .booking-pill-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.listing-toolbar-sort .booking-pill-value {
+  font-size: 0.82rem;
+}
+
+/* Same wrapper for the filter bar's compact date picker — keeps the
+   shadow consistent with the other cells. */
+.filter-bar-date-wrap {
+  background: transparent;
 }
