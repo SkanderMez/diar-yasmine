@@ -6420,3 +6420,167 @@ html:has([data-admin-shell]) {
   border-radius: 50%;
   background: var(--primary);
 }
+
+/* ==========================================================================
+   ADMIN LIGHT — accent bump pass (visibility tuning).
+   The previous teal tints were too discreet; bump them so the brand
+   actually reads on the calendar / sidebar / toolbar.
+   ========================================================================== */
+
+/* Calendar — make the teal frame, grid and weekend wash actually visible */
+[data-theme="light"] [data-admin-shell] .cal-wrapper {
+  border-color: rgba(14, 90, 107, 0.2);
+  box-shadow: 0 1px 2px rgba(14, 90, 107, 0.05);
+}
+[data-theme="light"] [data-admin-shell] .cal-toolbar {
+  background: #ffffff;
+  border-color: rgba(14, 90, 107, 0.18);
+}
+[data-theme="light"] [data-admin-shell] .cal-header-row,
+[data-theme="light"] [data-admin-shell] .cal-left-header {
+  background: rgba(14, 90, 107, 0.06);
+  border-bottom-color: rgba(14, 90, 107, 0.18);
+  color: var(--primary);
+}
+[data-theme="light"] [data-admin-shell] .cal-day {
+  border-right-color: rgba(14, 90, 107, 0.1);
+  color: var(--primary);
+}
+[data-theme="light"] [data-admin-shell] .cal-day.dim {
+  color: var(--text-dim);
+}
+[data-theme="light"] [data-admin-shell] .cal-day.weekend {
+  background: rgba(14, 90, 107, 0.04);
+}
+[data-theme="light"] [data-admin-shell] .cal-day.today {
+  background: rgba(14, 90, 107, 0.18);
+  color: var(--primary);
+  font-weight: 700;
+}
+[data-theme="light"] [data-admin-shell] .cal-left {
+  background: rgba(14, 90, 107, 0.03);
+  border-right-color: rgba(14, 90, 107, 0.14);
+}
+[data-theme="light"] [data-admin-shell] .booking-row {
+  border-bottom-color: rgba(14, 90, 107, 0.1);
+}
+[data-theme="light"] [data-admin-shell] .booking-row .cells .cell {
+  border-right-color: rgba(14, 90, 107, 0.07);
+}
+[data-theme="light"] [data-admin-shell] .booking-row .cells .cell.weekend {
+  background: rgba(14, 90, 107, 0.03);
+}
+[data-theme="light"] [data-admin-shell] .booking-row .cells .cell.today {
+  background: rgba(14, 90, 107, 0.1);
+}
+
+/* Unit section dividers (CHALETS · 9 / BUNGALOWS · 12) — teal headline */
+[data-theme="light"] [data-admin-shell] .unit-section-header {
+  background: rgba(14, 90, 107, 0.05);
+  border-bottom-color: rgba(14, 90, 107, 0.16);
+  color: var(--primary);
+}
+[data-theme="light"] [data-admin-shell] .unit-section-spacer {
+  background: rgba(14, 90, 107, 0.05);
+  border-bottom-color: rgba(14, 90, 107, 0.16);
+}
+[data-theme="light"] [data-admin-shell] .unit-section-header .count {
+  color: rgba(14, 90, 107, 0.55);
+}
+[data-theme="light"] [data-admin-shell] .unit-row-label {
+  border-bottom-color: rgba(14, 90, 107, 0.08);
+}
+[data-theme="light"] [data-admin-shell] .unit-row-label:hover {
+  background: rgba(14, 90, 107, 0.05);
+}
+
+/* Filter chips — stronger active state, fuller teal */
+[data-theme="light"] [data-admin-shell] .filter-chip {
+  background: #ffffff;
+  border-color: rgba(14, 90, 107, 0.14);
+}
+[data-theme="light"] [data-admin-shell] .filter-chip:hover {
+  border-color: rgba(14, 90, 107, 0.28);
+}
+[data-theme="light"] [data-admin-shell] .filter-chip.active {
+  background: rgba(14, 90, 107, 0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Toolbar date nav buttons — teal icon */
+[data-theme="light"] [data-admin-shell] .cal-date-nav .date-display {
+  color: var(--primary);
+}
+[data-theme="light"] [data-admin-shell] .cal-toggle {
+  background: rgba(14, 90, 107, 0.06);
+}
+[data-theme="light"] [data-admin-shell] .cal-toggle .active {
+  background: #ffffff;
+  color: var(--primary);
+  box-shadow: 0 1px 2px rgba(14, 90, 107, 0.15);
+}
+
+/* Sidebar — bump brand text visibility + larger logo treatment */
+[data-theme="light"] [data-admin-shell] .sidebar {
+  border-right-color: rgba(14, 90, 107, 0.12);
+}
+[data-theme="light"] [data-admin-shell] .sidebar-brand .name {
+  color: var(--primary);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+[data-theme="light"] [data-admin-shell] .sidebar-brand .sub {
+  color: rgba(14, 90, 107, 0.6);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+/* Sidebar nav active state — more visible rail + bg */
+[data-theme="light"] [data-admin-shell] .nav-item.active {
+  background: rgba(14, 90, 107, 0.1);
+  color: var(--primary);
+  font-weight: 600;
+}
+[data-theme="light"] [data-admin-shell] .nav-item.active::before {
+  background: var(--primary);
+  width: 3px;
+}
+
+/* Sidebar bottom user card — visible teal border + hover */
+[data-theme="light"] [data-admin-shell] .sidebar-bottom {
+  border-top-color: rgba(14, 90, 107, 0.12);
+}
+[data-theme="light"] [data-admin-shell] .user-card:hover {
+  background: rgba(14, 90, 107, 0.05);
+}
+
+/* Topbar — visible teal bottom rule + search border */
+[data-theme="light"] [data-admin-shell] .topbar {
+  border-bottom-color: rgba(14, 90, 107, 0.16);
+}
+[data-theme="light"] [data-admin-shell] .search-bar {
+  background: #ffffff;
+  border-color: rgba(14, 90, 107, 0.18);
+}
+[data-theme="light"] [data-admin-shell] .search-bar:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 90, 107, 0.12);
+}
+
+/* Topbar property picker pill — teal accent so it reads as a control */
+[data-theme="light"] [data-admin-shell] .property-pill {
+  background: #ffffff;
+  border-color: rgba(14, 90, 107, 0.18);
+}
+[data-theme="light"] [data-admin-shell] .property-pill:hover {
+  background: rgba(14, 90, 107, 0.04);
+  border-color: rgba(14, 90, 107, 0.32);
+}
+
+/* Today badge in the calendar header (the "AUJ" pill if present) */
+[data-theme="light"] [data-admin-shell] .today-badge {
+  background: var(--primary);
+  color: #ffffff;
+}
