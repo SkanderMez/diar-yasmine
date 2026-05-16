@@ -6260,3 +6260,163 @@ html:has([data-admin-shell]) {
   background: var(--accent-lavender-bg);
   color: var(--accent-lavender-ink);
 }
+
+/* ==========================================================================
+   ADMIN — modern UI font (Plus Jakarta Sans) + a touch more brand teal
+   on borders and rails. Scoped to `[data-admin-shell]` so the public
+   site (Inter + Fraunces editorial) stays intact.
+   ========================================================================== */
+
+/* Body font — Plus Jakarta Sans for all admin chrome. Fraunces stays
+   the display font for big numbers / titles where the editorial feel
+   helps. */
+[data-admin-shell],
+[data-admin-shell] button,
+[data-admin-shell] input,
+[data-admin-shell] select,
+[data-admin-shell] textarea {
+  font-family:
+    var(--font-jakarta),
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    system-ui,
+    sans-serif;
+  font-feature-settings:
+    "cv11" 1,
+    "ss01" 1,
+    "ss03" 1;
+  letter-spacing: -0.005em;
+}
+[data-admin-shell] {
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+/* Microcopy stays slightly tighter — better hierarchy with the body */
+[data-admin-shell] .kpi-label,
+[data-admin-shell] .dashboard-kpi-label,
+[data-admin-shell] .sidebar-label,
+[data-admin-shell] .field label,
+[data-admin-shell] th {
+  letter-spacing: 0.06em;
+}
+
+/* ---------- Discrete teal accents on light theme ---------- */
+
+/* Subtle teal-tinted borders on the principal surfaces — gives the
+   whole admin a consistent brand thread without shouting. */
+[data-theme="light"] [data-admin-shell] .card-admin,
+[data-theme="light"] [data-admin-shell] .kpi-card,
+[data-theme="light"] [data-admin-shell] .dashboard-panel,
+[data-theme="light"] [data-admin-shell] .dashboard-kpi,
+[data-theme="light"] [data-admin-shell] .dashboard-quick-link,
+[data-theme="light"] [data-admin-shell] .channel-card {
+  border-color: rgba(14, 90, 107, 0.1);
+}
+[data-theme="light"] [data-admin-shell] .card-admin:hover,
+[data-theme="light"] [data-admin-shell] .kpi-card:hover,
+[data-theme="light"] [data-admin-shell] .dashboard-kpi:hover,
+[data-theme="light"] [data-admin-shell] .dashboard-quick-link:hover {
+  border-color: rgba(14, 90, 107, 0.22);
+}
+
+/* Card headers — thin teal divider so the head feels anchored */
+[data-theme="light"] [data-admin-shell] .card-header,
+[data-theme="light"] [data-admin-shell] .dashboard-panel-head {
+  border-bottom-color: rgba(14, 90, 107, 0.1);
+}
+
+/* Calendar — teal-tinted frame + grid lines (was pure neutral gray) */
+[data-theme="light"] [data-admin-shell] .cal-wrapper {
+  border-color: rgba(14, 90, 107, 0.14);
+}
+[data-theme="light"] [data-admin-shell] .cal-header-row,
+[data-theme="light"] [data-admin-shell] .cal-left-header {
+  background: rgba(14, 90, 107, 0.04);
+  border-bottom-color: rgba(14, 90, 107, 0.12);
+}
+[data-theme="light"] [data-admin-shell] .cal-left {
+  background: rgba(14, 90, 107, 0.02);
+  border-right-color: rgba(14, 90, 107, 0.1);
+}
+[data-theme="light"] [data-admin-shell] .booking-row {
+  border-bottom-color: rgba(14, 90, 107, 0.07);
+}
+[data-theme="light"] [data-admin-shell] .booking-row .cells .cell {
+  border-right-color: rgba(14, 90, 107, 0.05);
+}
+[data-theme="light"] [data-admin-shell] .cal-day {
+  border-right-color: rgba(14, 90, 107, 0.07);
+}
+[data-theme="light"] [data-admin-shell] .unit-row-label {
+  border-bottom-color: rgba(14, 90, 107, 0.07);
+}
+[data-theme="light"] [data-admin-shell] .unit-row-label:hover {
+  background: rgba(14, 90, 107, 0.04);
+}
+
+/* Section header — title gets the brand teal so the rail + title speak
+   together (instead of black text floating on a teal stripe) */
+[data-theme="light"] [data-admin-shell] .section-head h2,
+[data-theme="light"] [data-admin-shell] .section-head h3 {
+  color: var(--primary);
+}
+[data-theme="light"] [data-admin-shell] .section-head::before {
+  width: 4px;
+  background: linear-gradient(
+    180deg,
+    var(--primary) 0%,
+    rgba(14, 90, 107, 0.55) 100%
+  );
+}
+
+/* Page head h1 — a touch of teal warmth, not pure black */
+[data-theme="light"] [data-admin-shell] .page-head h1 {
+  color: #0a2935;
+}
+
+/* Sidebar brand text — teal for the product name */
+[data-theme="light"] [data-admin-shell] .sidebar-brand .name {
+  color: var(--primary);
+}
+
+/* Topbar — thin teal bottom rule to mark the chrome edge */
+[data-theme="light"] [data-admin-shell] .topbar {
+  border-bottom-color: rgba(14, 90, 107, 0.12);
+}
+
+/* Search bar — pale teal border instead of generic gray */
+[data-theme="light"] [data-admin-shell] .search-bar {
+  border-color: rgba(14, 90, 107, 0.12);
+}
+
+/* Tables — teal-tinted header background + bottom rule */
+[data-theme="light"] [data-admin-shell] .table-admin thead,
+[data-theme="light"] [data-admin-shell] .table-compact thead,
+[data-theme="light"] [data-admin-shell] .users-table thead {
+  background: rgba(14, 90, 107, 0.04);
+}
+[data-theme="light"] [data-admin-shell] .table-admin th,
+[data-theme="light"] [data-admin-shell] .table-compact th,
+[data-theme="light"] [data-admin-shell] .users-table th {
+  background: transparent;
+  border-bottom-color: rgba(14, 90, 107, 0.12);
+  color: var(--primary);
+}
+
+/* Reservation detail / generic dividers — teal-tinted hairlines */
+[data-theme="light"] [data-admin-shell] .reservation-card,
+[data-theme="light"] [data-admin-shell] .reservation-stay-pair,
+[data-theme="light"] [data-admin-shell] .reservation-stay-card {
+  border-color: rgba(14, 90, 107, 0.1);
+}
+
+/* Stat dot / accent indicator helper — used wherever we want a small
+   bullet to colour-tag a row. */
+[data-theme="light"] [data-admin-shell] .stat-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+}

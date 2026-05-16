@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
-import { Caveat, Fraunces, Inter, Tajawal } from "next/font/google";
+import {
+  Caveat,
+  Fraunces,
+  Inter,
+  Plus_Jakarta_Sans,
+  Tajawal,
+} from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { routing } from "@/i18n/routing";
 import { RTL_LOCALES } from "@/lib/constants";
@@ -18,6 +24,18 @@ const fraunces = Fraunces({
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+});
+
+/**
+ * Plus Jakarta Sans — modern, slightly warmer than Inter, used as the
+ * admin shell body font. The public site stays on Inter to preserve
+ * its editorial identity.
+ */
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -86,7 +104,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const dir = RTL_LOCALES.includes(locale) ? "rtl" : "ltr";
-  const fontClasses = `${fraunces.variable} ${inter.variable} ${caveat.variable} ${tajawal.variable}`;
+  const fontClasses = `${fraunces.variable} ${inter.variable} ${jakarta.variable} ${caveat.variable} ${tajawal.variable}`;
 
   return (
     <html
