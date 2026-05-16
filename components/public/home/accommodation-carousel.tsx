@@ -102,7 +102,7 @@ function PropertyTeaserCard({ property }: PropertyTeaserCardProps) {
               setSaved((v) => !v);
             }}
             aria-label={saved ? "Retirer des favoris" : "Sauvegarder"}
-            className="absolute right-3 top-3 z-10 inline-flex size-9 items-center justify-center rounded-full bg-white text-primary shadow-sm transition-colors hover:bg-sand"
+            className="absolute right-3 top-3 z-10 inline-flex size-9 items-center justify-center rounded-full bg-white text-primary shadow-sm transition-colors hover:bg-primary-tint"
           >
             <Heart
               className={cn(
@@ -195,7 +195,7 @@ export function AccommodationCarousel({
               type="button"
               onClick={() => scroll(-380)}
               aria-label="Précédent"
-              className="inline-flex size-11 items-center justify-center rounded-full bg-white text-primary shadow-sm transition-colors hover:bg-sand"
+              className="inline-flex size-11 items-center justify-center rounded-full bg-white text-primary shadow-sm transition-colors hover:bg-primary-tint"
             >
               <ChevronLeft className="size-[18px]" strokeWidth={2} />
             </button>
@@ -203,7 +203,7 @@ export function AccommodationCarousel({
               type="button"
               onClick={() => scroll(380)}
               aria-label="Suivant"
-              className="inline-flex size-11 items-center justify-center rounded-full bg-white text-primary shadow-sm transition-colors hover:bg-sand"
+              className="inline-flex size-11 items-center justify-center rounded-full bg-white text-primary shadow-sm transition-colors hover:bg-primary-tint"
             >
               <ChevronRight className="size-[18px]" strokeWidth={2} />
             </button>

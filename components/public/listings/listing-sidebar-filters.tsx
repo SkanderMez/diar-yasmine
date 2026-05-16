@@ -238,7 +238,7 @@ export function ListingSidebarFilters({
         <button
           type="button"
           onClick={reset}
-          className="inline-flex w-full items-center justify-center rounded-full bg-transparent px-6 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-sand"
+          className="inline-flex w-full items-center justify-center rounded-full bg-transparent px-6 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-primary-tint"
         >
           Réinitialiser les filtres
         </button>

@@ -187,7 +187,7 @@ export function FunnelRecapSticky({
             type="button"
             disabled={!promo.trim() || !onPromoApply}
             onClick={() => onPromoApply?.(promo.trim())}
-            className="rounded-full px-3 text-xs font-medium text-primary transition-colors hover:bg-sand disabled:opacity-40"
+            className="rounded-full px-3 text-xs font-medium text-primary transition-colors hover:bg-primary-tint disabled:opacity-40"
           >
             Appliquer
           </button>

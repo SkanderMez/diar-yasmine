@@ -157,8 +157,8 @@ export function SelectPill({
                     setOpen(false);
                   }}
                   className={cn(
-                    "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-sand",
-                    active && "bg-sand/70",
+                    "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-primary-tint",
+                    active && "bg-primary-tint-strong",
                   )}
                 >
                   {option.icon ? (

@@ -35,6 +35,12 @@
   --color-muted: #6b7a80;
   --color-line: #e5ddd0;
   --color-line-soft: #efe9dd;
+  /* Interactive surface tints — used on hover/active states across the
+   * public site (date picker cells, select options, search pill...).
+   * Layered teal so every clickable surface speaks the same colour
+   * language as the CTAs. */
+  --color-primary-tint: rgba(14, 90, 107, 0.07);
+  --color-primary-tint-strong: rgba(14, 90, 107, 0.13);
   --color-bougainvillier: #c44e7a;
   --color-bougainvillier-light: #e89bb5;
   --color-olive: #7a8f6b;
@@ -111,6 +117,8 @@
   --color-charcoal-soft: var(--color-charcoal-soft);
   --color-line: var(--color-line);
   --color-line-soft: var(--color-line-soft);
+  --color-primary-tint: var(--color-primary-tint);
+  --color-primary-tint-strong: var(--color-primary-tint-strong);
   --color-bougainvillier: var(--color-bougainvillier);
   --color-bougainvillier-light: var(--color-bougainvillier-light);
   --color-olive: var(--color-olive);
@@ -481,7 +489,7 @@
   transition: background-color 0.15s ease;
 }
 .booking-pill-cell:hover {
-  background: var(--color-sand);
+  background: var(--color-primary-tint);
 }
 .booking-pill-trigger {
   background: transparent;
@@ -490,7 +498,7 @@
   width: 100%;
 }
 .booking-pill-trigger.open {
-  background: var(--color-sand);
+  background: var(--color-primary-tint-strong);
 }
 .booking-pill-label {
   display: block;
@@ -589,4 +597,43 @@
    shadow consistent with the other cells. */
 .filter-bar-date-wrap {
   background: transparent;
+}
+
+/* Property booking sticky — wraps the compact date + guest cells in one
+   bordered card with a hairline divider, so they read as a single
+   cohesive control instead of two floating buttons. */
+.booking-sticky-stack {
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--card);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.booking-sticky-stack:hover {
+  border-color: var(--color-primary-raw);
+  box-shadow:
+    0 1px 2px rgba(14, 90, 107, 0.04),
+    0 6px 18px -6px rgba(14, 90, 107, 0.18);
+}
+.booking-sticky-stack > .booking-pill-cell,
+.booking-sticky-stack > [class*="relative"] > .booking-pill-cell {
+  border-radius: 0;
+  padding: 12px 18px;
+}
+.booking-sticky-stack > .booking-pill-cell:first-child,
+.booking-sticky-stack > [class*="relative"]:first-child > .booking-pill-cell {
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+.booking-sticky-stack > .booking-pill-cell:last-child,
+.booking-sticky-stack > [class*="relative"]:last-child > .booking-pill-cell {
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+.booking-sticky-stack-divider {
+  display: block;
+  height: 1px;
+  background: var(--color-line);
 }

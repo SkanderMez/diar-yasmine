@@ -227,7 +227,9 @@ export function DateRangePicker({
             }}
             className={cn(
               "flex flex-col items-start gap-0.5 rounded-l-2xl px-5 py-3 text-left transition-colors",
-              variant === "dark" ? "hover:bg-white/10" : "hover:bg-bone",
+              variant === "dark"
+                ? "hover:bg-white/10"
+                : "hover:bg-primary-tint",
               open && focus === "in" && variant !== "dark" && "bg-bone",
             )}
           >
@@ -267,7 +269,9 @@ export function DateRangePicker({
             }}
             className={cn(
               "flex flex-col items-start gap-0.5 rounded-r-2xl px-5 py-3 text-left transition-colors",
-              variant === "dark" ? "hover:bg-white/10" : "hover:bg-bone",
+              variant === "dark"
+                ? "hover:bg-white/10"
+                : "hover:bg-primary-tint",
               open && focus === "out" && variant !== "dark" && "bg-bone",
             )}
           >
@@ -339,7 +343,7 @@ export function DateRangePicker({
                     <button
                       type="button"
                       onClick={clear}
-                      className="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-bone hover:text-foreground"
+                      className="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-primary-tint hover:text-foreground"
                     >
                       {labels.clear}
                     </button>
@@ -347,7 +351,7 @@ export function DateRangePicker({
                   <button
                     type="button"
                     onClick={() => setOpen(false)}
-                    className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-bone hover:text-foreground"
+                    className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-primary-tint hover:text-foreground"
                     aria-label="Fermer"
                   >
                     <X className="size-4" />
@@ -360,7 +364,7 @@ export function DateRangePicker({
                   type="button"
                   onClick={() => setViewMonth(addMonths(viewMonth, -1))}
                   disabled={isSameMonth(viewMonth, today)}
-                  className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-bone hover:text-foreground disabled:opacity-30"
+                  className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary-tint hover:text-foreground disabled:opacity-30"
                   aria-label="Mois précédent"
                 >
                   <ChevronLeft className="size-4" />
@@ -372,7 +376,7 @@ export function DateRangePicker({
                 <button
                   type="button"
                   onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-                  className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-bone hover:text-foreground"
+                  className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary-tint hover:text-foreground"
                   aria-label="Mois suivant"
                 >
                   <ChevronRight className="size-4" />
@@ -413,7 +417,7 @@ export function DateRangePicker({
                     <button
                       type="button"
                       onClick={clear}
-                      className="rounded-full px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-bone hover:text-foreground"
+                      className="rounded-full px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-primary-tint hover:text-foreground"
                     >
                       {labels.clear}
                     </button>
@@ -520,8 +524,10 @@ function MonthGrid({
                   !isEndpoint &&
                   !inRange &&
                   !inHover &&
-                  "hover:bg-sand rounded-full",
-                (inRange || inHover) && !isEndpoint && "bg-sand text-charcoal",
+                  "hover:bg-primary-tint rounded-full",
+                (inRange || inHover) &&
+                  !isEndpoint &&
+                  "bg-primary-tint-strong text-charcoal",
                 isIn && "rounded-l-full",
                 isOut && "rounded-r-full",
                 isEndpoint &&

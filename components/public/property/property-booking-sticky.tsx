@@ -169,8 +169,10 @@ export function PropertyBookingSticky({
         )}
       </div>
 
-      {/* Dates + guests stack — same compact triggers as the listings page */}
-      <div className="flex flex-col gap-2">
+      {/* Dates + guests stack — wrapped in a single card with an internal
+       *  divider so the two cells feel like one cohesive control, not two
+       *  floating buttons. */}
+      <div className="booking-sticky-stack">
         <DateRangePicker
           variant="compact"
           checkIn={checkIn}
@@ -181,7 +183,7 @@ export function PropertyBookingSticky({
             setCheckOut(r.checkOut);
           }}
         />
-
+        <span aria-hidden className="booking-sticky-stack-divider" />
         <button
           type="button"
           onClick={() => setGuestsOpen((v) => !v)}
@@ -230,7 +232,7 @@ export function PropertyBookingSticky({
         />
         <button
           type="button"
-          className="rounded-full px-3 text-xs font-medium text-primary transition-colors hover:bg-sand disabled:opacity-40"
+          className="rounded-full px-3 text-xs font-medium text-primary transition-colors hover:bg-primary-tint disabled:opacity-40"
           disabled={!promo.trim()}
         >
           Appliquer

@@ -62,7 +62,7 @@ export function ListingCard({ property }: ListingCardProps) {
         <button
           type="button"
           aria-label="Sauvegarder"
-          className="absolute right-3 top-3 z-10 inline-flex size-9 items-center justify-center rounded-full bg-white text-primary shadow-sm transition-colors hover:bg-sand"
+          className="absolute right-3 top-3 z-10 inline-flex size-9 items-center justify-center rounded-full bg-white text-primary shadow-sm transition-colors hover:bg-primary-tint"
         >
           <Heart className="size-4" />
         </button>

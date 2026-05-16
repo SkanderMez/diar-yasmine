@@ -16,7 +16,7 @@ export function LogoutButton() {
     <button
       type="button"
       onClick={logout}
-      className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm font-medium text-charcoal-soft transition-colors hover:border-bougainvillier hover:bg-sand hover:text-bougainvillier"
+      className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm font-medium text-charcoal-soft transition-colors hover:border-bougainvillier hover:bg-primary-tint hover:text-bougainvillier"
     >
       <LogOut className="size-3.5" />
       Se déconnecter

@@ -39,7 +39,7 @@ export function FunnelStepper({ current }: FunnelStepperProps) {
                 <div
                   className={cn(
                     "flex items-center gap-2 rounded-full px-3 py-2 transition-colors sm:px-4",
-                    status === "active" && "bg-sand",
+                    status === "active" && "bg-primary-tint-strong",
                   )}
                 >
                   <span

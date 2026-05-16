@@ -159,7 +159,7 @@ function FieldWrapper({
   return (
     <div
       className={cn(
-        "relative cursor-pointer rounded-md px-4 py-3 transition-colors hover:bg-sand",
+        "relative cursor-pointer rounded-md px-4 py-3 transition-colors hover:bg-primary-tint",
         withDivider &&
           "lg:after:absolute lg:after:bottom-[20%] lg:after:right-[-1px] lg:after:top-[20%] lg:after:w-px lg:after:bg-line lg:after:content-['']",
       )}
@@ -228,7 +228,7 @@ function GuestsField({
                 type="button"
                 onClick={() => onChange(Math.max(1, guests - 1))}
                 disabled={guests <= 1}
-                className="inline-flex size-9 items-center justify-center rounded-full border border-line text-foreground transition-colors hover:border-foreground hover:bg-sand disabled:cursor-not-allowed disabled:opacity-30"
+                className="inline-flex size-9 items-center justify-center rounded-full border border-line text-foreground transition-colors hover:border-foreground hover:bg-primary-tint disabled:cursor-not-allowed disabled:opacity-30"
                 aria-label="Moins"
               >
                 <Minus className="size-3.5" />
@@ -240,7 +240,7 @@ function GuestsField({
                 type="button"
                 onClick={() => onChange(Math.min(20, guests + 1))}
                 disabled={guests >= 20}
-                className="inline-flex size-9 items-center justify-center rounded-full border border-line text-foreground transition-colors hover:border-foreground hover:bg-sand disabled:cursor-not-allowed disabled:opacity-30"
+                className="inline-flex size-9 items-center justify-center rounded-full border border-line text-foreground transition-colors hover:border-foreground hover:bg-primary-tint disabled:cursor-not-allowed disabled:opacity-30"
                 aria-label="Plus"
               >
                 <Plus className="size-3.5" />

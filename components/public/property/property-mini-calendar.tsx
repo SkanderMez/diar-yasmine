@@ -79,7 +79,7 @@ export function PropertyMiniCalendar({
             viewMonth.getFullYear() === today.getFullYear() &&
             viewMonth.getMonth() === today.getMonth()
           }
-          className="inline-flex size-9 items-center justify-center rounded-full text-charcoal-soft transition-colors hover:bg-sand hover:text-charcoal disabled:opacity-30"
+          className="inline-flex size-9 items-center justify-center rounded-full text-charcoal-soft transition-colors hover:bg-primary-tint hover:text-charcoal disabled:opacity-30"
           aria-label="Mois précédent"
         >
           <ChevronLeft className="size-4" />
@@ -87,7 +87,7 @@ export function PropertyMiniCalendar({
         <button
           type="button"
           onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-          className="inline-flex size-9 items-center justify-center rounded-full text-charcoal-soft transition-colors hover:bg-sand hover:text-charcoal"
+          className="inline-flex size-9 items-center justify-center rounded-full text-charcoal-soft transition-colors hover:bg-primary-tint hover:text-charcoal"
           aria-label="Mois suivant"
         >
           <ChevronRight className="size-4" />
@@ -206,12 +206,12 @@ function Month({
               className={cn(
                 "relative flex aspect-square items-center justify-center text-sm transition-colors",
                 outside && "cursor-default text-line",
-                !outside && !disabled && "rounded-sm hover:bg-sand",
+                !outside && !disabled && "rounded-sm hover:bg-primary-tint",
                 isToday && !isStart && !isEnd && "border-2 border-primary",
                 booked &&
                   "cursor-not-allowed text-line line-through bg-sand-dark/40",
                 past && !outside && !booked && "text-line line-through",
-                inRange && "bg-sand text-primary rounded-none",
+                inRange && "bg-primary-tint-strong text-primary rounded-none",
                 isStart && "bg-primary text-ivory rounded-l-sm rounded-r-none",
                 isEnd && "bg-primary text-ivory rounded-r-sm rounded-l-none",
               )}

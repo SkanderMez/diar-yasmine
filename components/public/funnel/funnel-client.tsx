@@ -207,7 +207,7 @@ export function FunnelClient({
                   <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line-soft pt-6">
                     <Link
                       href={`/${property.type === "CHALET" ? "chalets" : "bungalows"}/${property.slug}`}
-                      className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-sand"
+                      className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-primary-tint"
                     >
                       <ArrowLeft className="size-4" />
                       Retour

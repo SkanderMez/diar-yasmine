@@ -237,8 +237,8 @@ function TypeSelect({
                   aria-selected={active}
                   onClick={() => pick(option.value)}
                   className={cn(
-                    "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-sand",
-                    active && "bg-sand/70",
+                    "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-primary-tint",
+                    active && "bg-primary-tint-strong",
                   )}
                 >
                   <span
@@ -351,7 +351,7 @@ function GuestsPopover({
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-sand hover:text-charcoal"
+                  className="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-primary-tint hover:text-charcoal"
                 >
                   Fermer
                 </button>

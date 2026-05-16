@@ -77,7 +77,7 @@ export function ReviewForm({ code, locale }: ReviewFormProps) {
               onMouseLeave={() => setHover(0)}
               onClick={() => setRating(v)}
               aria-label={`${v} étoile${v > 1 ? "s" : ""}`}
-              className="inline-flex size-11 items-center justify-center rounded-full transition-colors hover:bg-sand"
+              className="inline-flex size-11 items-center justify-center rounded-full transition-colors hover:bg-primary-tint"
             >
               <Star
                 className={cn(

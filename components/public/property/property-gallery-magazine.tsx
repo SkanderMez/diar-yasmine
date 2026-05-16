@@ -179,7 +179,7 @@ function GridModal({
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex size-10 items-center justify-center rounded-full text-charcoal transition-colors hover:bg-sand"
+          className="inline-flex size-10 items-center justify-center rounded-full text-charcoal transition-colors hover:bg-primary-tint"
           aria-label="Fermer"
         >
           <X className="size-5" />

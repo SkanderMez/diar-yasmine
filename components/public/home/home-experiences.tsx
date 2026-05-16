@@ -84,7 +84,7 @@ export function HomeExperiences({ experiences }: HomeExperiencesProps) {
           </div>
           <Link
             href="/padel"
-            className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-[0.95rem] font-medium text-foreground transition-colors hover:bg-sand"
+            className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-[0.95rem] font-medium text-foreground transition-colors hover:bg-primary-tint"
           >
             Tout voir
             <ArrowRight className="size-4" strokeWidth={2} />
