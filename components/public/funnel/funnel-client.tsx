@@ -178,21 +178,6 @@ export function FunnelClient({
     <>
       <FunnelStepper current={currentStep} />
 
-      {!isCustomerLoggedIn && (
-        <div className="container-x mt-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line-soft bg-white px-4 py-2.5 text-sm text-charcoal-soft">
-            <span>Déjà venu chez nous&nbsp;?</span>
-            <Link
-              href={`/account/login?next=${encodeURIComponent(`/book?propertyId=${property.id}&checkIn=${checkIn}&checkOut=${checkOut}&adults=${adults}&children=${childrenCount}`)}`}
-              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
-            >
-              Se connecter pour pré-remplir le formulaire
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
-        </div>
-      )}
-
       <div className="container-x">
         <div
           className="grid items-start gap-12 py-8 pb-16 lg:grid-cols-[1.6fr_1fr]"
@@ -209,10 +194,27 @@ export function FunnelClient({
                   >
                     Vos informations
                   </h2>
-                  <p className="mt-2 mb-6 text-sm text-charcoal-soft">
+                  <p className="mt-2 text-sm text-charcoal-soft">
                     Nous avons besoin de ces informations pour préparer votre
                     arrivée et émettre votre voucher.
                   </p>
+                  {!isCustomerLoggedIn && (
+                    <p className="mt-1 mb-6 text-xs text-muted-foreground">
+                      Déjà venu chez nous&nbsp;?{" "}
+                      <Link
+                        href={`/account/login?next=${encodeURIComponent(`/book?propertyId=${property.id}&checkIn=${checkIn}&checkOut=${checkOut}&adults=${adults}&children=${childrenCount}`)}`}
+                        className="inline-flex items-center gap-1 font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        Se connecter pour pré-remplir le formulaire
+                        <ArrowRight className="size-3" />
+                      </Link>
+                    </p>
+                  )}
+                  {isCustomerLoggedIn && (
+                    <p className="mt-1 mb-6 text-xs text-muted-foreground">
+                      Connecté&nbsp;: vos informations sont pré-remplies.
+                    </p>
+                  )}
 
                   <FunnelStepSummary
                     stepNumber={1}
