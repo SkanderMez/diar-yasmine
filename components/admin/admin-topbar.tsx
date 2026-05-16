@@ -18,14 +18,14 @@ type Theme = "light" | "dark";
 const THEME_KEY = "dy-admin-theme";
 
 function readInitialTheme(): Theme {
-  if (typeof document === "undefined") return "dark";
+  if (typeof document === "undefined") return "light";
   const fromAttr = document.documentElement.dataset.theme;
   if (fromAttr === "light" || fromAttr === "dark") return fromAttr;
-  return "dark";
+  return "light";
 }
 
 export function AdminTopbar() {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
   const searchRef = useRef<HTMLInputElement | null>(null);
 
   // Sync component state with the bootstrap-set <html data-theme> on mount.

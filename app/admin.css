@@ -5448,3 +5448,276 @@ html:has([data-admin-shell]) {
   color: var(--primary);
   flex-shrink: 0;
 }
+
+/* ==========================================================================
+   MODERN PMS REFRESH — purely visual layer applied on top of the existing
+   admin styles. No JS / data changes; everything here is additive and
+   safely overridable. Inspired by clean light-PMS dashboards (Mediterranean
+   teal palette, soft warm shadows, generous typography).
+   ========================================================================== */
+
+/* ---------- Page head — bigger title, breathable spacing ---------- */
+[data-admin-shell] .page-head h1 {
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+[data-admin-shell] .page-head p {
+  font-size: 0.94rem;
+  margin-top: 6px;
+}
+
+/* ---------- Section header — gradient vertical bar + icon + title ---------- */
+[data-admin-shell] .section-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 16px;
+}
+[data-admin-shell] .section-head::before {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 32px;
+  border-radius: 4px;
+  background: linear-gradient(
+    180deg,
+    var(--primary) 0%,
+    rgba(14, 90, 107, 0.45) 100%
+  );
+  flex-shrink: 0;
+}
+[data-admin-shell] .section-head h2,
+[data-admin-shell] .section-head h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+[data-admin-shell] .section-head .section-head-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(14, 90, 107, 0.1);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* ---------- KPI cards — generous numerals, soft elevation, delta badge ---- */
+[data-admin-shell] .kpi-card {
+  padding: 22px 22px 18px;
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+}
+[data-admin-shell] .kpi-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(14, 90, 107, 0.035) 0%,
+    transparent 55%
+  );
+}
+[data-admin-shell] .kpi-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+[data-admin-shell] .kpi-value {
+  font-size: 2.4rem;
+  font-weight: 500;
+  margin-top: 10px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+[data-admin-shell] .kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  margin-top: 10px;
+}
+[data-admin-shell] .kpi-trend.up {
+  background: rgba(74, 143, 107, 0.14);
+  color: var(--success);
+}
+[data-admin-shell] .kpi-trend.down {
+  background: rgba(192, 78, 78, 0.14);
+  color: var(--danger);
+}
+
+/* ---------- Buttons — gradient primary CTA ---------- */
+[data-admin-shell] .btn-admin {
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.86rem;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+[data-admin-shell] .btn-admin-primary {
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-deep) 100%
+  );
+  color: #ffffff;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.15) inset,
+    0 6px 14px -8px rgba(14, 90, 107, 0.55);
+}
+[data-admin-shell] .btn-admin-primary:hover {
+  background: linear-gradient(
+    135deg,
+    var(--primary-deep) 0%,
+    var(--primary-900) 100%
+  );
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 10px 24px -10px rgba(14, 90, 107, 0.65);
+}
+[data-admin-shell] .btn-admin-primary:active {
+  transform: translateY(0);
+}
+[data-admin-shell] .btn-admin-secondary {
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* ---------- Inputs — focus ring + lighter idle bg ---------- */
+[data-admin-shell] .input-admin,
+[data-admin-shell] .select-admin,
+[data-admin-shell] .textarea-admin {
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+[data-admin-shell] .input-admin:focus,
+[data-admin-shell] .select-admin:focus,
+[data-admin-shell] .textarea-admin:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 90, 107, 0.12);
+}
+[data-admin-shell] .field label {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+}
+
+/* ---------- Sidebar — stronger active state + role badge ---------- */
+[data-admin-shell] .nav-item {
+  padding: 9px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  position: relative;
+}
+[data-admin-shell] .nav-item.active {
+  background: rgba(14, 90, 107, 0.1);
+  color: var(--primary-deep);
+  font-weight: 600;
+}
+[data-admin-shell] .nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--primary);
+}
+[data-admin-shell] .nav-item.active svg {
+  color: var(--primary-deep);
+}
+[data-admin-shell] .user-avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 0.92rem;
+  box-shadow: 0 2px 6px -2px rgba(14, 90, 107, 0.45);
+}
+[data-admin-shell] .user-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(14, 90, 107, 0.08);
+  color: var(--primary-deep);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+/* ---------- Cards — soft warm shadow, larger radius ---------- */
+[data-admin-shell] .card-admin {
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  transition: box-shadow 0.18s ease;
+}
+[data-admin-shell] .card-header h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Light-theme tonal sweep — make the modern feel land ---------- */
+[data-theme="light"] [data-admin-shell] {
+  /* Slightly cooler, ivory-bluish page background — closer to the
+     "Mediterranean" feel without losing the warm sand identity. */
+  background: linear-gradient(180deg, #fbf6ec 0%, #f3ede0 100%);
+}
+[data-theme="light"] [data-admin-shell] .kpi-card,
+[data-theme="light"] [data-admin-shell] .card-admin {
+  border: 1.5px solid rgba(14, 90, 107, 0.1);
+  box-shadow:
+    0 1px 0 rgba(207, 196, 174, 0.4),
+    0 12px 28px -20px rgba(14, 90, 107, 0.16);
+}
+[data-theme="light"] [data-admin-shell] .kpi-card:hover {
+  box-shadow:
+    0 1px 0 rgba(207, 196, 174, 0.4),
+    0 16px 32px -16px rgba(14, 90, 107, 0.22);
+}
+[data-theme="light"] [data-admin-shell] .input-admin,
+[data-theme="light"] [data-admin-shell] .select-admin,
+[data-theme="light"] [data-admin-shell] .textarea-admin {
+  background: #fbf8f2;
+  border-color: rgba(14, 90, 107, 0.14);
+}
+[data-theme="light"] [data-admin-shell] .input-admin:focus,
+[data-theme="light"] [data-admin-shell] .select-admin:focus,
+[data-theme="light"] [data-admin-shell] .textarea-admin:focus {
+  background: #ffffff;
+}
+[data-theme="light"] [data-admin-shell] .nav-item.active {
+  background: rgba(14, 90, 107, 0.07);
+}
+[data-theme="light"] [data-admin-shell] .nav-item:hover {
+  background: rgba(14, 90, 107, 0.04);
+  color: var(--primary-deep);
+}
+[data-theme="light"] [data-admin-shell] .user-role {
+  background: rgba(14, 90, 107, 0.1);
+}
+[data-theme="light"] [data-admin-shell] .section-head h2,
+[data-theme="light"] [data-admin-shell] .section-head h3 {
+  color: var(--primary-deep);
+}

@@ -146,6 +146,13 @@ function isActive(pathname: string, href: string): boolean {
   return pathname.startsWith(`${href}/`);
 }
 
+const ROLE_LABEL: Record<string, string> = {
+  ADMIN: "Admin",
+  MANAGER: "Manager",
+  RECEPTION: "Réception",
+  VIEWER: "Lecteur",
+};
+
 interface AdminSidebarProps {
   user: AdminUser;
 }
@@ -206,7 +213,9 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
           <div className="user-avatar">{initials || "?"}</div>
           <div>
             <div className="user-name">{user.name}</div>
-            <div className="user-role">{user.role}</div>
+            <div className="user-role">
+              {ROLE_LABEL[user.role] ?? user.role}
+            </div>
           </div>
           <ChevronDown style={{ marginLeft: "auto" }} className="size-3.5" />
         </div>
