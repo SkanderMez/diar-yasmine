@@ -22,7 +22,7 @@ const STEPS: ReadonlyArray<{ id: 1 | 2 | 3; label: string }> = [
  */
 export function FunnelStepper({ current }: FunnelStepperProps) {
   return (
-    <div className="sticky top-[88px] z-40 border-b border-line-soft bg-white">
+    <div className="sticky top-[88px] z-40 border-b border-line-soft bg-white shadow-[0_4px_12px_-8px_rgba(14,90,107,0.18)]">
       <div className="container-x py-4">
         <ol className="flex items-center justify-center gap-3 sm:gap-4">
           {STEPS.map((step, idx) => {

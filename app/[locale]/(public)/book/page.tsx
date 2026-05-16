@@ -7,6 +7,7 @@ import { FunnelClient } from "@/components/public/funnel/funnel-client";
 import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
 import { findConflicts } from "@/lib/availability";
+import { getCustomerSession } from "@/lib/customer-auth";
 import { getPropertyRatingSummary } from "@/lib/queries";
 import { parseLocalDate, nightsBetween } from "@/lib/date";
 
@@ -129,10 +130,34 @@ export default async function BookPage({
     );
   }
 
-  const [taxRate, ratingSummary] = await Promise.all([
+  const [taxRate, ratingSummary, customerSession] = await Promise.all([
     getSetting("tax.rate"),
     getPropertyRatingSummary(property.id),
+    getCustomerSession(),
   ]);
+
+  const sessionGuest = customerSession
+    ? await prisma.guest.findUnique({
+        where: { id: customerSession.guestId },
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
+          country: true,
+        },
+      })
+    : null;
+
+  const initialGuest = sessionGuest
+    ? {
+        firstName: sessionGuest.firstName,
+        lastName: sessionGuest.lastName,
+        email: sessionGuest.email ?? "",
+        phone: sessionGuest.phone,
+        country: sessionGuest.country ?? "TN",
+      }
+    : undefined;
 
   return (
     <main className="flex-1 bg-sand pt-24">
@@ -156,6 +181,8 @@ export default async function BookPage({
         taxRate={taxRate}
         promoCode={promo}
         rating={ratingSummary}
+        initialGuest={initialGuest}
+        isCustomerLoggedIn={Boolean(customerSession)}
       />
     </main>
   );

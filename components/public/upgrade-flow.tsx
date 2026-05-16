@@ -15,10 +15,16 @@ type Step = "phone" | "verify";
  * sets the password, opens the customer session, and we redirect to
  * /account on success.
  */
-export function UpgradeFlow() {
+interface UpgradeFlowProps {
+  /** Optional starting phone — typically pre-filled from a just-completed
+   *  reservation so guests don't retype it on /book/confirmed → upgrade. */
+  initialPhone?: string;
+}
+
+export function UpgradeFlow({ initialPhone }: UpgradeFlowProps = {}) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("phone");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(initialPhone ?? "");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

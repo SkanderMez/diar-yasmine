@@ -12,14 +12,22 @@ export const metadata: Metadata = {
 
 export default async function AccountUpgradePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ phone?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const sp = await searchParams;
 
   const existing = await getCustomerSession();
   if (existing) redirect(`/${locale}/account`);
+
+  const initialPhone =
+    typeof sp.phone === "string" && /^\+?\d[\d\s]{4,}$/.test(sp.phone)
+      ? sp.phone
+      : undefined;
 
   return (
     <main className="flex-1 bg-sand pt-32 pb-24">
@@ -39,7 +47,7 @@ export default async function AccountUpgradePage({
 
         <FadeIn delay="delay-1" className="mx-auto mt-10 max-w-md">
           <div className="rounded-lg border border-line-soft bg-white p-8 shadow-sm">
-            <UpgradeFlow />
+            <UpgradeFlow initialPhone={initialPhone} />
           </div>
 
           <p className="mt-6 text-center text-sm text-charcoal-soft">

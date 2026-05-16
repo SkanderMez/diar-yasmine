@@ -5408,3 +5408,43 @@ html:has([data-admin-shell]) {
   width: 16px;
   height: 16px;
 }
+
+/* ==========================================================================
+   CALENDAR JUMP BANNER — shown when the current month has 0 reservations
+   but bookings exist in another month (very common after first deploy).
+   ========================================================================== */
+[data-admin-shell] .calendar-jump-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 12px 18px;
+  background: var(--bg-surface);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    transform 0.12s ease;
+}
+[data-admin-shell] .calendar-jump-banner:hover {
+  background: rgba(14, 90, 107, 0.06);
+}
+[data-admin-shell] .calendar-jump-banner:active {
+  transform: translateY(1px);
+}
+[data-admin-shell] .calendar-jump-banner > svg:first-child {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+[data-admin-shell] .calendar-jump-banner > span {
+  flex: 1;
+  text-align: left;
+}
+[data-admin-shell] .calendar-jump-banner > svg:last-child {
+  color: var(--primary);
+  flex-shrink: 0;
+}

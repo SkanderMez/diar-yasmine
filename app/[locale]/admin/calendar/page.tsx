@@ -5,6 +5,7 @@ import { fr } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz";
 import { prisma } from "@/lib/prisma";
 import {
+  findNextReservationOutsideWindow,
   listActiveProperties,
   listReservationsForCalendar,
 } from "@/lib/queries";
@@ -79,6 +80,7 @@ export default async function CalendarPage({
     monthCount,
     prevMonthCount,
     monthBookedNights,
+    nextOutOfWindow,
   ] = await Promise.all([
     listActiveProperties(),
     listReservationsForCalendar(start, end),
@@ -111,6 +113,9 @@ export default async function CalendarPage({
       },
       _sum: { nights: true },
     }),
+    // When the current window is empty, find the closest reservation
+    // outside it so we can offer a "Jump to next reservation" button.
+    findNextReservationOutsideWindow(start, end),
   ]);
 
   const photoByProperty = new Map<string, string>();
@@ -263,6 +268,19 @@ export default async function CalendarPage({
           arrivalsToday,
           changePct,
         }}
+        jumpToReservation={
+          monthCount === 0 && nextOutOfWindow
+            ? {
+                monthIso: monthKey(nextOutOfWindow.checkIn),
+                label: format(
+                  toZonedTime(nextOutOfWindow.checkIn, TZ),
+                  "MMMM yyyy",
+                  { locale: fr },
+                ),
+                isPast: nextOutOfWindow.checkIn < start,
+              }
+            : null
+        }
       />
     </>
   );

@@ -1,19 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 /**
  * Customer login form — phone OR email + password. POSTs to the existing
- * /api/auth/customer/login endpoint, then redirects to /account on success.
+ * /api/auth/customer/login endpoint. On success, redirects to `?next=...`
+ * if it points at a same-origin path (e.g. coming from the funnel), else
+ * /account.
  */
 export function CustomerLoginForm() {
   const router = useRouter();
+  const sp = useSearchParams();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  function resolveNext(): string {
+    const raw = sp?.get("next");
+    if (!raw) return "/account";
+    // Only allow internal redirects (start with "/", reject "//" + protocol).
+    if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+    return "/account";
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +40,7 @@ export function CustomerLoginForm() {
       setError("Identifiants incorrects.");
       return;
     }
-    router.push("/account");
+    router.push(resolveNext());
     router.refresh();
   }
 

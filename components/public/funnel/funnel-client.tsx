@@ -44,6 +44,12 @@ interface FunnelClientProps {
   promoCode?: string;
   /** Published-review aggregate. Null when the property has none yet. */
   rating?: { avg: number; count: number } | null;
+  /** Pre-filled guest fields — sourced from the logged-in customer
+   *  session so returning visitors don't retype their identity. */
+  initialGuest?: Partial<GuestFormValues>;
+  /** Whether a customer is logged in — controls the "déjà inscrit ?"
+   *  banner at the top of the funnel. */
+  isCustomerLoggedIn?: boolean;
 }
 
 /**
@@ -65,12 +71,28 @@ export function FunnelClient({
   taxRate,
   promoCode,
   rating,
+  initialGuest,
+  isCustomerLoggedIn,
 }: FunnelClientProps) {
   const router = useRouter();
   // The funnel currently lives at step 2 — step 1 is summarised on top, step
   // 3 is the dashed preview below. The stepper reflects this fixed state.
   const currentStep = 2 as const;
-  const [guest, setGuest] = useState<GuestFormValues | null>(null);
+  // Hydrate guest state with whatever the server knows about the
+  // logged-in customer; the local form still lets them edit before
+  // submission.
+  const [guest, setGuest] = useState<GuestFormValues | null>(
+    initialGuest
+      ? {
+          firstName: initialGuest.firstName ?? "",
+          lastName: initialGuest.lastName ?? "",
+          email: initialGuest.email ?? "",
+          phone: initialGuest.phone ?? "",
+          country: initialGuest.country ?? "TN",
+          city: initialGuest.city ?? "",
+        }
+      : null,
+  );
   const [stay, setStay] = useState<StayDetailsValues>({
     arrivalWindow: "18-22",
     stayMotif: "",
@@ -156,14 +178,35 @@ export function FunnelClient({
     <>
       <FunnelStepper current={currentStep} />
 
+      {!isCustomerLoggedIn && (
+        <div className="container-x mt-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line-soft bg-white px-4 py-2.5 text-sm text-charcoal-soft">
+            <span>Déjà venu chez nous&nbsp;?</span>
+            <Link
+              href={`/account/login?next=${encodeURIComponent(`/book?propertyId=${property.id}&checkIn=${checkIn}&checkOut=${checkOut}&adults=${adults}&children=${childrenCount}`)}`}
+              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+            >
+              Se connecter pour pré-remplir le formulaire
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="container-x">
-        <div className="grid items-start gap-12 py-8 pb-16 lg:grid-cols-[1.6fr_1fr]">
+        <div
+          className="grid items-start gap-12 py-8 pb-16 lg:grid-cols-[1.6fr_1fr]"
+          style={{ scrollMarginTop: 168 }}
+        >
           {/* LEFT — Step content */}
           <div>
             <div className="rounded-lg bg-white p-8">
               {currentStep === 2 && (
                 <>
-                  <h2 className="font-heading text-[1.75rem] font-medium text-charcoal">
+                  <h2
+                    className="font-heading text-[1.75rem] font-medium text-charcoal"
+                    style={{ scrollMarginTop: 168 }}
+                  >
                     Vos informations
                   </h2>
                   <p className="mt-2 mb-6 text-sm text-charcoal-soft">

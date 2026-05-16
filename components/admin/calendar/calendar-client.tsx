@@ -2,6 +2,8 @@
 
 import { useCallback, useMemo, useState } from "react";
 import type { ActiveProperty } from "@/lib/queries";
+import { useRouter } from "next/navigation";
+import { ArrowRight, CalendarRange } from "lucide-react";
 import { CalendarToolbar } from "./calendar-toolbar";
 import {
   CalendarTimeline,
@@ -33,6 +35,14 @@ interface CalendarClientProps {
     arrivalsToday: number;
     changePct: number;
   };
+  /** Set when the current window is empty but a reservation exists in
+   *  another month. The banner offers a one-click jump so the admin
+   *  never wonders "où sont mes réservations". */
+  jumpToReservation?: {
+    monthIso: string;
+    label: string;
+    isPast: boolean;
+  } | null;
 }
 
 export interface SerializableTimelineReservation {
@@ -66,6 +76,7 @@ export function CalendarClient({
   todayMonthIso,
   viewSize,
   stats,
+  jumpToReservation,
 }: CalendarClientProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [channelFilter, setChannelFilter] = useState<Set<ChannelKey>>(
@@ -123,6 +134,14 @@ export function CalendarClient({
         onSearchChange={setSearch}
       />
 
+      {jumpToReservation && reservations.length === 0 && (
+        <CalendarJumpBanner
+          monthIso={jumpToReservation.monthIso}
+          label={jumpToReservation.label}
+          isPast={jumpToReservation.isPast}
+        />
+      )}
+
       <CalendarTimeline
         properties={properties}
         days={days}
@@ -140,5 +159,31 @@ export function CalendarClient({
         onClose={() => setSelectedId(null)}
       />
     </>
+  );
+}
+
+function CalendarJumpBanner({
+  monthIso,
+  label,
+  isPast,
+}: {
+  monthIso: string;
+  label: string;
+  isPast: boolean;
+}) {
+  const router = useRouter();
+  return (
+    <button
+      type="button"
+      onClick={() => router.push(`/admin/calendar?month=${monthIso}`)}
+      className="calendar-jump-banner"
+    >
+      <CalendarRange className="size-4" aria-hidden />
+      <span>
+        {isPast ? "Réservation la plus récente" : "Prochaine réservation"} en{" "}
+        <strong>{label}</strong>
+      </span>
+      <ArrowRight className="size-3.5" aria-hidden />
+    </button>
   );
 }

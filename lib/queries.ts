@@ -96,6 +96,38 @@ export async function listReservationsForCalendar(start: Date, end: Date) {
   });
 }
 
+/**
+ * Earliest upcoming reservation that does NOT fall inside the given
+ * window. Used by the calendar header to surface a "Jump to next
+ * reservation" link when the current month appears empty even though
+ * future bookings exist (the calendar otherwise looks broken).
+ */
+export async function findNextReservationOutsideWindow(
+  start: Date,
+  end: Date,
+): Promise<{ checkIn: Date; propertyId: string } | null> {
+  const future = await prisma.reservation.findFirst({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkIn: { gte: end },
+    },
+    select: { checkIn: true, propertyId: true },
+    orderBy: { checkIn: "asc" },
+  });
+  if (future) return future;
+  const past = await prisma.reservation.findFirst({
+    where: {
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      checkOut: { lte: start },
+    },
+    select: { checkIn: true, propertyId: true },
+    orderBy: { checkIn: "desc" },
+  });
+  return past;
+}
+
 export type CalendarReservation = Awaited<
   ReturnType<typeof listReservationsForCalendar>
 >[number];
