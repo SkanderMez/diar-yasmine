@@ -5679,51 +5679,47 @@ html:has([data-admin-shell]) {
 }
 
 /* ==========================================================================
-   PADEL PALETTE — Mediterranean blue/cyan trial on the admin shell only.
-   Scoped to `[data-theme="light"] [data-admin-shell]` so it never leaks
-   into the public-facing site (which keeps its warm sand/ivory identity).
 
-   Token map (taken from padels-mediterranee globals.css):
-     - page bg          #E5F3FC  (soft blue-tinted)
-     - surface          #FFFFFF
-     - primary teal     #0284C7  (ocean blue)
-     - primary deep     #0369A1
-     - primary bright   #0ABDE3  (crystal turquoise — accents/highlights)
-     - amber CTA        #FF6B47  (sunset coral — used sparingly on key CTAs)
-     - text high        #0C2340  (navy)
-     - text mid         #334155
-     - text muted       #64748B
-     - border           rgba(10,189,227,0.18)
-     - cool shadow      rgba(15,23,42,0.08)
+/* ==========================================================================
+   ADMIN LIGHT THEME — Stratify-inspired modern PMS look (Dribbble ref).
+   Scoped to `[data-theme="light"] [data-admin-shell]` so the public site
+   is never touched. Highlights of the inspiration:
+     - very light neutral page bg (almost white)
+     - pure white cards with hairline border + barely-there shadow
+     - HUGE display values (Fraunces, light weight) — data first
+     - pastel-tinted icon tiles and chips (low saturation)
+     - generous whitespace, no decorative gradients
+     - brand teal reserved for active states + primary CTA + soft tints
    ========================================================================== */
 
 [data-theme="light"] [data-admin-shell] {
-  --primary: #0284c7;
-  --primary-raw: #0284c7;
-  --primary-deep: #0369a1;
-  --primary-bright: #0abde3;
-  --accent-coral: #ff6b47;
-  --accent-coral-deep: #e8552f;
+  --primary: #0e5a6b;
+  --primary-raw: #0e5a6b;
+  --primary-deep: #0a4854;
 
-  --bg-app: #e5f3fc;
+  /* Soft pastel teal — used for KPI icon tiles, status pills, hover */
+  --tint: #e6eff1;
+  --tint-strong: #cfe0e4;
+
+  --bg-app: #f8f9fb;
   --bg-surface: #ffffff;
-  --bg-surface-2: #f5fbff;
-  --bg-surface-3: #ecf6fd;
+  --bg-surface-2: #f4f5f7;
+  --bg-surface-3: #eceef1;
 
-  --text: #0c2340;
-  --text-mid: #334155;
-  --text-muted: #64748b;
-  --text-dim: #94a3b8;
+  --text: #14171c;
+  --text-mid: #4a5058;
+  --text-muted: #6b7280;
+  --text-dim: #9ca3af;
 
-  --border: rgba(10, 189, 227, 0.18);
-  --border-soft: rgba(10, 189, 227, 0.1);
-  --border-strong: rgba(10, 189, 227, 0.32);
+  --border: #ebedf0;
+  --border-soft: #f0f1f4;
+  --border-strong: #d8dbe0;
 
-  background: linear-gradient(180deg, #e5f3fc 0%, #d8ecf8 100%);
+  background: #f8f9fb;
   color: var(--text);
 }
 
-/* Sidebar — pure white panel + Mediterranean accent rail */
+/* Sidebar — pristine white, faint border */
 [data-theme="light"] [data-admin-shell] .sidebar {
   background: #ffffff;
   border-right: 1px solid var(--border);
@@ -5732,49 +5728,67 @@ html:has([data-admin-shell]) {
   color: var(--text);
 }
 [data-theme="light"] [data-admin-shell] .sidebar-label {
-  color: var(--text-muted);
+  color: var(--text-dim);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
 }
 [data-theme="light"] [data-admin-shell] .nav-item {
   color: var(--text-mid);
 }
 [data-theme="light"] [data-admin-shell] .nav-item:hover {
-  background: rgba(10, 189, 227, 0.08);
-  color: var(--primary-deep);
+  background: var(--bg-surface-2);
+  color: var(--text);
 }
 [data-theme="light"] [data-admin-shell] .nav-item.active {
-  background: rgba(10, 189, 227, 0.12);
-  color: var(--primary-deep);
+  background: var(--tint);
+  color: var(--primary);
+  font-weight: 600;
 }
 [data-theme="light"] [data-admin-shell] .nav-item.active::before {
-  background: var(--primary-bright);
+  background: var(--primary);
 }
 [data-theme="light"] [data-admin-shell] .nav-item.active svg {
-  color: var(--primary-deep);
+  color: var(--primary);
+}
+[data-theme="light"] [data-admin-shell] .nav-item .badge {
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+}
+[data-theme="light"] [data-admin-shell] .nav-item.active .badge {
+  background: var(--primary);
+  color: #ffffff;
 }
 [data-theme="light"] [data-admin-shell] .user-avatar {
-  background: linear-gradient(135deg, #0abde3 0%, #0369a1 100%);
-  box-shadow: 0 4px 12px -4px rgba(2, 132, 199, 0.55);
+  background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 [data-theme="light"] [data-admin-shell] .user-role {
-  background: rgba(10, 189, 227, 0.14);
-  color: var(--primary-deep);
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
 }
 
-/* Topbar — clean white strip */
+/* Topbar — flat white */
 [data-theme="light"] [data-admin-shell] .topbar {
   background: #ffffff;
   border-bottom: 1px solid var(--border);
 }
 
-/* Page head — navy title against the blue page */
+/* Page head — big display title, generous whitespace */
+[data-theme="light"] [data-admin-shell] .page-head {
+  margin-bottom: 28px;
+}
 [data-theme="light"] [data-admin-shell] .page-head h1 {
   color: var(--text);
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: -0.025em;
 }
 [data-theme="light"] [data-admin-shell] .page-head p {
   color: var(--text-muted);
+  margin-top: 6px;
 }
 
-/* Cards — bright white, cool blue border, soft slate shadow */
+/* Cards — flat white, hairline border, barely-there shadow */
 [data-theme="light"] [data-admin-shell] .card-admin,
 [data-theme="light"] [data-admin-shell] .kpi-card,
 [data-theme="light"] [data-admin-shell] .channel-card,
@@ -5783,99 +5797,130 @@ html:has([data-admin-shell]) {
 [data-theme="light"] [data-admin-shell] .dashboard-kpi,
 [data-theme="light"] [data-admin-shell] .dashboard-quick-link {
   background: #ffffff;
-  border: 1.5px solid var(--border-soft);
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 [data-theme="light"] [data-admin-shell] .kpi-card:hover,
 [data-theme="light"] [data-admin-shell] .dashboard-kpi:hover,
 [data-theme="light"] [data-admin-shell] .dashboard-quick-link:hover {
   border-color: var(--border-strong);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 }
+/* No decorative wash on KPI cards */
 [data-theme="light"] [data-admin-shell] .kpi-card::after,
 [data-theme="light"] [data-admin-shell] .dashboard-kpi::after {
-  background: linear-gradient(
-    135deg,
-    rgba(10, 189, 227, 0.06) 0%,
-    transparent 55%
-  );
+  display: none;
 }
 
-/* KPI numerals + icon tiles in the Mediterranean blue */
+/* KPI — XL display value (data is the hero) */
+[data-theme="light"] [data-admin-shell] .kpi-card,
+[data-theme="light"] [data-admin-shell] .dashboard-kpi {
+  padding: 22px 22px 20px;
+  border-radius: 18px;
+}
+[data-theme="light"] [data-admin-shell] .kpi-label,
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-label {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 [data-theme="light"] [data-admin-shell] .kpi-value,
 [data-theme="light"] [data-admin-shell] .dashboard-kpi-value {
-  color: var(--primary-deep);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-top: 12px;
 }
 [data-theme="light"] [data-admin-shell] .dashboard-kpi-icon {
-  background: rgba(10, 189, 227, 0.12);
-  color: var(--primary-deep);
+  background: var(--tint);
+  color: var(--primary);
+  border-radius: 12px;
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-warning
+  .dashboard-kpi-icon {
+  background: #fef2f0;
+  color: #c04e4e;
 }
 [data-theme="light"] [data-admin-shell] .kpi-trend.up {
-  background: rgba(16, 185, 129, 0.14);
-  color: #059669;
+  background: #e8f3ee;
+  color: #2f7a53;
 }
 [data-theme="light"] [data-admin-shell] .kpi-trend.down {
-  background: rgba(220, 38, 38, 0.14);
-  color: #dc2626;
+  background: #fdecec;
+  color: #c04e4e;
 }
 
-/* Section header — bright accent bar + deeper blue title */
+/* Section header — thin teal rail + neutral icon tile + dark title */
 [data-theme="light"] [data-admin-shell] .section-head::before {
-  background: linear-gradient(180deg, #0abde3 0%, #0369a1 100%);
+  background: var(--primary);
+  width: 3px;
+  border-radius: 0 3px 3px 0;
 }
 [data-theme="light"] [data-admin-shell] .section-head .section-head-icon {
-  background: rgba(10, 189, 227, 0.14);
-  color: var(--primary-deep);
+  background: var(--bg-surface-2);
+  color: var(--text-mid);
+  border-radius: 10px;
 }
 [data-theme="light"] [data-admin-shell] .section-head h2,
 [data-theme="light"] [data-admin-shell] .section-head h3 {
   color: var(--text);
 }
 
-/* Primary button — Mediterranean teal gradient + cool shadow */
+/* Primary button — flat brand teal, subtle shadow, no lift */
 [data-theme="light"] [data-admin-shell] .btn-admin-primary {
-  background: linear-gradient(135deg, #0abde3 0%, #0369a1 100%);
+  background: var(--primary);
   color: #ffffff;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.18) inset,
-    0 6px 14px -8px rgba(2, 132, 199, 0.55);
+  box-shadow: 0 1px 2px rgba(14, 90, 107, 0.2);
 }
 [data-theme="light"] [data-admin-shell] .btn-admin-primary:hover {
-  background: linear-gradient(135deg, #0284c7 0%, #062f64 100%);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.2) inset,
-    0 10px 24px -10px rgba(2, 132, 199, 0.65);
+  background: var(--primary-deep);
+  transform: none;
+  box-shadow: 0 2px 6px rgba(14, 90, 107, 0.28);
 }
 [data-theme="light"] [data-admin-shell] .btn-admin-secondary {
   background: #ffffff;
   border: 1px solid var(--border);
+  color: var(--text);
 }
 [data-theme="light"] [data-admin-shell] .btn-admin-secondary:hover {
   background: var(--bg-surface-2);
+  border-color: var(--border-strong);
+}
+[data-theme="light"] [data-admin-shell] .btn-admin-ghost {
+  color: var(--text-mid);
 }
 [data-theme="light"] [data-admin-shell] .btn-admin-ghost:hover {
-  background: rgba(10, 189, 227, 0.08);
-  color: var(--primary-deep);
+  background: var(--bg-surface-2);
+  color: var(--text);
 }
 
-/* Inputs — pale tinted bg + cyan focus ring */
+/* Inputs — white idle, hairline border, brand teal focus */
 [data-theme="light"] [data-admin-shell] .input-admin,
 [data-theme="light"] [data-admin-shell] .select-admin,
 [data-theme="light"] [data-admin-shell] .textarea-admin {
-  background: var(--bg-surface-2);
-  border-color: var(--border);
+  background: #ffffff;
+  border: 1px solid var(--border);
   color: var(--text);
 }
 [data-theme="light"] [data-admin-shell] .input-admin:focus,
 [data-theme="light"] [data-admin-shell] .select-admin:focus,
 [data-theme="light"] [data-admin-shell] .textarea-admin:focus {
   background: #ffffff;
-  border-color: var(--primary-bright);
-  box-shadow: 0 0 0 3px rgba(10, 189, 227, 0.16);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 90, 107, 0.1);
 }
 
-/* Tables — cool zebra + Mediterranean header */
+/* Tables — quiet header, neutral hover */
 [data-theme="light"] [data-admin-shell] .table-admin th,
 [data-theme="light"] [data-admin-shell] .table-compact th,
 [data-theme="light"] [data-admin-shell] .users-table th {
@@ -5885,23 +5930,23 @@ html:has([data-admin-shell]) {
 [data-theme="light"] [data-admin-shell] .table-admin tbody tr:hover,
 [data-theme="light"] [data-admin-shell] .table-compact tbody tr:hover,
 [data-theme="light"] [data-admin-shell] .users-table tbody tr:hover {
-  background: rgba(10, 189, 227, 0.06);
+  background: var(--bg-surface-2);
 }
 
-/* Search bar in topbar */
+/* Search bar */
 [data-theme="light"] [data-admin-shell] .search-bar {
   background: var(--bg-surface-2);
   border-color: var(--border);
 }
 [data-theme="light"] [data-admin-shell] .search-bar:focus-within {
-  border-color: var(--primary-bright);
-  box-shadow: 0 0 0 3px rgba(10, 189, 227, 0.16);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 90, 107, 0.1);
 }
 
 /* Icon buttons */
 [data-theme="light"] [data-admin-shell] .icon-btn:hover {
-  background: rgba(10, 189, 227, 0.1);
-  color: var(--primary-deep);
+  background: var(--bg-surface-2);
+  color: var(--text);
 }
 
 /* Property pill */
@@ -5911,43 +5956,47 @@ html:has([data-admin-shell]) {
 }
 [data-theme="light"] [data-admin-shell] .property-pill:hover {
   background: var(--bg-surface-2);
-  border-color: var(--primary-bright);
+  border-color: var(--border-strong);
 }
 
-/* Tag/status pills — keep the system colours but a touch brighter */
+/* Tags — pastel pills, low saturation */
 [data-theme="light"] [data-admin-shell] .tag-direct {
-  background: rgba(10, 189, 227, 0.14);
-  color: var(--primary-deep);
+  background: var(--tint);
+  color: var(--primary);
 }
 [data-theme="light"] [data-admin-shell] .tag-confirmed {
-  background: rgba(16, 185, 129, 0.14);
-  color: #059669;
+  background: #e8f3ee;
+  color: #2f7a53;
+}
+[data-theme="light"] [data-admin-shell] .tag-cancelled {
+  background: #fdecec;
+  color: #c04e4e;
 }
 
-/* Calendar — bright Mediterranean wash */
+/* Calendar — neutral surface */
 [data-theme="light"] [data-admin-shell] .cal-header-row,
 [data-theme="light"] [data-admin-shell] .cal-left-header {
   background: var(--bg-surface-2);
 }
 [data-theme="light"] [data-admin-shell] .booking-row .cells .cell.weekend {
-  background: rgba(10, 189, 227, 0.04);
+  background: var(--bg-surface-2);
 }
 [data-theme="light"] [data-admin-shell] .booking-row .cells .cell.today {
-  background: rgba(10, 189, 227, 0.16);
+  background: var(--tint);
 }
 [data-theme="light"]
   [data-admin-shell]
   .booking-row
   .cells
   .cell.is-empty:hover {
-  background: rgba(10, 189, 227, 0.1);
+  background: var(--tint);
 }
 
-/* Calendar jump banner — Mediterranean teal */
+/* Calendar jump banner */
 [data-theme="light"] [data-admin-shell] .calendar-jump-banner {
   background: #ffffff;
-  border-color: var(--primary-bright);
+  border-color: var(--primary);
 }
 [data-theme="light"] [data-admin-shell] .calendar-jump-banner:hover {
-  background: rgba(10, 189, 227, 0.06);
+  background: var(--tint);
 }
