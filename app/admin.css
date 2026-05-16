@@ -6000,3 +6000,263 @@ html:has([data-admin-shell]) {
 [data-theme="light"] [data-admin-shell] .calendar-jump-banner:hover {
   background: var(--tint);
 }
+
+/* ==========================================================================
+   ADMIN LIGHT — accent pass: discrete colour to break the white wall.
+   Pastel palette tied to data semantics. Used sparingly: KPI icon tiles
+   (4-colour rotation), section accents, soft warm page tint.
+   ========================================================================== */
+
+[data-theme="light"] [data-admin-shell] {
+  /* Soft pastels — backgrounds at ~10% perceived saturation, ink at ~45% */
+  --accent-teal-bg: #e3eef0;
+  --accent-teal-ink: #0e5a6b;
+  --accent-mint-bg: #e2f0e8;
+  --accent-mint-ink: #2f7a53;
+  --accent-amber-bg: #fbeed6;
+  --accent-amber-ink: #a87922;
+  --accent-coral-bg: #fbe6df;
+  --accent-coral-ink: #b05a36;
+  --accent-lavender-bg: #ebe7f5;
+  --accent-lavender-ink: #6c5fa3;
+}
+
+/* Subtle warmth on the page so it doesn't feel like raw printer paper */
+[data-theme="light"] [data-admin-shell] {
+  background:
+    radial-gradient(
+      circle at 12% -5%,
+      rgba(14, 90, 107, 0.04) 0,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 105% 110%,
+      rgba(196, 78, 122, 0.025) 0,
+      transparent 38%
+    ),
+    #f7f8fa;
+}
+
+/* KPI cards — 4-colour rotation on the icon tiles + matching 2px top accent.
+   The card body stays pristine white so data still leads. */
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-row .dashboard-kpi {
+  position: relative;
+  overflow: hidden;
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-row
+  .dashboard-kpi::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.85;
+}
+/* 1 — Arrivées */
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-row
+  .dashboard-kpi:nth-child(1) {
+  color: var(--accent-teal-ink);
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-row
+  .dashboard-kpi:nth-child(1)
+  .dashboard-kpi-icon {
+  background: var(--accent-teal-bg);
+  color: var(--accent-teal-ink);
+}
+/* 2 — Départs */
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-row
+  .dashboard-kpi:nth-child(2) {
+  color: var(--accent-mint-ink);
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-row
+  .dashboard-kpi:nth-child(2)
+  .dashboard-kpi-icon {
+  background: var(--accent-mint-bg);
+  color: var(--accent-mint-ink);
+}
+/* 3 — Occupation */
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-row
+  .dashboard-kpi:nth-child(3) {
+  color: var(--accent-lavender-ink);
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-row
+  .dashboard-kpi:nth-child(3)
+  .dashboard-kpi-icon {
+  background: var(--accent-lavender-bg);
+  color: var(--accent-lavender-ink);
+}
+/* 4 — Paiements en attente (already flagged warning, lock the coral hue) */
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-row
+  .dashboard-kpi:nth-child(4),
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-row
+  .dashboard-kpi-warning {
+  color: var(--accent-coral-ink);
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-row
+  .dashboard-kpi:nth-child(4)
+  .dashboard-kpi-icon,
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi-row
+  .dashboard-kpi-warning
+  .dashboard-kpi-icon {
+  background: var(--accent-coral-bg);
+  color: var(--accent-coral-ink);
+}
+
+/* The KPI value stays near-black for readability — `color: currentColor` on
+   the card would tint it; explicitly reset it. */
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-value,
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-label,
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-hint {
+  color: var(--text);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-label {
+  color: var(--text-muted);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-hint {
+  color: var(--text-muted);
+}
+
+/* Panel headers — give a soft 18px coloured stripe at the top so each
+   block is visually anchored. We use `:nth-of-type` on the dashboard
+   2-col grid to alternate teal and lavender. */
+[data-theme="light"] [data-admin-shell] .dashboard-panel {
+  position: relative;
+  overflow: hidden;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-panel-head h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-panel:nth-of-type(odd)
+  .dashboard-panel-head
+  h3
+  > svg:first-child {
+  color: var(--accent-teal-ink);
+  background: var(--accent-teal-bg);
+  padding: 6px;
+  border-radius: 8px;
+  box-sizing: content-box;
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-panel:nth-of-type(even)
+  .dashboard-panel-head
+  h3
+  > svg:first-child {
+  color: var(--accent-lavender-ink);
+  background: var(--accent-lavender-bg);
+  padding: 6px;
+  border-radius: 8px;
+  box-sizing: content-box;
+}
+
+/* Activity feed icon — pastel teal tile (replaces the gray surface-2) */
+[data-theme="light"] [data-admin-shell] .dashboard-activity-icon {
+  background: var(--accent-teal-bg);
+  color: var(--accent-teal-ink);
+}
+
+/* Arrival rows — give the price chip a warm coral tint so it pops */
+[data-theme="light"] [data-admin-shell] .dashboard-arrival-time {
+  background: var(--accent-amber-bg);
+  color: var(--accent-amber-ink);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+/* Status tags — coloured pastels */
+[data-theme="light"] [data-admin-shell] .tag-direct {
+  background: var(--accent-teal-bg);
+  color: var(--accent-teal-ink);
+}
+[data-theme="light"] [data-admin-shell] .tag-confirmed,
+[data-theme="light"] [data-admin-shell] .tag-paid {
+  background: var(--accent-mint-bg);
+  color: var(--accent-mint-ink);
+}
+[data-theme="light"] [data-admin-shell] .tag-pending {
+  background: var(--accent-amber-bg);
+  color: var(--accent-amber-ink);
+}
+[data-theme="light"] [data-admin-shell] .tag-cancelled,
+[data-theme="light"] [data-admin-shell] .tag-unpaid {
+  background: var(--accent-coral-bg);
+  color: var(--accent-coral-ink);
+}
+[data-theme="light"] [data-admin-shell] .tag-booking,
+[data-theme="light"] [data-admin-shell] .tag-airbnb,
+[data-theme="light"] [data-admin-shell] .tag-expedia {
+  background: var(--accent-lavender-bg);
+  color: var(--accent-lavender-ink);
+}
+
+/* User role chip in sidebar — pastel teal */
+[data-theme="light"] [data-admin-shell] .user-role {
+  background: var(--accent-teal-bg);
+  color: var(--accent-teal-ink);
+}
+
+/* Topbar — very faint warmth, not pure white anymore */
+[data-theme="light"] [data-admin-shell] .topbar {
+  background: #fdfdfb;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Sidebar bottom card — soft pastel ring around the avatar */
+[data-theme="light"] [data-admin-shell] .sidebar {
+  background: #fdfdfb;
+}
+
+/* Weekly bars (Cette semaine) — pastel teal fill */
+[data-theme="light"] [data-admin-shell] .dashboard-week-bar,
+[data-theme="light"] [data-admin-shell] .dashboard-week-fill {
+  background: var(--accent-teal-ink);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-week-track {
+  background: var(--accent-teal-bg);
+}
+
+/* Quick-link icon tiles — alternate teal & lavender via nth-child */
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-quick-link:nth-child(odd)
+  .dashboard-quick-icon {
+  background: var(--accent-teal-bg);
+  color: var(--accent-teal-ink);
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-quick-link:nth-child(even)
+  .dashboard-quick-icon {
+  background: var(--accent-lavender-bg);
+  color: var(--accent-lavender-ink);
+}
