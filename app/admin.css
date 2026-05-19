@@ -6276,7 +6276,7 @@ html:has([data-admin-shell]) {
 [data-admin-shell] select,
 [data-admin-shell] textarea {
   font-family:
-    var(--font-jakarta),
+    var(--font-inter),
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
@@ -6593,8 +6593,7 @@ html:has([data-admin-shell]) {
    ========================================================================== */
 
 [data-theme="light"] [data-admin-shell] {
-  font-family:
-    var(--font-jakarta), var(--font-sans), "Inter", system-ui, sans-serif;
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
   font-feature-settings: "ss01", "cv11";
   letter-spacing: -0.005em;
 }
@@ -6650,7 +6649,7 @@ html:has([data-admin-shell]) {
   color: var(--text);
 }
 [data-theme="light"] [data-admin-shell] .dashboard-kpi-unit {
-  font-family: var(--font-jakarta), var(--font-sans), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--text-muted);
@@ -6784,7 +6783,7 @@ html:has([data-admin-shell]) {
   );
 }
 [data-theme="light"] [data-admin-shell] .dashboard-week-pct {
-  font-family: var(--font-jakarta), var(--font-sans), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-size: 0.74rem;
   font-weight: 600;
   color: var(--text);
@@ -6879,4 +6878,195 @@ html:has([data-admin-shell]) {
       )
       0 0 / 28px 28px,
     #f7f8fa;
+}
+
+/* ==========================================================================
+   ADMIN LIGHT — final tuning pass.
+   - Drop Plus Jakarta in favour of Inter (cleaner, more neutral).
+   - Lighter page bg so cards float properly + bump border contrast so
+     they actually exist instead of melting into the canvas.
+   ========================================================================== */
+
+[data-theme="light"] [data-admin-shell] {
+  font-family:
+    var(--font-inter),
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    system-ui,
+    sans-serif;
+  font-feature-settings: "cv11", "ss03";
+  letter-spacing: 0;
+}
+
+/* Page bg — near-white, faint texture only. The dotted teal texture was
+   too noisy; replace with two ultra-soft washes. */
+[data-theme="light"] [data-admin-shell] {
+  background:
+    radial-gradient(
+      circle at 8% -5%,
+      rgba(14, 90, 107, 0.035) 0,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 110% 110%,
+      rgba(196, 78, 122, 0.02) 0,
+      transparent 45%
+    ),
+    #fbfbfc;
+}
+
+/* Borders — bump contrast so they read clearly against the lighter bg.
+   #dde0e5 is still neutral but properly distinct from cards. */
+[data-theme="light"] [data-admin-shell] {
+  --border: #dde0e5;
+  --border-soft: #e5e7eb;
+  --border-strong: #c8ccd2;
+}
+
+[data-theme="light"] [data-admin-shell] .card-admin,
+[data-theme="light"] [data-admin-shell] .kpi-card,
+[data-theme="light"] [data-admin-shell] .channel-card,
+[data-theme="light"] [data-admin-shell] .cal-wrapper,
+[data-theme="light"] [data-admin-shell] .dashboard-panel,
+[data-theme="light"] [data-admin-shell] .dashboard-kpi,
+[data-theme="light"] [data-admin-shell] .dashboard-quick-link {
+  border-color: #e6e8ec;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 1px 0 rgba(15, 23, 42, 0.02);
+}
+[data-theme="light"] [data-admin-shell] .kpi-card:hover,
+[data-theme="light"] [data-admin-shell] .dashboard-kpi:hover,
+[data-theme="light"] [data-admin-shell] .dashboard-quick-link:hover {
+  border-color: #d3d6dc;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+/* Tables — header on subtle warm gray, real row dividers */
+[data-theme="light"] [data-admin-shell] .table-admin th,
+[data-theme="light"] [data-admin-shell] .table-compact th,
+[data-theme="light"] [data-admin-shell] .users-table th {
+  background: #f3f4f6;
+  color: var(--text-mid);
+  border-bottom: 1px solid #dde0e5;
+}
+[data-theme="light"] [data-admin-shell] .table-admin td,
+[data-theme="light"] [data-admin-shell] .table-compact td,
+[data-theme="light"] [data-admin-shell] .users-table td {
+  border-bottom: 1px solid #eef0f3;
+}
+[data-theme="light"] [data-admin-shell] .table-admin tbody tr:last-child td,
+[data-theme="light"] [data-admin-shell] .table-compact tbody tr:last-child td,
+[data-theme="light"] [data-admin-shell] .users-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Calendar — borders in the same neutral hue (not teal-tinted anymore,
+   keep teal for accents only: today, active filter, brand) */
+[data-theme="light"] [data-admin-shell] .cal-wrapper {
+  border-color: #e6e8ec;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 1px 0 rgba(15, 23, 42, 0.02);
+}
+[data-theme="light"] [data-admin-shell] .cal-toolbar {
+  border-color: #e6e8ec;
+}
+[data-theme="light"] [data-admin-shell] .cal-header-row,
+[data-theme="light"] [data-admin-shell] .cal-left-header {
+  background: #f4f6f7;
+  border-bottom-color: #dde0e5;
+  color: var(--text-mid);
+}
+[data-theme="light"] [data-admin-shell] .cal-day {
+  border-right-color: #ebedef;
+  color: var(--text-mid);
+}
+[data-theme="light"] [data-admin-shell] .cal-day.dim {
+  color: var(--text-dim);
+}
+[data-theme="light"] [data-admin-shell] .cal-day.weekend {
+  background: #f7f8fa;
+}
+[data-theme="light"] [data-admin-shell] .cal-day.today {
+  background: rgba(14, 90, 107, 0.14);
+  color: var(--primary);
+  font-weight: 700;
+}
+[data-theme="light"] [data-admin-shell] .cal-left {
+  background: #fafbfc;
+  border-right-color: #e6e8ec;
+}
+[data-theme="light"] [data-admin-shell] .booking-row {
+  border-bottom-color: #ebedef;
+}
+[data-theme="light"] [data-admin-shell] .booking-row .cells .cell {
+  border-right-color: #f0f1f4;
+}
+[data-theme="light"] [data-admin-shell] .booking-row .cells .cell.weekend {
+  background: #f7f8fa;
+}
+[data-theme="light"] [data-admin-shell] .booking-row .cells .cell.today {
+  background: rgba(14, 90, 107, 0.08);
+}
+
+/* Unit section dividers — neutral header with teal label only */
+[data-theme="light"] [data-admin-shell] .unit-section-header {
+  background: #f7f8fa;
+  border-bottom-color: #dde0e5;
+  color: var(--primary);
+}
+[data-theme="light"] [data-admin-shell] .unit-section-spacer {
+  background: #f7f8fa;
+  border-bottom-color: #dde0e5;
+}
+[data-theme="light"] [data-admin-shell] .unit-row-label {
+  border-bottom-color: #eef0f3;
+}
+[data-theme="light"] [data-admin-shell] .unit-row-label:hover {
+  background: #f7f8fa;
+}
+
+/* Sidebar borders — neutral so they don't fight the brand teal text */
+[data-theme="light"] [data-admin-shell] .sidebar {
+  border-right-color: #e6e8ec;
+}
+[data-theme="light"] [data-admin-shell] .sidebar-bottom {
+  border-top-color: #e6e8ec;
+}
+
+/* Topbar bottom rule */
+[data-theme="light"] [data-admin-shell] .topbar {
+  border-bottom-color: #e6e8ec;
+}
+
+/* Search bar + property pill — neutral borders, teal only on focus */
+[data-theme="light"] [data-admin-shell] .search-bar {
+  border-color: #dde0e5;
+}
+[data-theme="light"] [data-admin-shell] .search-bar:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 90, 107, 0.12);
+}
+[data-theme="light"] [data-admin-shell] .property-pill {
+  border-color: #dde0e5;
+}
+[data-theme="light"] [data-admin-shell] .property-pill:hover {
+  border-color: #c8ccd2;
+}
+
+/* Inputs — neutral idle borders, teal focus stays */
+[data-theme="light"] [data-admin-shell] .input-admin,
+[data-theme="light"] [data-admin-shell] .select-admin,
+[data-theme="light"] [data-admin-shell] .textarea-admin {
+  border-color: #dde0e5;
+}
+
+/* Filter chips — same treatment, teal only on active */
+[data-theme="light"] [data-admin-shell] .filter-chip {
+  border-color: #dde0e5;
+}
+[data-theme="light"] [data-admin-shell] .filter-chip:hover {
+  border-color: #c8ccd2;
 }
