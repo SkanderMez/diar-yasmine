@@ -6584,3 +6584,299 @@ html:has([data-admin-shell]) {
   background: var(--primary);
   color: #ffffff;
 }
+
+/* ==========================================================================
+   ADMIN LIGHT — refinement pass: typography rhythm + visual polish.
+   Plus Jakarta Sans is loaded globally via the `--font-jakarta` token;
+   apply it on the admin shell so the body reads warmer + crisper than
+   Inter. Fraunces stays for editorial titles + KPI hero numerals.
+   ========================================================================== */
+
+[data-theme="light"] [data-admin-shell] {
+  font-family:
+    var(--font-jakarta), var(--font-sans), "Inter", system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  letter-spacing: -0.005em;
+}
+
+/* Body weight + size — slightly larger and lighter for breathability */
+[data-theme="light"] [data-admin-shell] {
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+[data-theme="light"] [data-admin-shell] p {
+  line-height: 1.55;
+}
+
+/* Headings — keep Fraunces for the editorial pop */
+[data-theme="light"] [data-admin-shell] h1,
+[data-theme="light"] [data-admin-shell] h2,
+[data-theme="light"] [data-admin-shell] .page-head h1 {
+  font-family: var(--font-display, serif);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+[data-theme="light"] [data-admin-shell] .page-head h1 {
+  font-size: 2.1rem;
+}
+[data-theme="light"] [data-admin-shell] .page-head p {
+  font-size: 0.95rem;
+  margin-top: 4px;
+}
+
+/* Uppercase labels — better tracking, less heavy */
+[data-theme="light"] [data-admin-shell] .kpi-label,
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-label,
+[data-theme="light"] [data-admin-shell] .sidebar-label,
+[data-theme="light"] [data-admin-shell] .field label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  color: var(--text-muted);
+}
+
+/* KPI hero numerals — keep Fraunces, refine size + baseline */
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-value,
+[data-theme="light"] [data-admin-shell] .kpi-value {
+  font-family: var(--font-display, serif);
+  font-size: 2.8rem;
+  font-weight: 300;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  margin-top: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--text);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-unit {
+  font-family: var(--font-jakarta), var(--font-sans), sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+  line-height: 1.45;
+}
+
+/* KPI cards — more generous padding */
+[data-theme="light"] [data-admin-shell] .dashboard-kpi {
+  padding: 24px 24px 22px;
+  border-radius: 18px;
+}
+
+/* Panel headers — bigger title, breathable */
+[data-theme="light"] [data-admin-shell] .dashboard-panel-head {
+  padding: 18px 22px 14px;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-panel-head h3 {
+  font-family: var(--font-display, serif);
+  font-size: 1.18rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-panel-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-panel-link {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* Activity feed — more vertical rhythm + hover state */
+[data-theme="light"] [data-admin-shell] .dashboard-activity-feed {
+  padding: 6px 8px 12px;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-activity-feed > li {
+  padding: 12px 14px;
+  border-radius: 12px;
+  transition: background-color 0.15s ease;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-activity-feed > li:hover {
+  background: rgba(14, 90, 107, 0.04);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-activity-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-activity-title {
+  font-weight: 500;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-activity-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Arrival rows — same rhythm */
+[data-theme="light"] [data-admin-shell] .dashboard-arrival-link {
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-arrival-link:hover {
+  background: rgba(14, 90, 107, 0.04);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-arrival-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-arrival-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Weekly strip — taller bars, rounded tops, visible min fill */
+[data-theme="light"] [data-admin-shell] .dashboard-week-strip {
+  padding: 22px 22px 24px;
+  gap: 10px;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-week-day {
+  padding: 12px 4px 12px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  gap: 8px;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-week-day:hover {
+  background: rgba(14, 90, 107, 0.04);
+  border-color: rgba(14, 90, 107, 0.2);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-week-day.is-today {
+  background: rgba(14, 90, 107, 0.06);
+  border-color: var(--primary);
+  box-shadow: 0 2px 6px rgba(14, 90, 107, 0.12);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-week-bar-track {
+  height: 110px;
+  width: 22px;
+  background: rgba(14, 90, 107, 0.06);
+  border-radius: 6px;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-week-bar-fill {
+  background: linear-gradient(180deg, #1a8aa1 0%, var(--primary) 100%);
+  border-radius: 6px 6px 2px 2px;
+  min-height: 8px;
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-week-day.is-today
+  .dashboard-week-bar-fill {
+  background: linear-gradient(
+    180deg,
+    var(--primary) 0%,
+    var(--primary-deep) 100%
+  );
+}
+[data-theme="light"] [data-admin-shell] .dashboard-week-pct {
+  font-family: var(--font-jakarta), var(--font-sans), sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text);
+}
+[data-theme="light"] [data-admin-shell] .dashboard-week-dow {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-week-day.is-today
+  .dashboard-week-dow {
+  color: var(--primary);
+}
+
+/* Sidebar — better vertical rhythm */
+[data-theme="light"] [data-admin-shell] .sidebar {
+  padding: 18px 16px 16px;
+}
+[data-theme="light"] [data-admin-shell] .sidebar-section {
+  margin-bottom: 22px;
+}
+[data-theme="light"] [data-admin-shell] .sidebar-section:last-of-type {
+  margin-bottom: 12px;
+}
+[data-theme="light"] [data-admin-shell] .sidebar-label {
+  padding: 4px 12px 10px;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+}
+[data-theme="light"] [data-admin-shell] .nav-item {
+  padding: 10px 14px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  border-radius: 10px;
+  margin-bottom: 2px;
+}
+[data-theme="light"] [data-admin-shell] .nav-item svg {
+  width: 17px;
+  height: 17px;
+}
+[data-theme="light"] [data-admin-shell] .sidebar-brand {
+  padding: 4px 12px 22px;
+  gap: 12px;
+}
+[data-theme="light"] [data-admin-shell] .sidebar-brand-text .name {
+  font-family: var(--font-display, serif);
+  font-size: 1.18rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+[data-theme="light"] [data-admin-shell] .sidebar-brand-text .sub {
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  margin-top: 2px;
+}
+
+/* Topbar search — bigger placeholder, more breathable */
+[data-theme="light"] [data-admin-shell] .search-bar input {
+  font-size: 0.92rem;
+}
+
+/* Page content padding */
+[data-theme="light"] [data-admin-shell] .content {
+  padding: 32px 36px 40px;
+}
+@media (max-width: 768px) {
+  [data-theme="light"] [data-admin-shell] .content {
+    padding: 20px 18px 28px;
+  }
+}
+
+/* Subtle dotted texture on the bg — adds depth without crying */
+[data-theme="light"] [data-admin-shell] {
+  background:
+    radial-gradient(
+      circle at 12% -5%,
+      rgba(14, 90, 107, 0.05) 0,
+      transparent 36%
+    ),
+    radial-gradient(
+      circle at 105% 110%,
+      rgba(196, 78, 122, 0.03) 0,
+      transparent 40%
+    ),
+    radial-gradient(
+        circle 1px at center,
+        rgba(14, 90, 107, 0.045) 1px,
+        transparent 1px
+      )
+      0 0 / 28px 28px,
+    #f7f8fa;
+}
