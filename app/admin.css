@@ -8548,3 +8548,35 @@ html:has([data-admin-shell]) {
 [data-theme="light"] [data-admin-shell] .nav-item.active .nav-item-emoji {
   transform: scale(1.08);
 }
+
+/* ==========================================================================
+   Restore brand teal on primary CTA — "Nouvelle résa" and everywhere a
+   primary button shows up. The slate-dark "+ Nouveau" treatment from
+   the padel ref doesn't fit Diar Yasmine's identity (the teal is the
+   brand colour, not slate).
+   ========================================================================== */
+
+[data-theme="light"] [data-admin-shell] .btn-admin-primary {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 6px -2px rgba(14, 90, 107, 0.4);
+}
+[data-theme="light"] [data-admin-shell] .btn-admin-primary:hover {
+  background: var(--primary-deep);
+  box-shadow: 0 4px 12px -2px rgba(14, 90, 107, 0.5);
+  transform: none;
+}
+[data-theme="light"] [data-admin-shell] .btn-admin-primary:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px -1px rgba(14, 90, 107, 0.45);
+}
+
+/* Topbar "Nouvelle résa" CTA + same treatment everywhere primary lives */
+[data-theme="light"] [data-admin-shell] .topbar .btn-admin-primary,
+[data-theme="light"] [data-admin-shell] .page-actions .btn-admin-primary {
+  background: var(--primary);
+}
+[data-theme="light"] [data-admin-shell] .topbar .btn-admin-primary:hover,
+[data-theme="light"] [data-admin-shell] .page-actions .btn-admin-primary:hover {
+  background: var(--primary-deep);
+}
