@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronRight, LogIn, Phone } from "lucide-react";
+import { CheckCircle2, ChevronRight, Phone } from "lucide-react";
 import { formatInTimeZone } from "date-fns-tz";
 import { Link } from "@/i18n/navigation";
 import { TZ } from "@/lib/date";
@@ -43,7 +43,9 @@ export function DashboardArrivals({ arrivals }: DashboardArrivalsProps) {
     <section className="dashboard-panel">
       <header className="dashboard-panel-head">
         <h3>
-          <LogIn className="size-4" />
+          <span className="dashboard-panel-emoji" aria-hidden="true">
+            🛬
+          </span>
           Arrivées du jour
         </h3>
         <Link

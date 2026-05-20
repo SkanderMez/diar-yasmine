@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronRight, LogOut, Phone } from "lucide-react";
+import { CheckCircle2, ChevronRight, Phone } from "lucide-react";
 import { formatInTimeZone } from "date-fns-tz";
 import { Link } from "@/i18n/navigation";
 import { TZ } from "@/lib/date";
@@ -42,7 +42,9 @@ export function DashboardDepartures({ departures }: DashboardDeparturesProps) {
     <section className="dashboard-panel">
       <header className="dashboard-panel-head">
         <h3>
-          <LogOut className="size-4" />
+          <span className="dashboard-panel-emoji" aria-hidden="true">
+            🛫
+          </span>
           Départs du jour
         </h3>
         <Link

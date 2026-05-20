@@ -42,7 +42,9 @@ export function DashboardActivityFeed({ entries }: DashboardActivityFeedProps) {
     <section className="dashboard-panel">
       <header className="dashboard-panel-head">
         <h3>
-          <Activity className="size-4" />
+          <span className="dashboard-panel-emoji" aria-hidden="true">
+            ⚡
+          </span>
           Activité récente
         </h3>
         <span className="dashboard-panel-sub">10 derniers événements</span>

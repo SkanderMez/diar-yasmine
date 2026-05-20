@@ -8454,3 +8454,63 @@ html:has([data-admin-shell]) {
   color: var(--text);
   letter-spacing: -0.005em;
 }
+
+/* ==========================================================================
+   PADEL EMOJI PASS — make the emoji tiles the visual hero, not Lucide
+   icons in pastel tile. Bump KPI values one more step + style panel
+   header emojis.
+   ========================================================================== */
+
+/* KPI emoji tiles — no bg tint, just a big native emoji */
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-kpi
+  .dashboard-kpi-icon-emoji {
+  background: transparent;
+  color: inherit;
+  width: 44px;
+  height: 44px;
+  font-size: 30px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  /* Apple system emojis already carry their colour — no need to tint */
+}
+
+/* Bump KPI hero to feel padel-big */
+[data-theme="light"] [data-admin-shell] .dashboard-kpi {
+  padding: 24px 24px 20px;
+}
+[data-theme="light"] [data-admin-shell] .dashboard-kpi-value {
+  font-size: 2.6rem;
+  font-weight: 900;
+}
+
+/* Panel header emoji — sits next to "Arrivées du jour" etc */
+[data-theme="light"] [data-admin-shell] .dashboard-panel-emoji {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Reset the panel-head `> svg:first-child` tile we added earlier — emoji
+   doesn't need a coloured background. */
+[data-theme="light"]
+  [data-admin-shell]
+  .dashboard-panel-head
+  h3
+  > svg:first-child {
+  background: transparent;
+  padding: 0;
+  color: var(--primary);
+}
+
+/* Page head — keep room for an emoji prefix if any */
+[data-theme="light"] [data-admin-shell] .page-head h1 {
+  align-items: center;
+  gap: 10px;
+}

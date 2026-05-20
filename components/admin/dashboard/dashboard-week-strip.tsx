@@ -1,4 +1,3 @@
-import { CalendarRange } from "lucide-react";
 import { formatInTimeZone } from "date-fns-tz";
 import { Link } from "@/i18n/navigation";
 import { TZ } from "@/lib/date";
@@ -18,7 +17,9 @@ export function DashboardWeekStrip({ days }: DashboardWeekStripProps) {
     <section className="dashboard-panel">
       <header className="dashboard-panel-head">
         <h3>
-          <CalendarRange className="size-4" />
+          <span className="dashboard-panel-emoji" aria-hidden="true">
+            📅
+          </span>
           Cette semaine
         </h3>
         <Link href="/admin/calendar" className="dashboard-panel-link">
