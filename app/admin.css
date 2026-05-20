@@ -8514,3 +8514,37 @@ html:has([data-admin-shell]) {
   align-items: center;
   gap: 10px;
 }
+
+/* ==========================================================================
+   SIDEBAR PADEL POLISH — emoji nav icons + brand teal title.
+   ========================================================================== */
+
+/* Brand title — force the Diar Yasmine #0e5a6b teal (was reading too dark) */
+[data-theme="light"] [data-admin-shell] .sidebar-brand .name {
+  color: var(--primary);
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: -0.005em;
+}
+[data-theme="light"] [data-admin-shell] .sidebar-brand .sub {
+  color: var(--primary);
+  opacity: 0.55;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+
+/* Sidebar nav emoji — replaces the Lucide icon slot */
+[data-theme="light"] [data-admin-shell] .nav-item-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+/* Active state: scale up emoji slightly for emphasis */
+[data-theme="light"] [data-admin-shell] .nav-item.active .nav-item-emoji {
+  transform: scale(1.08);
+}

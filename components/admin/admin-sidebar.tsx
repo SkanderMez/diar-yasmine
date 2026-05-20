@@ -1,22 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {
-  Building2,
-  Calendar,
-  ChevronDown,
-  ClipboardList,
-  Globe,
-  Home,
-  LineChart,
-  Plus,
-  Settings,
-  Sparkles,
-  Star,
-  Tags,
-  Ticket,
-  Users,
-} from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 
 type AdminUser = {
@@ -28,7 +13,8 @@ type NavItem = {
   key: string;
   href: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  /** Native emoji glyph rendered before the label — padel-style. */
+  emoji: string;
   badge?: string;
 };
 
@@ -45,32 +31,32 @@ const SECTIONS: NavSection[] = [
         key: "dashboard",
         href: "/admin/dashboard",
         label: "Vue d'ensemble",
-        icon: Home,
+        emoji: "🏠",
       },
       {
         key: "calendar",
         href: "/admin/calendar",
         label: "Calendrier",
-        icon: Calendar,
+        emoji: "📅",
       },
       {
         key: "reservations",
         href: "/admin/reservations",
         label: "Réservations",
-        icon: ClipboardList,
+        emoji: "📋",
         badge: "12",
       },
       {
         key: "new-booking",
         href: "/admin/reservations/new",
         label: "Nouvelle résa",
-        icon: Plus,
+        emoji: "✨",
       },
       {
         key: "clients",
         href: "/admin/clients",
         label: "Clients",
-        icon: Users,
+        emoji: "👥",
       },
     ],
   },
@@ -81,32 +67,32 @@ const SECTIONS: NavSection[] = [
         key: "units",
         href: "/admin/properties",
         label: "Unités",
-        icon: Building2,
+        emoji: "🏡",
         badge: "21",
       },
       {
         key: "pricing",
         href: "/admin/pricing",
         label: "Tarification",
-        icon: Tags,
+        emoji: "🏷️",
       },
       {
         key: "supplements",
         href: "/admin/supplements",
         label: "Suppléments",
-        icon: Sparkles,
+        emoji: "🎁",
       },
       {
         key: "promo-codes",
         href: "/admin/promo-codes",
         label: "Codes promo",
-        icon: Ticket,
+        emoji: "🎟️",
       },
       {
         key: "channels",
         href: "/admin/channels",
         label: "Channels",
-        icon: Globe,
+        emoji: "🌐",
       },
     ],
   },
@@ -117,13 +103,13 @@ const SECTIONS: NavSection[] = [
         key: "analytics",
         href: "/admin/reports",
         label: "Rapports",
-        icon: LineChart,
+        emoji: "📊",
       },
       {
         key: "reviews",
         href: "/admin/reviews",
         label: "Avis",
-        icon: Star,
+        emoji: "⭐",
       },
     ],
   },
@@ -134,7 +120,7 @@ const SECTIONS: NavSection[] = [
         key: "settings",
         href: "/admin/settings",
         label: "Paramètres",
-        icon: Settings,
+        emoji: "⚙️",
       },
     ],
   },
@@ -188,7 +174,6 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
         <div key={section.label} className="sidebar-section">
           <div className="sidebar-label">{section.label}</div>
           {section.items.map((item) => {
-            const Icon = item.icon;
             const active = isActive(pathname, item.href);
             return (
               <Link
@@ -197,7 +182,9 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
                 data-nav={item.key}
                 className={`nav-item${active ? " active" : ""}`}
               >
-                <Icon className="size-4" />
+                <span className="nav-item-emoji" aria-hidden="true">
+                  {item.emoji}
+                </span>
                 <span>{item.label}</span>
                 {item.badge ? (
                   <span className="badge">{item.badge}</span>
